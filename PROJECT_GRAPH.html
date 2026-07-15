@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Проект LMS - Структура и Граф Зависимостей</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .tab {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            padding: 15px 30px;
+            margin: 5px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        
+        .tab:hover {
+            background: rgba(255,255,255,0.4);
+            transform: translateY(-2px);
+        }
+        
+        .tab.active {
+            background: white;
+            color: #667eea;
+            font-weight: bold;
+        }
+        
+        .content {
+            display: none;
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        
+        .content.active {
+            display: block;
+        }
+        
+        .tree {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .folder {
+            color: #4CAF50;
+        }
+        
+        .file {
+            color: #2196F3;
+        }
+        
+        .model {
+            color: #9C27B0;
+        }
+        
+        .service {
+            color: #FF5722;
+        }
+        
+        .section {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 8px;
+        }
+        
+        .section-title {
+            color: #333;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        
+        .section-content {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 15px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+            margin-right: 8px;
+        }
+        
+        .legend-text {
+            color: #333;
+            font-size: 14px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 36px;
+            font-weight: bold;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📁 ПРОЕКТ LMS - ПОЛНАЯ СТРУКТУРА</h1>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="showContent('tree')">🌳 Дерево проекта</button>
+            <button class="tab" onclick="showContent('graph')">📊 Граф зависимостей</button>
+            <button class="tab" onclick="showContent('models')">💎 Модели</button>
+            <button class="tab" onclick="showContent('services')">🛠️ Сервисы</button>
+            <button class="tab" onclick="showContent('migrations')">📋 Migrations</button>
+        </div>
+        
+        <div id="tree" class="content active">
+            <div class="tree">
+<pre>
+21-lms/
+├── 📂 app/                          # Основная логика приложения (Laravel)
+│   ├── 📁 Actions/
+│   │   ├── 📁 Fortify/               # Auth Fortify actions
+│   │   └── 📁 Jetstream/              # Jetstream actions
+│   ├── 📁 Http/
+│   │   ├── 📁 Controllers/            # Контроллеры API и web
+│   │   └── 📁 Middleware/           # Middleware файлы
+│   ├── 📁 Jobs/
+│   │   └── 📄 CreateGitlabProjectJob.php  # Работа по созданию GitLab проекта
+│   ├── 📁 Models/                    # Все модели данных
+│   │   ├── 📄 Admin.php
+│   │   ├── 📄 Achievement.php
+│   │   ├── 📄 CalendarEvent.php
+│   │   ├── 📄 CalendarSlot.php
+│   │   ├── 📄 ChatMessage.php
+│   │   ├── 📄 Chat.php
+│   │   ├── 📄 CourseDependency.php
+│   │   ├── 📄 Course.php
+│   │   ├── 📄 Leaderboard.php
+│   │   ├── 📄 LearningPath.php
+│   │   ├── 📄 Lesson.php
+│   │   ├── 📄 Module.php
+│   │   ├── 📄 Notification.php
+│   │   ├── 📄 SubmissionFile.php
+│   │   ├── 📄 SubmissionReviewQueue.php
+│   │   ├── 📄 TestResult.php
+│   │   ├── 📄 UserAchievement.php
+│   │   ├── 📄 UserActivity.php
+│   │   ├── 📄 User.php
+│   │   ├── 📄 UserStat.php
+│   │   └── 📄 XpTransaction.php
+│   ├── 📁 Providers/
+│   │   ├── 📄 AppServiceProvider.php
+│   │   ├── 📄 FortifyServiceProvider.php
+│   │   └── 📄 JetstreamServiceProvider.php
+│   ├── 📁 Services/                  # Сервисы бизнес-логики
+│   │   ├── 📄 AchievementService.php
+│   │   ├── 📄 BookingService.php
+│   │   ├── 📄 ChatService.php
+│   │   ├── 📄 GitlabCacheService.php
+│   │   ├── 📄 GitlabHealthService.php
+│   │   ├── 📄 GitlabService.php
+│   │   ├── 📄 LeaderboardService.php
+│   │   ├── 📄 ReviewAssignmentService.php
+│   │   └── 📄 XpService.php
+│   └── 📁 View/
+│       └── 📁 Components/            # Компоненты представлений
+│
+├── 📂 bootstrap/                    # Laravel bootstrap файлы
+│   ├── 📁 cache/
+│   │   ├── 📄 packages.php
+│   │   └── 📄 services.php
+│   ├── 📄 app.php
+│   └── 📄 providers.php
+│
+├── 📂 config/                         # Конфигурационные файлы
+│   ├── 📄 app.php
+│   ├── 📄 auth.php
+│   ├── 📄 cache.php
+│   ├── 📄 database.php
+│   ├── 📄 filesystems.php
+│   ├── 📄 fortify.php
+│   ├── 📄 jetstream.php
+│   ├── 📄 logging.php
+│   ├── 📄 mail.php
+│   ├── 📄 permission.php
+│   ├── 📄 queue.php
+│   ├── 📄 sanctum.php
+│   ├── 📄 services.php
+│   ├── 📄 session.php
+│   ├── 📄 xp.php
+│   └── (конфигурации для XP, чата, календаря и т.д.)
+│
+├── 📂 database/                       # База данных
+│   ├── 📁 factories/
+│   │   └── 📄 UserFactory.php
+│   ├── 📁 migrations/
+│   │   ├── 📄 0001_01_01_000000_create_users_table.php
+│   │   ├── 📄 0001_01_01_000001_create_cache_table.php
+│   │   ├── 📄 0001_01_01_000002_create_jobs_table.php
+│   │   ├── 📄 2026_05_05_074722_create_courses_table.php
+│   │   ├── 📄 2026_05_05_074722_create_modules_table.php
+│   │   ├── 📄 2026_05_05_074722_create_projects_table.php
+│   │   ├── 📄 2026_05_05_074722_create_submissions_table.php
+│   │   ├── 📄 2026_05_05_074723_create_lessons_table.php
+│   │   ├── 📄 2026_05_05_074723_create_project_dependencies_table.php
+│   │   ├── 📄 2026_05_05_074723_create_project_tests_table.php
+│   │   ├── 📄 2026_05_05_074723_create_reviews_table.php
+│   │   ├── 📄 2026_05_05_074724_create_review_checklists_table.php
+│   │   ├── 📄 2026_05_05_074724_create_reviewer_ratings_table.php
+│   │   ├── 📄 2026_05_05_074724_create_submission_files_table.php
+│   │   ├── 📄 2026_05_05_074724_create_test_results_table.php
+│   │   ├── 📄 2026_05_05_074735_create_achievements_table.php
+│   │   ├── 📄 2026_05_05_074735_create_discussions_table.php
+│   │   ├── 📄 2026_05_05_074735_create_teams_table.php
+│   │   ├── 📄 2026_05_05_074735_create_user_achievements_table.php
+│   │   ├── 📄 2026_05_05_074735_create_user_activities_table.php
+│   │   ├── 📄 2026_05_05_074735_create_xp_transactions_table.php
+│   │   ├── 📄 2026_05_05_074736_create_ai_conversations_table.php
+│   │   ├── 📄 2026_05_05_074736_create_ai_hints_table.php
+│   │   ├── 📄 2026_05_05_074736_create_code_similarity_table.php
+│   │   ├── 📄 2026_05_05_074736_create_discussion_replies_table.php
+│   │   ├── 📄 2026_05_05_074736_create_learning_analytics_table.php
+│   │   ├── 📄 2026_05_05_074736_create_notifications_table.php
+│   │   ├── 📄 2026_05_05_074736_create_plagiarism_checks_table.php
+│   │   ├── 📄 2026_05_05_074736_create_team_user_table.php
+│   │   ├── 📄 2026_05_05_074746_create_leaderboards_table.php
+│   │   ├── 📄 2026_05_05_074746_create_reports_table.php
+│   │   ├── 📄 2026_05_05_074746_create_user_bans_table.php
+│   │   ├── 📄 2026_05_05_074746_create_user_stats_table.php
+│   │   ├── 📄 2026_05_05_074747_create_learning_paths_table.php
+│   │   ├── 📄 2026_05_05_074747_create_user_learning_paths_table.php
+│   │   ├── 📄 2026_05_05_074747_create_user_preferences_table.php
+│   │   ├── 📄 2026_05_05_134513_add_two_factor_columns_to_users_table.php
+│   │   ├── 📄 2026_05_05_134514_create_passkeys_table.php
+│   │   ├── 📄 2026_05_05_134536_create_personal_access_tokens_table.php
+│   │   ├── 📄 2026_05_23_000001_add_level_to_users_table.php
+│   │   ├── 📄 2026_05_23_000002_add_min_level_to_projects_table.php
+│   │   ├── 📄 2026_06_11_170616_create_permission_tables.php
+│   │   ├── 📄 2026_06_20_163408_add_username_gitlab_token_to_users_table.php
+│   │   ├── 📄 2026_06_20_163408_create_chats_and_chat_messages_tables.php
+│   │   ├── 📄 2026_06_20_163408_create_course_dependencies_table.php
+│   │   ├── 📄 2026_06_20_203454_make_gitlab_project_id_nullable.php
+│   │   ├── 📄 2026_06_22_add_gitlab_sync_status_to_projects.php
+│   │   ├── 📄 2026_07_04_000001_create_calendar_slots_table.php
+│   │   ├── 📄 2026_07_04_000002_create_calendar_events_table.php
+│   │   └── 📄 2026_07_04_180307_create_submission_review_queues_table.php
+│   └── 📁 seeders/
+│       ├── 📄 AchievementSeeder.php
+│       ├── 📄 CalendarSeeder.php
+│       ├── 📄 CourseSeeder.php
+│       ├── 📄 DatabaseSeeder.php
+│       ├── 📄 ProjectSeeder.php
+│       └── 📄 RolesAndPermissionsSeeder.php
+│
+├── 📂 docs/                           # Документация
+│   └── 📄 login.txt
+│
+├── 📂 public/                          # Публичная директория (webroot)
+│   ├── 📁 assets/
+│   │   ├── 📁 css/
+│   │   └── 📁 js/
+│   ├── 📁 css/
+│   │   └── 📄 layout.css
+│   ├── 📁 js/
+│   │   └── 📄 app.js
+│   ├── 📁 lumina/
+│   ├── 📄 storage -> symlink (капсулы)
+│   ├── 📄 app.js
+│   ├── 📄 favicon.ico
+│   ├── 📄 index-CvUvEGlg.css (compiled CSS)
+│   ├── 📄 index.php (Laravel entry point)
+│   └── 📄 robots.txt
+│
+├── 📂 resources/                       # Ресурсы приложения
+│   ├── 📁 css/
+│   │   └── 📄 app.css
+│   ├── 📁 js/
+│   │   └── 📄 calendar.js
+│   ├── 📁 markdown/
+│   │   ├── 📄 policy.md
+│   │   └── 📄 terms.md
+│   └── 📁 views/
+│       ├── 📁 admin/                  # Админ-панель
+│       ├── 📁 auth/                   # Авторизация
+│       ├── 📁 components/              # Компоненты (Blade)
+│       ├── 📁 legal/                  # Юридические документы
+│       ├── 📁 profile/                # Профиль пользователя
+│       └── 📁 public/                 # Публичные страницы
+│
+├── 📂 routes/                          # Маршруты (routes)
+│   ├── 📄 api.php                     # API маршруты
+│   ├── 📄 console.php                 # Artisan команды
+│   └── 📄 web.php                     # Web маршруты
+│
+├── 📂 storage/                         # Хранилище
+│   ├── 📁 app/
+│   │   ├── 📁 private/               # Приватные файлы
+│   │   └── 📁 public/                 # Публичные файлы
+│   ├── 📁 framework/
+│   │   ├── 📁 cache/
+│   │   ├── 📁 sessions/
+│   │   ├── 📁 testing/
+│   │   └── 📁 views/                 # Compiled Blade views
+│   └── 📁 logs/
+│       └── 📄 laravel.log
+│
+├── 📂 tests/                          # Тесты
+│   ├── 📁 Feature/
+│   │   ├── 📄 ApiTokenPermissionsTest.php
+│   │   ├── 📄 AuthenticationTest.php
+│   │   ├── 📄 BrowserSessionsTest.php
+│   │   ├── 📄 CreateApiTokenTest.php
+│   │   ├── 📄 DeleteAccountTest.php
+│   │   ├── 📄 DeleteApiTokenTest.php
+│   │   ├── 📄 EmailVerificationTest.php
+│   │   ├── 📄 ExampleTest.php
+│   │   ├── 📄 PasswordConfirmationTest.php
+│   │   ├── 📄 PasswordResetTest.php
+│   │   ├── 📄 ProfileInformationTest.php
+│   │   ├── 📄 RegistrationTest.php
+│   │   ├── 📄 TwoFactorAuthenticationSettingsTest.php
+│   │   └── 📄 UpdatePasswordTest.php
+│   ├── 📁 Unit/
+│   │   └── 📄 ExampleTest.php
+│   └── 📄 TestCase.php
+│
+├── 📄 artisan                         # Artisan CLI
+├── 📄 CALENDAR_SEPARATE_PAGES.md      # Документация по календарю
+├── 📄 CALENDAR_SERVER_SIDE_UPDATE.md  # Документация по календарю
+├── 📄 composer.json                   # Composer зависимости
+├── 📄 composer.lock
+├── 📄 llama.log
+├── 📄 package.json                    # Node.js зависимости
+├── 📄 package-lock.json
+├── 📄 phpunit.xml                    # PHPUnit конфигурация
+├── 📄 postcss.config.js               # PostCSS конфигурация
+├── 📄 README.md                      # Описание проекта
+├── 📄 tailwind.config.js              # Tailwind CSS конфигурация
+├── 📄 vite.config.js                 # Vite конфигурация
+└── 📂 .claude/
+    └── 📄 settings.local.json
+</pre>
+            </div>
+            
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #4CAF50;"></div>
+                    <div class="legend-text">📁 Папка</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #2196F3;"></div>
+                    <div class="legend-text">📄 Файл</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #9C27B0;"></div>
+                    <div class="legend-text">💎 Модель</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #FF5722;"></div>
+                    <div class="legend-text">🛠️ Сервис</div>
+                </div>
+            </div>
+            
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number">60+</div>
+                    <div class="stat-label">Директорий</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">150+</div>
+                    <div class="stat-label">Файлов</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">35+</div>
+                    <div class="stat-label">Migrations</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">15+</div>
+                    <div class="stat-label">Моделей</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">9+</div>
+                    <div class="stat-label">Сервисов</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">14+</div>
+                    <div class="stat-label">Тестов</div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="graph" class="content">
+            <div class="section">
+                <div class="section-title">🔗 Граф зависимостей моделей</div>
+                <div class="section-content">
+<pre>
+User (Пользователь)
+  ├── HasMany: Course
+  ├── HasMany: Module
+  ├── HasMany: Lesson
+  ├── HasMany: Project
+  ├── HasMany: Submission
+  ├── HasMany: Review
+  ├── HasMany: Achievement
+  ├── HasMany: UserAchievement
+  ├── HasMany: XpTransaction
+  ├── HasMany: Chat
+  ├── HasMany: ChatMessage
+  ├── HasMany: Discussion
+  ├── HasMany: DiscussionReply
+  ├── HasMany: Team
+  ├── HasMany: Leaderboard
+  ├── HasMany: Notification
+  ├── HasMany: LearningPath
+  ├── HasMany: UserLearningPath
+  ├── HasMany: CalendarEvent
+  ├── HasMany: CalendarSlot
+  └── HasOne: UserStat
+
+Course (Курс)
+  ├── HasMany: Module
+  └── HasMany: CourseDependency
+
+Module (Модуль)
+  ├── BelongsTo: Course
+  └── HasMany: Lesson
+
+Lesson (Урок)
+  ├── BelongsTo: Module
+  └── HasMany: Project
+
+Project (Проект)
+  ├── BelongsTo: Lesson
+  ├── HasMany: Submission
+  ├── HasMany: Test
+  └── HasMany: ProjectDependency
+
+Submission (Отправка)
+  ├── BelongsTo: User
+  ├── BelongsTo: Project
+  └── HasMany: SubmissionFile
+
+SubmissionFile (Файл отправки)
+  ├── BelongsTo: Submission
+  └── HasMany: ReviewChecklist
+
+Review (Ревью)
+  ├── BelongsTo: Submission
+  └── HasMany: ReviewerRating
+
+Achievement (Достижение)
+  ├── HasMany: UserAchievement
+  └── HasMany: XpTransaction
+
+UserAchievement (Достижение пользователя)
+  ├── BelongsTo: User
+  └── BelongsTo: Achievement
+
+XpTransaction (Транзакция XP)
+  ├── BelongsTo: User
+  └── BelongsTo: Achievement
+
+Chat (Чат)
+  ├── BelongsTo: User
+  └── HasMany: ChatMessage
+
+ChatMessage (Сообщение чата)
+  ├── BelongsTo: Chat
+  └── BelongsTo: User
+
+Discussion (Обсуждение)
+  ├── BelongsTo: User
+  └── HasMany: DiscussionReply
+
+DiscussionReply (Ответ обсуждения)
+  ├── BelongsTo: Discussion
+  └── BelongsTo: User
+
+Team (Команда)
+  ├── HasMany: User (через team_user)
+  └── HasMany: Submission
+
+TeamUser (Связь команды и пользователя)
+  ├── BelongsTo: Team
+  └── BelongsTo: User
+
+LearningPath (Путь обучения)
+  ├── HasMany: Course
+  └── HasMany: UserLearningPath
+
+UserLearningPath (Путь обучения пользователя)
+  ├── BelongsTo: User
+  └── BelongsTo: LearningPath
+
+CalendarEvent (Событие календаря)
+  ├── HasMany: CalendarSlot
+  └── BelongsTo: User
+
+CalendarSlot (Слот календаря)
+  ├── BelongsTo: CalendarEvent
+  └── BelongsTo: User
+
+Leaderboard (Рейтинг)
+  ├── BelongsTo: User
+  └── HasMany: XpTransaction
+
+Notification (Уведомление)
+  ├── BelongsTo: User
+  └── HasMany: Notification
+
+UserStat (Статистика пользователя)
+  └── BelongsTo: User
+</pre>
+                </div>
+            </div>
+        </div>
+        
+        <div id="models" class="content">
+            <div class="section">
+                <div class="section-title">💎 Основные модели (15+)</div>
+                <div class="section-content">
+                    <ol>
+                        <li><strong>User</strong> - Пользователь с XP, уровнями, достижениями</li>
+                        <li><strong>Course</strong> - Курсы с модулями и уроками</li>
+                        <li><strong>Module</strong> - Модули курса</li>
+                        <li><strong>Lesson</strong> - Уроки с проектами</li>
+                        <li><strong>Project</strong> - Проекты для разработки</li>
+                        <li><strong>Submission</strong> - Отправки проектов</li>
+                        <li><strong>SubmissionFile</strong> - Файлы отправки</li>
+                        <li><strong>Review</strong> - Ревью проектов</li>
+                        <li><strong>Achievement</strong> - Достижения</li>
+                        <li><strong>UserAchievement</strong> - Достижения пользователя</li>
+                        <li><strong>Chat</strong> - Чаты с пользователями</li>
+                        <li><strong>ChatMessage</strong> - Сообщения чата</li>
+                        <li><strong>Discussion</strong> - Обсуждения</li>
+                        <li><strong>DiscussionReply</strong> - Ответы обсуждений</li>
+                        <li><strong>Team</strong> - Команды</li>
+                        <li><strong>TeamUser</strong> - Связь команды и пользователя</li>
+                        <li><strong>CalendarEvent</strong> - События календаря</li>
+                        <li><strong>CalendarSlot</strong> - Слоты календаря</li>
+                        <li><strong>Leaderboard</strong> - Рейтинг</li>
+                        <li><strong>Notification</strong> - Уведомления</li>
+                        <li><strong>UserStat</strong> - Статистика пользователя</li>
+                        <li><strong>XpTransaction</strong> - Транзакции XP</li>
+                        <li><strong>LearningPath</strong> - Путь обучения</li>
+                        <li><strong>UserLearningPath</strong> - Путь обучения пользователя</li>
+                        <li><strong>CourseDependency</strong> - Зависимости курсов</li>
+                        <li><strong>ProjectDependency</strong> - Зависимости проектов</li>
+                        <li><strong>GitlabProject</strong> - GitLab проекты</li>
+                        <li><strong>Test</strong> - Тесты проектов</li>
+                        <li><strong>TestResult</strong> - Результаты тестов</li>
+                        <li><strong>ReviewChecklist</strong> - Чек-листы ревью</li>
+                        <li><strong>ReviewerRating</strong> - Оценки ревьюеров</li>
+                        <li><strong>SubmissionReviewQueue</strong> - Очередь ревью</li>
+                        <li><strong>CodeSimilarity</strong> - Кодовая схожесть</li>
+                        <li><strong>PlagiarismCheck</strong> - Плагиат чек</li>
+                        <li><strong>LearningAnalytics</strong> - Аналитика обучения</li>
+                        <li><strong>UserPreferences</strong> - Настройки пользователя</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+        
+        <div id="services" class="content">
+            <div class="section">
+                <div class="section-title">🛠️ Сервисы (9 сервисов)</div>
+                <div class="section-content">
+                    <ol>
+                        <li><strong>AchievementService</strong> - Достижения</li>
+                        <li><strong>BookingService</strong> - Бронирование</li>
+                        <li><strong>ChatService</strong> - Чаты</li>
+                        <li><strong>GitlabService</strong> - GitLab интеграция</li>
+                        <li><strong>GitlabCacheService</strong> - Кэш GitLab</li>
+                        <li><strong>GitlabHealthService</strong> - Мониторинг GitLab</li>
+                        <li><strong>LeaderboardService</strong> - Рейтинг</li>
+                        <li><strong>ReviewAssignmentService</strong> - Назначение ревью</li>
+                        <li><strong>XpService</strong> - Система XP</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+        
+        <div id="migrations" class="content">
+            <div class="section">
+                <div class="section-title">📋 Migrations (35+ миграций)</div>
+                <div class="section-content">
+                    <ul>
+                        <li>Пользователи, авторизация, уровни</li>
+                        <li>Курсы, модули, уроки, проекты</li>
+                        <li>Отправки, файлы, ревью</li>
+                        <li>Достижения, XP, чаты</li>
+                        <li>Обсуждения, команды, календарь</li>
+                        <li>Рейтинг, уведомления, аналитика</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function showContent(id) {
+            // Hide all content
+            document.querySelectorAll('.content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Show selected content
+            document.getElementById(id).classList.add('active');
+            
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>

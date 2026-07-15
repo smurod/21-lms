@@ -1,0 +1,92 @@
+/* ============================================================
+   ANIMATIONS — replaces framer-motion behaviors
+   ============================================================ */
+
+/* Tab fade-in on switch (replaces AnimatePresence mode="wait") */
+@keyframes tabFadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Staggered rise for stat cards (initial y:30, opacity 0, delay = index * 0.1s) */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(30px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Task items slide-in from left (initial x:-20) */
+@keyframes slideX {
+  from { opacity: 0; transform: translateX(-20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* Progress bar fills (0% to --progress) */
+@keyframes fillBar {
+  from { width: 0%; }
+  to   { width: var(--progress, 50%); }
+}
+
+/* Activity chart bars rise */
+@keyframes barRise {
+  from { height: 0%; opacity: 0; }
+  to   { height: var(--h, 50%); opacity: 1; }
+}
+
+/* Apply animations */
+.tab-section { animation: tabFadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) both; }
+
+.stat-card { animation: rise 0.5s cubic-bezier(0.4, 0, 0.2, 1) both; }
+.stat-card:nth-of-type(1) { animation-delay: 0s; }
+.stat-card:nth-of-type(2) { animation-delay: 0.1s; }
+.stat-card:nth-of-type(3) { animation-delay: 0.2s; }
+.stat-card:nth-of-type(4) { animation-delay: 0.3s; }
+
+.task-item { animation: slideX 0.4s cubic-bezier(0.4, 0, 0.2, 1) both; }
+.task-item:nth-of-type(1) { animation-delay: 0s; }
+.task-item:nth-of-type(2) { animation-delay: 0.05s; }
+.task-item:nth-of-type(3) { animation-delay: 0.1s; }
+.task-item:nth-of-type(4) { animation-delay: 0.15s; }
+
+.xp-bar > span { animation: fillBar 1.4s cubic-bezier(0.4, 0, 0.2, 1) 0.3s both; }
+
+.project-row .bar > span { animation: fillBar 1.6s cubic-bezier(0.4, 0, 0.2, 1) both; }
+.project-row:nth-of-type(1) .bar > span { animation-delay: 0.3s; }
+.project-row:nth-of-type(2) .bar > span { animation-delay: 0.5s; }
+.project-row:nth-of-type(3) .bar > span { animation-delay: 0.7s; }
+
+.day-bar .bar > span { animation: fillBar 1s cubic-bezier(0.4, 0, 0.2, 1) both; }
+.day-bar:nth-of-type(1) .bar > span { animation-delay: 0s; }
+.day-bar:nth-of-type(2) .bar > span { animation-delay: 0.1s; }
+.day-bar:nth-of-type(3) .bar > span { animation-delay: 0.2s; }
+.day-bar:nth-of-type(4) .bar > span { animation-delay: 0.3s; }
+.day-bar:nth-of-type(5) .bar > span { animation-delay: 0.4s; }
+.day-bar:nth-of-type(6) .bar > span { animation-delay: 0.5s; }
+.day-bar:nth-of-type(7) .bar > span { animation-delay: 0.6s; }
+
+.skill-row .bar > span { animation: fillBar 1s cubic-bezier(0.4, 0, 0.2, 1) both; }
+.skill-row:nth-of-type(1) .bar > span { animation-delay: 0.4s; }
+.skill-row:nth-of-type(2) .bar > span { animation-delay: 0.55s; }
+.skill-row:nth-of-type(3) .bar > span { animation-delay: 0.7s; }
+.skill-row:nth-of-type(4) .bar > span { animation-delay: 0.85s; }
+
+.activity-bar {
+  height: 0%;
+  animation: barRise 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+/* Confetti particles */
+.confetti-piece {
+  position: fixed;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  top: -20px;
+  pointer-events: none;
+  z-index: 100;
+  animation: confettiFall 2.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes confettiFall {
+  0% { transform: translate(0, -20px) rotate(0); opacity: 1; }
+  100% { transform: translate(var(--dx, 100px), 100vh) rotate(var(--rot, 720deg)); opacity: 0; }
+}

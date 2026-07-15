@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@yield('title', 'Lumina Admin Dashboard')</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/intersect@3.14.9/dist/cdn.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/cdn.min.js"></script>
+
+    <style>
+        [x-cloak] { display: none !important; }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #52525b; }
+
+        /* Входящие анимации */
+        @keyframes fmUp { 0% { opacity: 0; transform: translateY(40px); } 100% { opacity: 1; transform: translateY(0); } }
+        @keyframes fmUpLg { 0% { opacity: 0; transform: translateY(60px); } 100% { opacity: 1; transform: translateY(0); } }
+        @keyframes fmLeft { 0% { opacity: 0; transform: translateX(-30px); } 100% { opacity: 1; transform: translateX(0); } }
+
+        .anim-up { animation: fmUp 0.8s cubic-bezier(0.1, 0.9, 0.2, 1) backwards; }
+        .anim-up-lg { animation: fmUpLg 0.9s cubic-bezier(0.1, 0.9, 0.2, 1) backwards; }
+        .anim-left { animation: fmLeft 0.8s cubic-bezier(0.1, 0.9, 0.2, 1) backwards; }
+    </style>
+
+    @yield('styles')
+</head>
+<body class="bg-[#0a0c14] text-white overflow-hidden antialiased">
+
+<!-- Фоновый градиент -->
+<div class="fixed inset-0 bg-[radial-gradient(at_50%_30%,rgba(165,243,252,0.08)_0%,transparent_50%)] pointer-events-none"></div>
+
+<div class="flex h-screen relative z-10">
+
+    <!-- SIDEBAR -->
+    @include('admin.layouts.sidebar')
+
+    <!-- MAIN CONTENT -->
+    <div class="flex-1 overflow-auto flex flex-col relative" id="main-scroll-area">
+
+        <!-- TOP HEADER -->
+        @include('admin.layouts.header')
+
+        <!-- КОНТЕНТ ВКЛАДОК / СТРАНИЦ -->
+        <div class="p-10 relative">
+            @yield('content')
+        </div>
+    </div>
+</div>
+
+<!-- Status Bar -->
+@include('admin.layouts.footer')
+
+@yield('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        lucide.createIcons();
+    });
+</script>
+</body>
+</html>
