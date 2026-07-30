@@ -24,7 +24,7 @@ class ProjectController extends Controller
     /**
      * Submission statuses meaning "project is finished".
      */
-    private const DONE_STATUSES = ['passed', 'failed'];
+    private const DONE_STATUSES = ['passed'];
 
     /**
      * Projects list — fully server-side.
@@ -48,12 +48,13 @@ class ProjectController extends Controller
         $activeIds = [];
         $reviewIds = [];
         $doneIds   = [];
+        $failedIds = [];
 
         if ($userId) {
             $latestStatuses = Submission::where('user_id', $userId)
-                ->orderBy('updated_at')
+                ->orderBy('id')
                 ->get(['project_id', 'status'])
-                // keep the LATEST submission per project (later rows overwrite earlier)
+                // keep the LATEST attempt per project (later rows overwrite earlier)
                 ->keyBy('project_id')
                 ->map(fn ($s) => $s->status);
 
@@ -64,12 +65,15 @@ class ProjectController extends Controller
                     $reviewIds[] = $projectId;
                 } elseif (in_array($status, self::DONE_STATUSES, true)) {
                     $doneIds[] = $projectId;
+                } elseif ($status === 'failed') {
+                    $failedIds[] = $projectId;
                 }
             }
         }
 
         $enrolledProjectIds  = array_merge($activeIds, $reviewIds);
         $completedProjectIds = $doneIds;
+        $retryProjectIds     = $failedIds;
 
         // --- Base query: published, real (linked to GitLab) projects ---
         $query = Project::where('is_published', true)
@@ -98,19 +102,29 @@ class ProjectController extends Controller
         // --- Enrich with GitLab + user's own submission status ---
         $gitlabProjects = collect($gitlabCache->getProjects());
 
-        $enrichedProjects = $projects->map(function ($project) use ($gitlabProjects, $enrolledProjectIds, $completedProjectIds, $userId) {
-            $gitlabData  = $gitlabProjects->firstWhere('id', $project->gitlab_project_id);
+        $enrichedProjects = $projects->map(function ($project) use ($gitlabProjects, $enrolledProjectIds, $completedProjectIds, $retryProjectIds, $userId) {
+            $gitlabData  = $gitlabProjects->firstWhere('id', $project->gitlab_project_id) ?: [
+                'id' => $project->gitlab_project_id,
+                'web_url' => $project->repository_url,
+                'http_url_to_repo' => $project->repository_url,
+                'ssh_url_to_repo' => '',
+                'path' => $project->slug,
+                'path_with_namespace' => $project->slug,
+                'default_branch' => $project->default_branch ?? 'main',
+                'empty_repo' => false,
+            ];
             $isEnrolled  = in_array($project->id, $enrolledProjectIds);
             $isCompleted = in_array($project->id, $completedProjectIds);
+            $isRetry     = in_array($project->id, $retryProjectIds);
 
             $testStatus   = ['percent' => 0, 'result' => null, 'testsPassed' => 0, 'testsTotal' => 0];
             $reviewStatus = ['received' => 0, 'required' => $project->required_reviews_count ?? 0, 'percent' => 0];
 
-            if ($userId && ($isEnrolled || $isCompleted)) {
+            if ($userId && ($isEnrolled || $isCompleted || $isRetry)) {
                 // ONLY the current user's submission (was: any user's — privacy bug)
                 $latestSubmission = Submission::where('project_id', $project->id)
                     ->where('user_id', $userId)
-                    ->latest('updated_at')
+                    ->latest('id')
                     ->first();
 
                 if ($latestSubmission) {
@@ -132,6 +146,7 @@ class ProjectController extends Controller
                 'project'      => $project,
                 'is_enrolled'  => $isEnrolled,
                 'is_completed' => $isCompleted,
+                'is_retry'     => $isRetry,
                 'test_status'  => $testStatus,
                 'review_status'=> $reviewStatus,
                 'gitlab'       => $gitlabData ? [
@@ -176,8 +191,19 @@ class ProjectController extends Controller
             $gitlabProject = $gitlabCache->getProjectById($project->gitlab_project_id);
         }
 
-        // A project must exist in GitLab to be shown publicly
-        abort_unless($gitlabProject, 404);
+        // If GitLab API is temporarily unavailable, keep the LMS page usable
+        // with DB-stored repository metadata. Actual GitLab actions still use
+        // GitLabService and will report errors when needed.
+        $gitlabProject = $gitlabProject ?: [
+            'id' => $project->gitlab_project_id,
+            'web_url' => $project->repository_url,
+            'http_url_to_repo' => $project->repository_url,
+            'ssh_url_to_repo' => '',
+            'path' => $project->slug,
+            'path_with_namespace' => $project->slug,
+            'default_branch' => $project->default_branch ?? 'main',
+            'empty_repo' => false,
+        ];
 
         // Get user's active submission
         $activeSubmission = null;
@@ -196,7 +222,7 @@ class ProjectController extends Controller
             $latestCompleted = Submission::where('project_id', $project->id)
                 ->where('user_id', Auth::id())
                 ->whereIn('status', ['passed', 'failed'])
-                ->latest()
+                ->latest('id')
                 ->first();
 
             if ($latestCompleted) {
@@ -206,7 +232,7 @@ class ProjectController extends Controller
             // Use latest of any status for test/review display
             $latestSub = Submission::where('project_id', $project->id)
                 ->where('user_id', Auth::id())
-                ->latest('updated_at')
+                ->latest('id')
                 ->first();
 
             if ($latestSub) {

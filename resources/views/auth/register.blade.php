@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="csrf-token" content="{{ csrf_token() }}" />
     <title>Register — 21-LMS</title>
     <link rel="stylesheet" href="{{asset('assets/css/style.css')}}" />
 </head>
@@ -125,18 +126,25 @@
             </div>
 
             <div class="field">
+                <label for="regUsername">username</label>
+                <input type="text" id="regUsername" name="username" autocomplete="username" placeholder="login for 21-LMS and GitLab" required />
+            </div>
+
+            <div class="field">
                 <label for="regEmail">email</label>
                 <input type="email" id="regEmail" name="email" autocomplete="email" placeholder="you@example.com" required />
             </div>
 
             <div class="field">
                 <label for="regPassword">password</label>
-                <input type="password" id="regPassword" name="password" autocomplete="new-password" placeholder="min. 8 characters" required />
+                <input type="password" id="regPassword" name="password" autocomplete="new-password" placeholder="example: school21" required />
                 <button class="eye-btn" type="button" data-eye="regPassword" aria-label="Show password">
                     <svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
                     <svg class="eye-off" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/><line x1="4" y1="3" x2="20" y2="21"/></svg>
                 </button>
             </div>
+
+            <p class="auth-password-hint">Password: 8+ chars, latin letters + numbers. Do not include your username/name. Safe example: <strong>school21</strong>.</p>
 
             <div class="field">
                 <label for="regPassword2">confirm password</label>

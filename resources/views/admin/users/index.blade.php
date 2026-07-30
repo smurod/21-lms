@@ -88,7 +88,14 @@
                                     <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 to-violet-500 flex items-center justify-center text-white font-bold text-lg shrink-0">
                                         {{ mb_substr($user->name ?? 'A', 0, 1) }}
                                     </div>
-                                    <span class="font-semibold text-white text-[15px] block">{{ $user->name ?? 'Alex Rivera' }}</span>
+                                    <div>
+                                        <span class="font-semibold text-white text-[15px] block">{{ $user->name ?? 'Alex Rivera' }}</span>
+                                        @if(method_exists($user, 'trashed') && $user->trashed())
+                                            <span class="inline-flex items-center mt-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                                                Удалён
+                                            </span>
+                                        @endif
+                                    </div>
                                 </div>
                             </td>
 
@@ -98,7 +105,8 @@
 
                             <td class="px-6 py-4">
                                 @php
-                                    $rolesArr = isset($user->roles) ? $user->roles->pluck('name')->toArray() : ['user'];
+                                    $rolesArr = isset($user->roles) ? $user->roles->pluck('name')->toArray() : [];
+                                    $rolesArr = count($rolesArr) > 0 ? $rolesArr : ['user'];
                                 @endphp
                                 <div class="flex flex-wrap gap-2">
                                     @foreach($rolesArr as $r)
@@ -121,38 +129,69 @@
                             </td>
 
                             <td class="px-6 py-4 text-right">
-                                <div x-data="{ open: false }" class="relative inline-block text-left">
-                                    <button @click="open = !open" @click.outside="open = false"
-                                            class="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white transition-colors" title="Настройки роли">
-                                        <i data-lucide="more-vertical" class="w-4 h-4"></i>
-                                    </button>
+                                @if(method_exists($user, 'trashed') && $user->trashed())
+                                    <form method="POST" action="{{ route('admin.users.restore', $user->id) }}" class="inline-block">
+                                        @csrf
+                                        @method('PATCH')
+                                        <button type="submit"
+                                                class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/10 text-xs font-semibold text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors"
+                                                title="Восстановить пользователя">
+                                            <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                                            Восстановить
+                                        </button>
+                                    </form>
+                                @elseif(auth()->id() === $user->id)
+                                    <span class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 text-xs font-semibold text-zinc-500 border border-white/10 cursor-not-allowed" title="Нельзя изменить собственную роль или удалить свой аккаунт">
+                                        <i data-lucide="lock" class="w-4 h-4"></i>
+                                        Это вы
+                                    </span>
+                                @else
+                                    <div x-data="{ open: false }" class="relative inline-block text-left">
+                                        <button @click="open = !open" @click.outside="open = false"
+                                                class="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white transition-colors" title="Действия пользователя">
+                                            <i data-lucide="more-vertical" class="w-4 h-4"></i>
+                                        </button>
 
-                                    <div x-show="open" x-cloak
-                                         x-transition:enter="transition ease-out duration-200"
-                                         x-transition:enter-start="opacity-0 scale-95"
-                                         x-transition:enter-end="opacity-100 scale-100"
-                                         x-transition:leave="transition ease-in duration-100"
-                                         x-transition:leave-start="opacity-100 scale-100"
-                                         x-transition:leave-end="opacity-0 scale-95"
-                                         class="absolute right-0 mt-2 w-48 bg-zinc-900 rounded-2xl shadow-xl border border-white/10 z-50 overflow-hidden origin-top-right">
-                                        <div class="p-2">
-                                            <p class="px-3 py-2 text-xs font-mono tracking-widest text-zinc-500 uppercase font-semibold border-b border-white/5 mb-1">Назначить роль:</p>
-                                            <form method="POST" action="{{ route('admin.users.role', $user->id ?? 1) }}" class="flex flex-col gap-1">
-                                                @csrf
-                                                <button type="submit" name="role" value="admin"
-                                                        class="w-full text-left px-3 py-2 text-sm rounded-xl transition-colors
-                                                {{ in_array('admin', $rolesArr) ? 'bg-violet-500/10 text-violet-400 font-semibold' : 'text-zinc-300 hover:bg-white/5 hover:text-white font-medium' }}">
-                                                    Admin
-                                                </button>
-                                                <button type="submit" name="role" value="user"
-                                                        class="w-full text-left px-3 py-2 text-sm rounded-xl transition-colors
-                                                {{ in_array('user', $rolesArr) ? 'bg-white/10 text-white font-semibold' : 'text-zinc-300 hover:bg-white/5 hover:text-white font-medium' }}">
-                                                    User
-                                                </button>
-                                            </form>
+                                        <div x-show="open" x-cloak
+                                             x-transition:enter="transition ease-out duration-200"
+                                             x-transition:enter-start="opacity-0 scale-95"
+                                             x-transition:enter-end="opacity-100 scale-100"
+                                             x-transition:leave="transition ease-in duration-100"
+                                             x-transition:leave-start="opacity-100 scale-100"
+                                             x-transition:leave-end="opacity-0 scale-95"
+                                             class="absolute right-0 mt-2 w-52 bg-zinc-900 rounded-2xl shadow-xl border border-white/10 z-50 overflow-hidden origin-top-right">
+                                            <div class="p-2">
+                                                <p class="px-3 py-2 text-xs font-mono tracking-widest text-zinc-500 uppercase font-semibold border-b border-white/5 mb-1">Назначить роль:</p>
+                                                <form method="POST" action="{{ route('admin.users.role', $user->id ?? 1) }}" class="flex flex-col gap-1">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <button type="submit" name="role" value="admin"
+                                                            class="w-full text-left px-3 py-2 text-sm rounded-xl transition-colors
+                                                    {{ in_array('admin', $rolesArr) ? 'bg-violet-500/10 text-violet-400 font-semibold' : 'text-zinc-300 hover:bg-white/5 hover:text-white font-medium' }}">
+                                                        Admin
+                                                    </button>
+                                                    <button type="submit" name="role" value="user"
+                                                            class="w-full text-left px-3 py-2 text-sm rounded-xl transition-colors
+                                                    {{ in_array('user', $rolesArr) ? 'bg-white/10 text-white font-semibold' : 'text-zinc-300 hover:bg-white/5 hover:text-white font-medium' }}">
+                                                        User
+                                                    </button>
+                                                </form>
+
+                                                <div class="border-t border-white/5 mt-2 pt-2">
+                                                    <form method="POST" action="{{ route('admin.users.destroy', $user->id) }}">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit"
+                                                                onclick="return confirm('Удалить пользователя {{ addslashes($user->name ?? $user->email) }}? Его можно будет восстановить через Soft Delete.')"
+                                                                class="w-full text-left px-3 py-2 text-sm rounded-xl text-rose-400 hover:bg-rose-500/10 font-semibold transition-colors">
+                                                            Удалить
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
+                                @endif
                             </td>
                         </tr>
                     @empty

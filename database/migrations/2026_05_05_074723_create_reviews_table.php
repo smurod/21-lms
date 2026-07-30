@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('reviewer_id')->constrained('users')->onDelete('cascade');
 
             // Оценка
-            $table->unsignedTinyInteger('score'); // 0-100
+            $table->unsignedTinyInteger('score')->nullable(); // 0-100; nullable until reviewer submits
             $table->longText('feedback')->nullable();
             $table->longText('private_notes')->nullable(); // для менторов
 

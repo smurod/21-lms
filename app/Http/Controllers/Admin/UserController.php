@@ -11,12 +11,14 @@ class UserController extends Controller
 {
     public function index(Request $request)
     {
-        $query = User::with(['roles'])->latest();
+        $this->assignDefaultUserRoleToUsersWithoutRoles();
+
+        $query = User::withTrashed()->with(['roles'])->latest();
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'ilike', "%{$search}%")
-                  ->orWhere('email', 'ilike', "%{$search}%");
+                    ->orWhere('email', 'ilike', "%{$search}%");
             });
         }
 
@@ -34,16 +36,56 @@ class UserController extends Controller
 
     public function updateRole(Request $request, User $user)
     {
+        if ($request->user()?->is($user)) {
+            return back()->with('error', 'Вы не можете изменить собственную роль.');
+        }
+
         $validated = $request->validate([
             'role' => 'required|in:admin,user',
         ]);
 
-        if ($validated['role'] === 'admin') {
-            $user->syncRoles(['admin']);
-        } else {
-            $user->syncRoles(['user']);
-        }
+        $user->syncRoles([$validated['role']]);
 
         return back()->with('success', "Роль пользователя '{$user->name}' обновлена.");
+    }
+
+    public function destroy(Request $request, User $user)
+    {
+        if ($request->user()?->is($user)) {
+            return back()->with('error', 'Вы не можете удалить собственный аккаунт.');
+        }
+
+        $user->delete();
+
+        return back()->with('success', "Пользователь '{$user->name}' удалён. Его можно восстановить из списка пользователей.");
+    }
+
+    public function restore(Request $request, int $user)
+    {
+        $restoredUser = User::withTrashed()->findOrFail($user);
+
+        if (! $restoredUser->trashed()) {
+            return back()->with('error', "Пользователь '{$restoredUser->name}' не удалён.");
+        }
+
+        $restoredUser->restore();
+
+        if (! $restoredUser->hasAnyRole(['admin', 'user'])) {
+            $restoredUser->assignRole('user');
+        }
+
+        return back()->with('success', "Пользователь '{$restoredUser->name}' восстановлен.");
+    }
+
+    private function assignDefaultUserRoleToUsersWithoutRoles(): void
+    {
+        $userRole = Role::firstOrCreate([
+            'name' => 'user',
+            'guard_name' => 'web',
+        ]);
+
+        User::whereDoesntHave('roles')
+            ->get()
+            ->each(fn (User $user) => $user->assignRole($userRole));
     }
 }

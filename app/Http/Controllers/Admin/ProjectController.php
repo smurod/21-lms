@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Jobs\CreateGitlabProjectJob;
 use App\Models\Admin\Project;
 use App\Services\GitlabCacheService;
 use App\Services\GitlabService;
@@ -77,37 +76,48 @@ class ProjectController extends Controller
         $data['is_published'] = $request->boolean('is_published');
         $data['is_mandatory'] = $request->boolean('is_mandatory');
         $data['has_automated_tests'] = $request->boolean('has_automated_tests');
-        $data['requires_peer_review'] = $request->boolean('requires_peer_review', true); // default true
+        $data['requires_peer_review'] = $request->boolean('requires_peer_review', true);
 
-        $defaultBranch = 'main';
+        $data['xp_reward'] = $data['xp_reward'] ?? 100;
+        $data['passing_score'] = $data['passing_score'] ?? 70;
+        $data['required_reviews_count'] = $data['required_reviews_count'] ?? 2;
+        $data['default_branch'] = 'main';
+        $data['created_by'] = $request->user()?->id;
 
-        $project = Project::create([
-            ...$data,
-            'xp_reward' => $data['xp_reward'] ?? 100,
-            'passing_score' => $data['passing_score'] ?? 70,
-            'required_reviews_count' => $data['required_reviews_count'] ?? 2,
-            'gitlab_project_id' => null,
-            'repository_url' => null,
-            'default_branch' => $defaultBranch,
-            'gitlab_sync_status' => 'pending',
-            'is_published' => $data['is_published'],
-            'is_mandatory' => $data['is_mandatory'],
-            'has_automated_tests' => $data['has_automated_tests'],
-            'requires_peer_review' => $data['requires_peer_review'],
-        ]);
+        try {
+            // Admin create is synchronous: DB and GitLab must stay in sync.
+            $gitlabProject = $gitlab->createProjectWithConfig(
+                name: $data['title'],
+                path: $data['slug'],
+                description: $data['description'],
+                defaultBranch: $data['default_branch'],
+                visibility: config('services.gitlab.visibility', 'private'),
+                initializeWithReadme: true,
+            );
 
-        // Dispatch async job to create GitLab project
-        dispatch(new CreateGitlabProjectJob(
-            name: $data['title'],
-            path: $data['slug'],
-            description: $data['description'],
-            defaultBranch: $defaultBranch,
-            visibility: config('services.gitlab.visibility', 'public'),
-            projectId: $project->id,
-        ));
+            $gitlab->syncProjectReadme(
+                projectId: $gitlabProject['id'],
+                projectData: $data,
+                branch: $gitlabProject['default_branch'] ?? $data['default_branch']
+            );
 
-        return redirect()->route('admin.projects.index')
-            ->with('success', "Project '{$project->title}' created — GitLab repo will be created in background.");
+            $project = Project::create([
+                ...$data,
+                'gitlab_project_id' => $gitlabProject['id'],
+                'repository_url' => $gitlabProject['web_url'],
+                'default_branch' => $gitlabProject['default_branch'] ?? $data['default_branch'],
+                'gitlab_sync_status' => 'synced',
+            ]);
+
+            $gitlabCache->invalidateProject($project->gitlab_project_id);
+
+            return redirect()->route('admin.projects.index')
+                ->with('success', "Project '{$project->title}' created and synced with GitLab.");
+        } catch (\RuntimeException $e) {
+            return back()
+                ->withInput()
+                ->withErrors(['gitlab' => 'GitLab error: ' . $e->getMessage()]);
+        }
     }
 
     public function edit(Project $project)
@@ -143,42 +153,55 @@ class ProjectController extends Controller
         $data['is_mandatory'] = $request->boolean('is_mandatory');
         $data['has_automated_tests'] = $request->boolean('has_automated_tests');
         $data['requires_peer_review'] = $request->boolean('requires_peer_review');
+        $data['xp_reward'] = $data['xp_reward'] ?? 100;
+        $data['passing_score'] = $data['passing_score'] ?? 70;
+        $data['required_reviews_count'] = $data['required_reviews_count'] ?? 2;
 
         try {
-            // Verify GitLab connectivity — non-blocking, just a warning
+            $defaultBranch = $project->default_branch ?: 'main';
+            $gitlabProject = null;
+
             if ($project->gitlab_project_id) {
-                try {
-                    $gitlab->getProjectById($project->gitlab_project_id);
-                } catch (\RuntimeException $e) {
-                    \Log::warning('GitLab project unreachable', [
-                        'project_id' => $project->gitlab_project_id,
-                        'error' => $e->getMessage(),
-                    ]);
-                }
+                $gitlabProject = $gitlab->updateProject(
+                    id: $project->gitlab_project_id,
+                    name: $data['title'],
+                    path: $data['slug'],
+                    description: $data['description'],
+                    visibility: config('services.gitlab.visibility', 'private'),
+                );
+            } else {
+                // Legacy local project: create missing GitLab repository during update.
+                $gitlabProject = $gitlab->createProjectWithConfig(
+                    name: $data['title'],
+                    path: $data['slug'],
+                    description: $data['description'],
+                    defaultBranch: $defaultBranch,
+                    visibility: config('services.gitlab.visibility', 'private'),
+                    initializeWithReadme: true,
+                );
             }
 
-            // Sync GitLab repo name + visibility with local project
-            if ($project->gitlab_project_id) {
-                try {
-                    $gitlab->updateProject(
-                        id: $project->gitlab_project_id,
-                        name: $data['title'],
-                        visibility: 'private',
-                    );
-                    $gitlabCache->invalidateProject($project->gitlab_project_id);
-                } catch (\RuntimeException $e) {
-                    \Log::warning('Failed to sync GitLab project on update', [
-                        'project_id' => $project->gitlab_project_id,
-                        'error' => $e->getMessage(),
-                    ]);
-                }
-            }
+            $gitlab->syncProjectReadme(
+                projectId: $gitlabProject['id'],
+                projectData: [...$project->toArray(), ...$data],
+                branch: $gitlabProject['default_branch'] ?? $defaultBranch
+            );
 
-            $project->update($data);
+            $project->update([
+                ...$data,
+                'gitlab_project_id' => $gitlabProject['id'],
+                'repository_url' => $gitlabProject['web_url'] ?? $project->repository_url,
+                'default_branch' => $gitlabProject['default_branch'] ?? $defaultBranch,
+                'gitlab_sync_status' => 'synced',
+            ]);
+
+            $gitlabCache->invalidateProject($project->gitlab_project_id);
 
             return redirect()->route('admin.projects.index')
-                ->with('success', "Project '{$project->title}' updated.");
+                ->with('success', "Project '{$project->title}' updated and synced with GitLab.");
         } catch (\RuntimeException $e) {
+            $project->update(['gitlab_sync_status' => 'failed']);
+
             return back()
                 ->withInput()
                 ->withErrors(['gitlab' => 'GitLab error: ' . $e->getMessage()]);
@@ -190,23 +213,23 @@ class ProjectController extends Controller
         $name = $project->title;
         $gitlabProjectId = $project->gitlab_project_id;
 
-        // Try to delete the GitLab repository first
-        if ($gitlabProjectId) {
-            try {
-                $gitlab->deleteProject($gitlabProjectId);
-                $gitlabCache->invalidateProject($gitlabProjectId);
-            } catch (\RuntimeException $e) {
-                // Log but don't block deletion
-                \Log::warning('Failed to delete GitLab project', [
-                    'project_id' => $gitlabProjectId,
-                    'error' => $e->getMessage(),
-                ]);
+        try {
+            // Delete in GitLab first. If GitLab deletion fails, keep the local
+            // project so the admin can retry and DB/GitLab do not diverge.
+            if ($gitlabProjectId && ! $gitlab->deleteProject($gitlabProjectId)) {
+                throw new \RuntimeException('GitLab project deletion failed.');
             }
+
+            $project->delete();
+
+            if ($gitlabProjectId) {
+                $gitlabCache->invalidateProject($gitlabProjectId);
+            }
+
+            return redirect()->route('admin.projects.index')
+                ->with('success', "Project '{$name}' deleted in LMS and GitLab.");
+        } catch (\RuntimeException $e) {
+            return back()->withErrors(['gitlab' => 'GitLab error: ' . $e->getMessage()]);
         }
-
-        $project->delete();
-
-        return redirect()->route('admin.projects.index')
-            ->with('success', "Project '{$name}' deleted.");
     }
 }

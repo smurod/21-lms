@@ -16,11 +16,13 @@
         <nav class="main-nav">
             <a href="{{ route('public.home') }}" class="@yield('nav-dashboard')">Dashboard</a>
             <a href="{{ route('public.calendar') }}" class="@yield('nav-calendar')">Calendar</a>
-            {{-- Progress / Profile link removed --}}
-            {{-- <a href="{{ route('public.progress') }}">Progress</a> --}}
+            <a href="{{ route('public.progress') }}" class="@yield('nav-progress')">Progress</a>
             <a href="{{ route('public.projects.index') }}" class="projects-nav-toggle @yield('nav-projects')">Projects</a>
             <a href="{{ route('public.activities') }}" class="activities-toggle @yield('nav-activities')">Activities</a>
             <a href="{{ route('public.more') }}">More</a>
+            @if(auth()->check() && auth()->user()->hasRole('admin'))
+                <a href="{{ route('admin.dashboard') }}">Админка</a>
+            @endif
         </nav>
 
         <div class="header-tools">

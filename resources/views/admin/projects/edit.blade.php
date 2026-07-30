@@ -23,7 +23,7 @@
             </div>
         </div>
 
-        <form method="POST" action="{{ route('admin.projects.update', $project ?? 1) }}" @submit="submit" class="space-y-6">
+        <form method="POST" action="{{ route('admin.projects.update', $project->id ?? 1) }}" @submit="submit" class="space-y-6">
             @csrf
             @method('PUT')
 

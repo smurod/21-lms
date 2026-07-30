@@ -8,12 +8,14 @@ use Illuminate\Support\Facades\Http;
 class GitlabHealthService
 {
     protected string $baseUrl;
-    protected string $token;
+    protected ?string $token;
 
     public function __construct()
     {
-        $this->baseUrl = rtrim(config('services.gitlab.url'), '/') . '/api/v4';
-        $this->token = config('services.gitlab.token');
+        $url = config('services.gitlab.internal_url') ?: config('services.gitlab.url');
+
+        $this->baseUrl = rtrim((string) $url, '/') . '/api/v4';
+        $this->token = config('services.gitlab.admin_token') ?: config('services.gitlab.token');
     }
 
     /**
@@ -30,6 +32,11 @@ class GitlabHealthService
 
         if ($cached !== null) {
             return (bool) $cached;
+        }
+
+        if (!$this->token || $this->baseUrl === '/api/v4') {
+            rescue(fn () => Cache::put($cacheKey, false, 300), null, false);
+            return false;
         }
 
         try {

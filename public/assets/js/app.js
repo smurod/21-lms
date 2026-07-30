@@ -586,10 +586,46 @@ function escapeHtml(text) {
         el.setAttribute("aria-hidden", "true");
     }
 
+    function localDateString(date) {
+        return date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0");
+    }
+
+    function updateCurrentTimeLine() {
+        var line = document.getElementById("calendarNowLine");
+        var gridEl = document.getElementById("calendarGrid");
+        if (!line || !gridEl) return;
+
+        var now = new Date();
+        var today = localDateString(now);
+        var hourTime = String(now.getHours()).padStart(2, "0") + ":00";
+        var cell = gridEl.querySelector('.grid-cell[data-date="' + today + '"][data-time="' + hourTime + '"]');
+
+        if (!cell) {
+            line.hidden = true;
+            return;
+        }
+
+        var fraction = (now.getMinutes() * 60 + now.getSeconds()) / 3600;
+        var top = cell.offsetTop + cell.offsetHeight * fraction;
+        var left = cell.offsetLeft;
+        var width = gridEl.scrollWidth - left;
+        var dotLeft = cell.offsetLeft + cell.offsetWidth / 2 - left;
+
+        line.style.top = top + "px";
+        line.style.left = left + "px";
+        line.style.width = width + "px";
+        line.style.setProperty("--now-dot-left", dotLeft + "px");
+        line.hidden = false;
+    }
+
+    updateCurrentTimeLine();
+    setInterval(updateCurrentTimeLine, 30000);
+
     /* ---- modal refs ---- */
     var createBackdrop = document.getElementById("calendarModalBackdrop");
     var slotInfoBackdrop = document.getElementById("calendarSlotInfoBackdrop");
     var cancelBackdrop = document.getElementById("calendarCancelBackdrop");
+    var bookBackdrop = document.getElementById("calendarBookBackdrop");
     var eventBackdrop  = document.getElementById("calendarEventBackdrop");
 
     var modalTitle = document.getElementById("calendarModalTitle");
@@ -604,6 +640,7 @@ function escapeHtml(text) {
         [createBackdrop, "calendarModalClose", null],
         [slotInfoBackdrop, "calendarSlotInfoClose", null],
         [cancelBackdrop, "calendarCancelClose", "calendarCancelKeep"],
+        [bookBackdrop, "calendarBookClose", "calendarBookKeep"],
         [eventBackdrop, "calendarEventClose", null],
     ].forEach(function (cfg) {
         var backdrop = cfg[0];
@@ -619,7 +656,7 @@ function escapeHtml(text) {
 
     document.addEventListener("keydown", function (e) {
         if (e.key !== "Escape") return;
-        [createBackdrop, slotInfoBackdrop, cancelBackdrop, eventBackdrop].forEach(function (b) {
+        [createBackdrop, slotInfoBackdrop, cancelBackdrop, bookBackdrop, eventBackdrop].forEach(function (b) {
             if (b && !b.hidden) closeBackdrop(b);
         });
     });
@@ -640,23 +677,36 @@ function escapeHtml(text) {
     var grid = document.getElementById("calendarGrid");
     if (grid) {
         grid.addEventListener("click", function (e) {
-            var cell = e.target.closest(".grid-cell");
+            var cell = e.target.closest(".cell-segment") || e.target.closest(".grid-cell");
             if (!cell) return;
 
             var date = cell.dataset.date;
             var time = cell.dataset.time;
             var when = formatDate(date) + ", " + time;
 
-            /* my own slot (cancellable, >24h left) -> cancel confirmation.
-               If the system already booked it, show WHO it was booked for. */
+            /* free public slot -> manual booking confirmation */
+            if (cell.dataset.bookAction && bookBackdrop) {
+                var bookForm = document.getElementById("calendarBookForm");
+                if (bookForm) bookForm.setAttribute("action", cell.dataset.bookAction);
+                var bookTime = document.getElementById("calendarBookTime");
+                if (bookTime) bookTime.textContent = when;
+                openBackdrop(bookBackdrop);
+                return;
+            }
+
+            /* cancellable slot/booking (>30 minutes left) -> confirmation */
             if (cell.dataset.cancelAction && cancelBackdrop) {
                 var cancelForm = document.getElementById("calendarCancelForm");
                 if (cancelForm) cancelForm.setAttribute("action", cell.dataset.cancelAction);
                 var cancelTime = document.getElementById("calendarCancelTime");
                 if (cancelTime) {
-                    cancelTime.textContent = when + (cell.dataset.bookedBy
-                        ? " \u2014 booked by the system for " + cell.dataset.bookedBy
-                        : "");
+                    cancelTime.textContent = when + (cell.dataset.cancelBooking ? " — cancel your booking" : "");
+                }
+                var cancelNote = document.getElementById("calendarCancelNote");
+                if (cancelNote) {
+                    cancelNote.textContent = cell.dataset.cancelBooking
+                        ? "Your booking will be cancelled and the slot will become available again in the public calendar. Your project will return to the review queue."
+                        : "The slot will be removed from your schedule. If it was booked, the assigned project will return to the review queue.";
                 }
                 openBackdrop(cancelBackdrop);
                 return;
@@ -670,9 +720,9 @@ function escapeHtml(text) {
                 var infoNote = document.getElementById("calendarSlotInfoNote");
                 if (infoNote) {
                     var notes = [];
-                    if (cell.dataset.bookedBy) notes.push("Booked by the system for: " + cell.dataset.bookedBy + ".");
-                    if (cell.dataset.cancelLocked) notes.push("Cannot be cancelled less than 24 hours before it starts.");
-                    infoNote.textContent = notes.join(" ") || "Your Peer Review slot.";
+                    if (cell.classList.contains("cell-booked")) notes.push("This slot is booked for a peer review.");
+                    if (cell.dataset.cancelLocked) notes.push("Cannot be cancelled less than 30 minutes before it starts.");
+                    infoNote.textContent = notes.join(" ") || "Peer Review slot.";
                 }
                 openBackdrop(slotInfoBackdrop);
                 return;
@@ -717,14 +767,14 @@ function escapeHtml(text) {
             var slotFrom = document.getElementById("slotFrom");
             if (slotFrom) slotFrom.value = time;
             var slotTo = document.getElementById("slotTo");
-            if (slotTo) slotTo.value = addMinutes(time, 15);
+            if (slotTo) slotTo.value = addMinutes(time, 30);
 
             var eventDate = document.getElementById("eventDate");
             if (eventDate) eventDate.value = date;
             var eventStart = document.getElementById("eventStart");
             if (eventStart) eventStart.value = time;
             var eventEnd = document.getElementById("eventEnd");
-            if (eventEnd) eventEnd.value = addMinutes(time, 15);
+            if (eventEnd) eventEnd.value = addMinutes(time, 30);
 
             setMode("slot");
             openBackdrop(createBackdrop);
@@ -1670,6 +1720,7 @@ function init() {
     initAuthPages();
     initGitlabPage();
     initProfileDropdowns();
+    initReviewCountdowns();
 }
 
 /* Profile "Weekly/Monthly" dropdown: functional period toggle */
@@ -2573,12 +2624,19 @@ function initAuthPages() {
             err.classList.remove("show");
             err.textContent = "";
 
-            // AJAX login to API endpoint (no CSRF needed for API)
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content
+                || document.querySelector('input[name="_token"]')?.value
+                || '';
+
+            // AJAX login uses the web session, so Laravel CSRF token is required.
             fetch('/api/auth/login', {
                 method: 'POST',
+                credentials: 'same-origin',
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
                 },
                 body: JSON.stringify({
                     email: email,
@@ -2610,18 +2668,29 @@ function initAuthPages() {
         registerForm.addEventListener("submit", function (e) {
             e.preventDefault();
             var name = document.getElementById("regName").value.trim();
+            var username = document.getElementById("regUsername") ? document.getElementById("regUsername").value.trim() : "";
             var email = document.getElementById("regEmail").value.trim();
             var p1 = document.getElementById("regPassword").value;
             var p2 = document.getElementById("regPassword2").value;
             var err = document.getElementById("registerError");
 
             var msg = "";
-            if (!name || !email || !p1 || !p2) {
+            if (!name || !username || !email || !p1 || !p2) {
                 msg = "Please fill in all fields.";
+            } else if (!/^[A-Za-z0-9_][A-Za-z0-9_.-]*$/.test(username)) {
+                msg = "Username may contain letters, numbers, underscore, dot and dash.";
+            } else if (["admin", "api", "assets", "dashboard", "explore", "groups", "help", "import", "profile", "projects", "root", "search", "users"].includes(username.toLowerCase())) {
+                msg = "This username is reserved by GitLab. Choose another username, for example lms-admin or your own login.";
             } else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
                 msg = "Please enter a valid email address.";
             } else if (p1.length < 8) {
                 msg = "Password must be at least 8 characters long.";
+            } else if (!/[A-Za-z]/.test(p1) || !/[0-9]/.test(p1)) {
+                msg = "Password must contain at least one latin letter and one number. Example: school21.";
+            } else if (["00000000", "11111111", "22222222", "12121212", "12345678", "87654321", "12341234", "abcd1234", "a1234567", "gitlab21", "a1b2c3d4"].includes(p1.toLowerCase())) {
+                msg = "Password is too common for GitLab. Example of accepted password: school21.";
+            } else if ([username, email.split("@")[0]].concat(name.split(/[^A-Za-z0-9]+/)).filter(function (token) { return token && token.length >= 4; }).some(function (token) { return p1.toLowerCase().includes(token.toLowerCase()); })) {
+                msg = "Password must not contain your username, email login or name. Example: school21.";
             } else if (p1 !== p2) {
                 msg = "Passwords do not match.";
             }
@@ -2634,15 +2703,23 @@ function initAuthPages() {
             err.classList.remove("show");
             err.textContent = "";
 
-            // AJAX register
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content
+                || document.querySelector('input[name="_token"]')?.value
+                || '';
+
+            // AJAX register uses the web session, so Laravel CSRF token is required.
             fetch('/api/auth/register', {
                 method: 'POST',
+                credentials: 'same-origin',
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
                 },
                 body: JSON.stringify({
                     name: name,
+                    username: username,
                     email: email,
                     password: p1,
                     password_confirmation: p2,
@@ -2693,3 +2770,49 @@ function initGitlabPage() {
     }
 }
 
+
+/* ========================================
+   Reviews countdown: UI-only live timer until scheduled review start
+   ======================================== */
+function initReviewCountdowns() {
+    const nodes = document.querySelectorAll('.review-countdown[data-starts-at]');
+    if (!nodes.length) return;
+
+    function formatLeft(ms) {
+        if (ms <= 0) return 'можно открыть сейчас';
+        const totalSeconds = Math.ceil(ms / 1000);
+        const days = Math.floor(totalSeconds / 86400);
+        const hours = Math.floor((totalSeconds % 86400) / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+        const parts = [];
+        if (days) parts.push(days + 'д');
+        if (hours || days) parts.push(hours + 'ч');
+        parts.push(minutes + 'м');
+        if (!days && !hours) parts.push(seconds + 'с');
+        return parts.join(' ');
+    }
+
+    function tick() {
+        const now = Date.now();
+        nodes.forEach((node) => {
+            const startsAt = Date.parse(node.dataset.startsAt);
+            if (!startsAt) return;
+            const left = startsAt - now;
+            const strong = node.querySelector('strong');
+            if (strong) strong.textContent = formatLeft(left);
+            if (left <= 0) {
+                node.classList.add('is-ready');
+                node.hidden = true;
+                const readyActions = node.parentElement?.querySelector('.review-actions-ready');
+                if (readyActions) {
+                    readyActions.hidden = false;
+                    readyActions.classList.add('is-visible');
+                }
+            }
+        });
+    }
+
+    tick();
+    setInterval(tick, 1000);
+}

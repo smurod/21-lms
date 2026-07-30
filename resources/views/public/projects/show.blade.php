@@ -34,11 +34,21 @@
         else                  { $pillClass = 'prj-pill-open';     $pillText = 'Запись открыта'; }
 
         /* Active view: task becomes available once enrolled */
-        $activeView = request('view', $isWorking || $isInReview ? 'task' : 'about');
-        if ($activeView === 'task' && !($isWorking || $isInReview)) $activeView = 'about';
+        $activeView = request('view', $isWorking || $isInReview || $isFailed ? 'task' : 'about');
+        if ($activeView === 'task' && !($isWorking || $isInReview || $isFailed)) $activeView = 'about';
 
-        $repoUrl = $gitlabProject['web_url'] ?? $project->repository_url;
-        $cloneUrl = $gitlabProject['ssh_url_to_repo'] ?? ($gitlabProject['http_url_to_repo'] ?? $repoUrl);
+        $templateRepoUrl = $gitlabProject['web_url'] ?? $project->repository_url;
+        $templateCloneUrl = $gitlabProject['ssh_url_to_repo'] ?? ($gitlabProject['http_url_to_repo'] ?? $templateRepoUrl);
+
+        // Once the user is enrolled, show the personal repository created/forked
+        // for this submission, not the administrator/template repository.
+        $studentRepoUrl = $activeSubmission?->git_url ?: $completedSubmission?->git_url;
+        $repoUrl = $studentRepoUrl ?: $templateRepoUrl;
+        $cloneUrl = $studentRepoUrl ?: $templateCloneUrl;
+        $openRepoUrl = $repoUrl && str_ends_with($repoUrl, '.git') ? substr($repoUrl, 0, -4) : $repoUrl;
+        $displayRepoName = $studentRepoUrl
+            ? basename(parse_url($openRepoUrl, PHP_URL_PATH) ?: $project->slug)
+            : ($gitlabProject['path'] ?? $project->slug);
 
         /* General skills — derived server-side from project data */
         $xp = max(1, (int) $project->xp_reward);
@@ -109,15 +119,21 @@
                     @else
                         @auth
                             @if (!$activeSubmission)
-                                {{-- Native form → SubscriptionController (creates submission + GitLab branch) --}}
-                                <form method="POST" action="{{ route('public.projects.subscribe', $project) }}">
-                                    @csrf
-                                    <button class="pd-subscribe" type="submit">
-                                        {{ $completedSubmission ? 'Записаться снова' : 'Записаться' }}
-                                    </button>
-                                </form>
-                                @if ($completedSubmission)
-                                    <div class="pd-subscribe-note">Попытка №{{ $completedSubmission->attempt_number + 1 }}</div>
+                                @if($isPassed)
+                                    <button class="pd-subscribe subscribed" type="button" disabled>Пройден</button>
+                                    <div class="pd-subscribe-note">Итоговый результат: {{ $completedSubmission->final_score ?? $completedSubmission->review_score }}%</div>
+                                @else
+                                    {{-- Native form → SubscriptionController. First enrollment creates/forks repo;
+                                         failed retry reuses the same repo and creates a new attempt. --}}
+                                    <form method="POST" action="{{ route('public.projects.subscribe', $project) }}">
+                                        @csrf
+                                        <button class="pd-subscribe" type="submit">
+                                            {{ $isFailed ? 'Переделать' : 'Записаться' }}
+                                        </button>
+                                    </form>
+                                    @if ($isFailed)
+                                        <div class="pd-subscribe-note">Попытка №{{ $completedSubmission->attempt_number + 1 }} — исправьте ошибки в том же GitLab repo</div>
+                                    @endif
                                 @endif
                             @elseif ($isWorking)
                                 {{-- Submit for review → CalendarController@submitProjectForReview (BookingService FIFO) --}}
@@ -145,7 +161,7 @@
             <div class="pd-tabs">
                 <a class="pd-tab {{ $activeView === 'about' ? 'active' : '' }}"
                    href="{{ route('public.projects.show', $project) }}?view=about">About</a>
-                @if ($isWorking || $isInReview)
+                @if ($isWorking || $isInReview || $isFailed)
                     <a class="pd-tab {{ $activeView === 'task' ? 'active' : '' }}"
                        href="{{ route('public.projects.show', $project) }}?view=task">Task</a>
                 @else
@@ -335,8 +351,8 @@
                         <div class="pd-git-row">
                             <span class="pd-git-url" title="{{ $cloneUrl }}">{{ \Illuminate\Support\Str::limit($cloneUrl, 64) }}</span>
                             <button class="pd-git-copy" type="button" data-copy-text="{{ $cloneUrl }}">Copy link</button>
-                            @if ($repoUrl)
-                                <a class="pd-git-open" href="{{ $repoUrl }}" target="_blank" rel="noopener">Open</a>
+                            @if ($openRepoUrl)
+                                <a class="pd-git-open" href="{{ $openRepoUrl }}" target="_blank" rel="noopener">Open</a>
                             @endif
                         </div>
                         @auth
@@ -365,6 +381,12 @@
                                 <input type="hidden" name="submission_id" value="{{ $activeSubmission->id }}" />
                                 <button class="pd-finish-btn" type="submit">Finish project</button>
                             </form>
+                        @elseif($isFailed)
+                            <form method="POST" action="{{ route('public.projects.subscribe', $project) }}">
+                                @csrf
+                                <button class="pd-finish-btn" type="submit">Переделать</button>
+                            </form>
+                            <p class="pd-about-text">Исправьте ошибки в этом же репозитории и начните новую попытку без нового fork.</p>
                         @else
                             <button class="pd-finish-btn" type="button" disabled>Ожидает review</button>
                         @endif
@@ -372,7 +394,7 @@
 
                     <div class="pd-repo-card">
                         <div class="pd-repo-label">Git project</div>
-                        <div class="pd-repo-name">{{ $gitlabProject['path'] ?? $project->slug }}</div>
+                        <div class="pd-repo-name">{{ $displayRepoName }}</div>
                     </div>
                 </aside>
             </section>

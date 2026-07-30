@@ -3,6 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\Admin\Project;
+use App\Models\Admin\ReviewChecklist;
+use App\Models\User;
 use App\Services\GitlabService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Log;
@@ -31,6 +33,13 @@ class ProjectSeeder extends Seeder
 {
     public function run(GitlabService $gitlab): void
     {
+        $admin = User::where('email', 'admin@gmail.com')->first();
+
+        // Development reset: GitLab is the project source mirror, so remove
+        // all visible GitLab projects before recreating the LMS seed set.
+        $gitlab->deleteAllProjects();
+        Project::query()->delete();
+
         $projects = [
             [
                 'title' => 'SimpleBashUtils',
@@ -156,37 +165,10 @@ class ProjectSeeder extends Seeder
 
         foreach ($projects as $index => $data) {
             $slug = Str::slug($data['slug'] ?? $data['title']);
+            $gitlabName = $this->transliterate($data['title']);
+            $defaultBranch = 'main';
 
-            // Skip if already exists — seeder is idempotent
-            if (Project::where('slug', $slug)->exists()) {
-                Log::info("Project '{$data['title']}' already exists, skipping.");
-                continue;
-            }
-
-            // Try to create in GitLab; if it already exists, find it
-            $gitlabProject = null;
-            try {
-                $gitlabName = $this->transliterate($data['title']);
-                $gitlabProject = $gitlab->createProjectWithConfig(
-                    name: $gitlabName,
-                    path: $slug,
-                    description: $data['description'],
-                    defaultBranch: 'main',
-                );
-            } catch (\RuntimeException $e) {
-                Log::warning("Failed to create GitLab project '{$data['title']}': " . $e->getMessage());
-                // Try to find existing project in GitLab by path
-                $allProjects = $gitlab->getProjects();
-                $gitlabProject = collect($allProjects)->firstWhere('path', $slug);
-            }
-
-            if (!$gitlabProject) {
-                Log::error("Could not find or create GitLab project '{$data['title']}' with path '{$slug}'.");
-                continue;
-            }
-
-            // Create in DB (link to existing or newly created GitLab project)
-            Project::create([
+            $projectData = [
                 'title' => $data['title'],
                 'slug' => $slug,
                 'description' => $data['description'],
@@ -201,7 +183,7 @@ class ProjectSeeder extends Seeder
                 'language' => $data['language'],
                 'language_version' => null,
                 'submission_type' => 'git',
-                'allowed_file_extensions' => json_encode($this->getFileExtensions($data['language'])),
+                'allowed_file_extensions' => $this->getFileExtensions($data['language']),
                 'max_file_size_mb' => 10,
                 'has_automated_tests' => true,
                 'test_file_path' => null,
@@ -213,17 +195,144 @@ class ProjectSeeder extends Seeder
                 'required_reviews_count' => 2,
                 'is_published' => true,
                 'is_mandatory' => $index < 5, // C-core (первые 5) — обязательные
-                'tags' => json_encode([$data['language'], $data['difficulty'], 'school21']),
+                'tags' => [$data['language'], $data['difficulty'], 'school21'],
                 'learning_outcomes' => null,
-                'created_by' => null,
-                'gitlab_project_id' => $gitlabProject['id'],
-                'repository_url' => $gitlabProject['web_url'],
-                'default_branch' => $gitlabProject['default_branch'] ?? 'main',
+                'created_by' => $admin?->id,
+                'default_branch' => $defaultBranch,
                 'runtime' => ['command' => $this->getDefaultCommand($data['language']), 'timeout' => 30],
+            ];
+
+            $gitlabProject = null;
+
+            try {
+                $gitlabProject = $gitlab->createProjectWithConfig(
+                    name: $gitlabName,
+                    path: $slug,
+                    description: $data['description'],
+                    defaultBranch: $defaultBranch,
+                    visibility: config('services.gitlab.visibility', 'private'),
+                    initializeWithReadme: true,
+                );
+            } catch (\RuntimeException $e) {
+                Log::warning("Failed to create GitLab project '{$data['title']}': " . $e->getMessage());
+                $gitlabProject = collect($gitlab->getProjects())->firstWhere('path', $slug);
+            }
+
+            if (!$gitlabProject) {
+                Log::error("Could not find or create GitLab project '{$data['title']}' with path '{$slug}'.");
+                continue;
+            }
+
+            $gitlab->syncProjectReadme(
+                projectId: $gitlabProject['id'],
+                projectData: $projectData,
+                branch: $gitlabProject['default_branch'] ?? $defaultBranch,
+            );
+
+            $project = Project::create([
+                ...$projectData,
+                'gitlab_project_id' => $gitlabProject['id'],
+                'gitlab_sync_status' => 'synced',
+                'repository_url' => $gitlabProject['web_url'],
+                'default_branch' => $gitlabProject['default_branch'] ?? $defaultBranch,
             ]);
 
-            Log::info("Seeded project '{$data['title']}' in DB (GitLab ID: {$gitlabProject['id']}).");
+            $this->seedReviewChecklist($project, $data);
+
+            Log::info("Seeded project '{$data['title']}' from admin account in DB and GitLab (GitLab ID: {$gitlabProject['id']}).");
         }
+    }
+
+    private function seedReviewChecklist(Project $project, array $data): void
+    {
+        $items = $this->checklistForProject($data['slug'] ?? $project->slug, $data['language'] ?? 'c');
+
+        foreach ($items as $index => $item) {
+            ReviewChecklist::updateOrCreate(
+                [
+                    'project_id' => $project->id,
+                    'item_key' => $item['item_key'],
+                ],
+                [
+                    'item_label' => $item['item_label'],
+                    'description' => $item['description'],
+                    'weight' => $item['weight'] ?? 1,
+                    'is_required' => $item['is_required'] ?? true,
+                    'order_position' => $index + 1,
+                ]
+            );
+        }
+    }
+
+    private function checklistForProject(string $slug, string $language): array
+    {
+        $common = [
+            ['item_key' => 'repo_structure', 'item_label' => 'Структура репозитория', 'description' => 'В репозитории есть требуемые папки/файлы исходного кода, нет сгенерированных бинарников и лишних файлов.', 'weight' => 1],
+            ['item_key' => 'build_instructions', 'item_label' => 'Сборка и инструкции', 'description' => 'Проект собирается так, как описано в README/задании. Makefile или build script присутствует, если он требуется.', 'weight' => 1],
+            ['item_key' => 'no_crashes', 'item_label' => 'Нет падений на базовых сценариях', 'description' => 'Программа/библиотека обрабатывает обычные входные данные без segfault, необработанных исключений и бесконечных циклов.', 'weight' => 2],
+            ['item_key' => 'memory_safety', 'item_label' => 'Память и ресурсы', 'description' => 'На проверенных сценариях нет очевидных утечек памяти, double free, invalid read/write и утечек ресурсов.', 'weight' => 2],
+            ['item_key' => 'code_style', 'item_label' => 'Стиль и читаемость кода', 'description' => 'Код читаемый, разбит на функции/классы, использует понятные имена и единый стиль форматирования.', 'weight' => 1],
+            ['item_key' => 'tests_or_manual_checks', 'item_label' => 'Тесты или ручные проверки', 'description' => 'Студент предоставил тесты или понятные шаги ручной проверки реализованной функциональности.', 'weight' => 1],
+        ];
+
+        $bySlug = [
+            'simple-bash-utils' => [
+                ['item_key' => 'cat_flags', 'item_label' => 'Флаги s21_cat', 'description' => 's21_cat поддерживает требуемые флаги и комбинации; вывод совпадает с GNU cat на репрезентативных файлах.', 'weight' => 2],
+                ['item_key' => 'grep_flags', 'item_label' => 'Флаги s21_grep', 'description' => 's21_grep поддерживает требуемые флаги/комбинации, regex-паттерны, несколько файлов и ошибочные сценарии.', 'weight' => 2],
+                ['item_key' => 'gnu_compare', 'item_label' => 'Сравнение с GNU-утилитами', 'description' => 'Reviewer сравнил вывод побайтово с оригинальными cat/grep на обычных и граничных сценариях.', 'weight' => 2],
+            ],
+            's21-stringplus' => [
+                ['item_key' => 'string_functions', 'item_label' => 'Функции string.h', 'description' => 'Требуемые string/memory функции совпадают с поведением стандартной библиотеки на обычных, граничных и null-like сценариях, где применимо.', 'weight' => 2],
+                ['item_key' => 'sprintf_behavior', 'item_label' => 'Поведение sprintf', 'description' => 's21_sprintf поддерживает требуемые спецификаторы, флаги, ширину, точность и length modifiers.', 'weight' => 2],
+                ['item_key' => 'library_api', 'item_label' => 'API библиотеки', 'description' => 'Заголовочные файлы, static library target и публичный API пригодны для внешних тестов.', 'weight' => 1],
+            ],
+            's21-math' => [
+                ['item_key' => 'math_accuracy', 'item_label' => 'Численная точность', 'description' => 'Функции совпадают с math.h в пределах допустимой точности на репрезентативных значениях.', 'weight' => 2],
+                ['item_key' => 'edge_values', 'item_label' => 'Граничные значения', 'description' => 'NAN, infinity, отрицательные/нулевые случаи и domain errors обрабатываются последовательно.', 'weight' => 2],
+                ['item_key' => 'no_std_math_inside', 'item_label' => 'Нет запрещённых shortcut-ов', 'description' => 'Реализация не вызывает напрямую запрещённые оригинальные math-функции для той же операции.', 'weight' => 1],
+            ],
+            's21-decimal' => [
+                ['item_key' => 'decimal_arithmetic', 'item_label' => 'Decimal-арифметика', 'description' => 'add/sub/mul/div/mod возвращают корректные значения и коды ошибок для обычных и overflow случаев.', 'weight' => 2],
+                ['item_key' => 'decimal_conversion', 'item_label' => 'Преобразования', 'description' => 'Преобразования int/float/decimal сохраняют scale/sign и обрабатывают некорректные входные данные.', 'weight' => 2],
+                ['item_key' => 'decimal_compare_round', 'item_label' => 'Сравнение и округление', 'description' => 'Функции сравнения и округления соответствуют decimal-семантике.', 'weight' => 1],
+            ],
+            's21-matrix' => [
+                ['item_key' => 'matrix_core_ops', 'item_label' => 'Базовые операции с матрицами', 'description' => 'Create/remove, equality, sum/subtract и умножение на число/матрицу работают корректно.', 'weight' => 2],
+                ['item_key' => 'matrix_advanced_ops', 'item_label' => 'Продвинутые операции', 'description' => 'Transpose, determinant, complements и inverse корректны для валидных матриц и отклоняют невалидные.', 'weight' => 2],
+                ['item_key' => 'matrix_memory', 'item_label' => 'Жизненный цикл памяти матриц', 'description' => 'Все выделенные матрицы освобождаются, error paths не дают утечек памяти.', 'weight' => 2],
+            ],
+            'smartcalc-v1' => [
+                ['item_key' => 'expression_parser', 'item_label' => 'Парсер выражений', 'description' => 'Парсер обрабатывает приоритеты, скобки, унарные операторы, функции и невалидные выражения.', 'weight' => 2],
+                ['item_key' => 'calculation_accuracy', 'item_label' => 'Точность вычислений', 'description' => 'Результаты совпадают с ожидаемыми для арифметических, тригонометрических и логарифмических выражений.', 'weight' => 2],
+                ['item_key' => 'mvc_gui', 'item_label' => 'MVC и GUI', 'description' => 'Бизнес-логика отделена от UI, GUI умеет считать и строить графики функций.', 'weight' => 1],
+            ],
+            'brickgame-v1-tetris' => [
+                ['item_key' => 'fsm_gameplay', 'item_label' => 'FSM и игровой процесс', 'description' => 'Состояния игры, движение, вращение, столкновения, очистка линий и game over работают корректно.', 'weight' => 2],
+                ['item_key' => 'score_levels', 'item_label' => 'Очки и уровни', 'description' => 'Подсчёт очков, уровни скорости и сохранение рекорда соответствуют требованиям.', 'weight' => 1],
+                ['item_key' => 'logic_ui_separation', 'item_label' => 'Разделение логики и UI', 'description' => 'Игровая логика находится в требуемой библиотеке/модуле, UI только отображает и собирает ввод.', 'weight' => 1],
+            ],
+            '3dviewer-v1' => [
+                ['item_key' => 'obj_parser', 'item_label' => 'OBJ-парсер', 'description' => 'Парсер корректно загружает vertices/faces и обрабатывает большие/невалидные файлы без падений.', 'weight' => 2],
+                ['item_key' => 'affine_transforms', 'item_label' => 'Аффинные преобразования', 'description' => 'Перемещение, вращение и масштабирование независимо работают по осям X/Y/Z.', 'weight' => 2],
+                ['item_key' => 'viewer_settings', 'item_label' => 'Настройки viewer-а', 'description' => 'Проекция, стиль рёбер/вершин, цвета и сохранение настроек работают по требованиям.', 'weight' => 1],
+            ],
+            's21-matrixplus' => [
+                ['item_key' => 'oop_contract', 'item_label' => 'OOP-контракт', 'description' => 'Конструкторы, деструктор, copy/move семантика и accessors реализованы корректно.', 'weight' => 2],
+                ['item_key' => 'operators', 'item_label' => 'Операторы', 'description' => 'Арифметические, assignment, comparison и index operators работают по спецификации.', 'weight' => 2],
+                ['item_key' => 'exceptions', 'item_label' => 'Исключения и границы', 'description' => 'Неверные размеры, singular inverse и ошибки индексов корректно выбрасывают/обрабатывают исключения.', 'weight' => 1],
+            ],
+            's21-containers' => [
+                ['item_key' => 'container_api', 'item_label' => 'API контейнеров', 'description' => 'Требуемые контейнеры предоставляют constructors, iterators, capacity и modifiers, совместимые с STL-семантикой.', 'weight' => 2],
+                ['item_key' => 'iterator_validity', 'item_label' => 'Поведение итераторов', 'description' => 'Итераторы корректно обходят контейнер, а modifier-операции сохраняют документированное поведение итераторов.', 'weight' => 2],
+                ['item_key' => 'template_quality', 'item_label' => 'Качество шаблонов', 'description' => 'Header-only template implementation компилируется для разных типов и не опирается на запрещённые STL-контейнеры.', 'weight' => 1],
+            ],
+        ];
+
+        $languageItems = $language === 'cpp'
+            ? [['item_key' => 'cpp_standard', 'item_label' => 'Соответствие стандарту C++', 'description' => 'Проект компилируется с требуемым стандартом C++ и warning flags.', 'weight' => 1]]
+            : [['item_key' => 'c_standard', 'item_label' => 'Соответствие стандарту C', 'description' => 'Проект компилируется с C11 и требуемыми warning flags, без предупреждений там, где это требуется.', 'weight' => 1]];
+
+        return array_merge($common, $languageItems, $bySlug[$slug] ?? []);
     }
 
     /**

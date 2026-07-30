@@ -49,6 +49,14 @@
             <i data-lucide="clipboard-check" class="w-5 h-5"></i>
             <span class="font-medium">Reviews</span>
         </a>
+
+        <a href="{{ config('services.gitlab.login_url') }}"
+           target="_blank"
+           rel="noopener noreferrer"
+           class="flex items-center gap-3 px-6 py-3.5 rounded-3xl mb-1 text-zinc-300 hover:bg-white/5 transition-colors duration-200">
+            <i data-lucide="gitlab" class="w-5 h-5"></i>
+            <span class="font-medium">GitLab Login</span>
+        </a>
     </nav>
 
     <div class="p-6 border-t border-white/10 text-xs text-zinc-500 flex items-center justify-between">

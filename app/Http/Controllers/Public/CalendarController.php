@@ -29,30 +29,38 @@ class CalendarController extends Controller
         $weekStart  = Carbon::today()->addWeeks($weekOffset);
         $weekEnd    = $weekStart->copy()->addDays(6);
 
-        /* PRIVACY: users see ONLY their own slots. Booking is done by the
-           system algorithm, so foreign slots are never shown or bookable. */
-        $slots = CalendarSlot::where('user_id', auth()->id())
+        /* Calendar visibility:
+           - available slots are visible to everyone, but duplicated slots with
+             the same interval are collapsed to one random Free slot;
+           - booked slots are visible only to the slot owner and the assigned
+             student; booked-by names are not exposed in the grid. */
+        $availableSlots = CalendarSlot::where('status', 'available')
             ->whereBetween('date', [$weekStart->toDateString(), $weekEnd->toDateString()])
-            ->whereIn('status', ['available', 'booked'])
+            ->with(['user', 'bookedBy'])
+            ->get()
+            ->groupBy(fn (CalendarSlot $slot) => implode('|', [
+                $slot->date->toDateString(),
+                substr($slot->start_time, 0, 5),
+                substr($slot->end_time, 0, 5),
+                $slot->project_id ?? 'any',
+            ]))
+            ->map(fn ($group) => $group->random())
+            ->values();
+
+        $bookedSlots = CalendarSlot::where('status', 'booked')
+            ->whereBetween('date', [$weekStart->toDateString(), $weekEnd->toDateString()])
+            ->where(function ($query) {
+                $query->where('user_id', auth()->id())
+                    ->orWhere('booked_by_user_id', auth()->id());
+            })
             ->with(['user', 'bookedBy'])
             ->get();
+
+        $slots = $availableSlots->merge($bookedSlots)->values();
 
         $events = CalendarEvent::whereBetween('date', [$weekStart->toDateString(), $weekEnd->toDateString()])
             ->where('status', 'published')
             ->with('user')
-            ->get();
-
-        /* School 21: events are team-up announcements. A user may create an
-           event ONLY for a project he is registered on. Registration lives in
-           `submissions` (User->hasMany(Admin\Submission)) — any status counts:
-           registered / in progress / passed. */
-        $registeredProjectIds = auth()->user()
-            ->submissions()
-            ->pluck('project_id')
-            ->unique();
-
-        $projects = \App\Models\Admin\Project::whereIn('id', $registeredProjectIds)
-            ->orderBy('title')
             ->get();
 
         return view('public.calendar', [
@@ -60,15 +68,16 @@ class CalendarController extends Controller
             'weekOffset'    => $weekOffset,
             'weekStart'     => $weekStart,
             'weekEnd'       => $weekEnd,
-            'slotStep'      => 15,
+            'slotStep'      => 60,
+            'formStep'      => 15,
             'slots'         => $slots,
             'events'        => $events,
             'allEvents'     => collect(),
             'myEvents'      => collect(),
             'mySlots'       => collect(),
-            'projects'      => $projects,
+            'projects'      => collect(),
             'authId'        => auth()->id(),
-            'queuePosition' => app(BookingService::class)->getQueuePosition(auth()->user()),
+            'queuePosition' => 0,
         ]);
     }
 
@@ -159,7 +168,8 @@ class CalendarController extends Controller
             'weekOffset'    => 0,
             'weekStart'     => Carbon::today(),
             'weekEnd'       => Carbon::today()->addDays(6),
-            'slotStep'      => 15,
+            'slotStep'      => 60,
+            'formStep'      => 15,
             'slots'         => collect(),
             'events'        => collect(),
             'allEvents'     => collect(),
@@ -167,7 +177,7 @@ class CalendarController extends Controller
             'mySlots'       => $mySlots,
             'projects'      => collect(),
             'authId'        => $authId,
-            'queuePosition' => app(BookingService::class)->getQueuePosition(auth()->user()),
+            'queuePosition' => 0,
         ]);
     }
 
@@ -184,6 +194,21 @@ class CalendarController extends Controller
             'project_id' => 'nullable|exists:projects,id',
             'notes'      => 'nullable|string|max:1000', // FIX: was max=1000
         ]);
+
+        $startsAt = Carbon::parse($validated['date'] . ' ' . $validated['start_time']);
+
+        if ($startsAt->lessThanOrEqualTo(now())) {
+            return redirect()->back()
+                ->withErrors(['start_time' => 'Нельзя создать слот в прошлом.'])
+                ->withInput();
+        }
+
+        $endsAt = Carbon::parse($validated['date'] . ' ' . $validated['end_time']);
+        if ($endsAt->lessThanOrEqualTo($startsAt) || $startsAt->diffInMinutes($endsAt) < 30) {
+            return redirect()->back()
+                ->withErrors(['end_time' => 'Минимальная длительность слота — 30 минут.'])
+                ->withInput();
+        }
 
         /* Friendly guard for the DB unique index
            (user_id, project_id, date, start_time): without it a duplicate
@@ -210,8 +235,6 @@ class CalendarController extends Controller
             'status'     => 'available',
         ]);
 
-        app(BookingService::class)->processQueue($slot->id);
-
         return redirect()->route('public.calendar')->with('success', 'Slot created successfully.');
     }
 
@@ -227,25 +250,11 @@ class CalendarController extends Controller
             'end_time'    => 'required|date_format:H:i|after:start_time',
             'title'       => 'required|string|max:255',
             'description' => 'nullable|string|max:2000',
-            'project_id'  => 'required|exists:projects,id', // event = team-up for a project
         ]);
-
-        /* Server-side guard: the user must be registered on that project
-           (has a submission for it — created by SubscriptionController). */
-        $registered = auth()->user()
-            ->submissions()
-            ->where('project_id', $validated['project_id'])
-            ->exists();
-
-        if (! $registered) {
-            return redirect()->back()
-                ->withErrors(['project_id' => 'You can create events only for projects you are registered on.'])
-                ->withInput();
-        }
 
         CalendarEvent::create([
             'user_id'     => auth()->id(),
-            'project_id'  => $validated['project_id'] ?? null,
+            'project_id'  => null,
             'date'        => $validated['date'],
             'start_time'  => $validated['start_time'],
             'end_time'    => $validated['end_time'],
@@ -264,10 +273,6 @@ class CalendarController extends Controller
     public function destroySlot(int $slotId): RedirectResponse
     {
         $slot = CalendarSlot::findOrFail($slotId);
-
-        if ($slot->user_id !== auth()->id()) {
-            return redirect()->back()->with('error', "You cannot cancel another user's slot.");
-        }
 
         $result = app(BookingService::class)->cancelSlot($slot, auth()->user());
 
@@ -299,6 +304,73 @@ class CalendarController extends Controller
     /*  POST — submit project for review -> queue (kept, now redirect)     */
     /* ------------------------------------------------------------------ */
 
+    public function bookSlot(int $slotId): RedirectResponse
+    {
+        $slot = CalendarSlot::where('status', 'available')->findOrFail($slotId);
+        $user = auth()->user();
+
+        if ($slot->user_id === $user->id) {
+            return redirect()->back()->with('error', 'You cannot book your own review slot.');
+        }
+
+        $startsAt = Carbon::parse($slot->date->toDateString() . ' ' . $slot->start_time);
+        if ($startsAt->lessThanOrEqualTo(now())) {
+            return redirect()->back()->with('error', 'Cannot book a slot in the past.');
+        }
+
+        $submission = \App\Models\Admin\Submission::where('user_id', $user->id)
+            ->whereIn('status', ['tested', 'in_review', 'reviewed'])
+            ->latest('id')
+            ->first();
+
+        if (! $submission) {
+            return redirect()->back()->with('error', 'No project is waiting for review. Submit a project first.');
+        }
+
+        $project = $submission->project;
+        $completedReviews = $submission->reviews()->where('status', 'completed')->count();
+        $activeReviews = $submission->reviews()->whereIn('status', ['pending', 'in_progress'])->count();
+        $requiredReviews = $project->required_reviews_count ?? 2;
+
+        if (($completedReviews + $activeReviews) >= $requiredReviews) {
+            return redirect()->back()->with('error', 'This project already has enough assigned reviews.');
+        }
+
+        $alreadyReviewedBySlotOwner = $submission->reviews()
+            ->where('reviewer_id', $slot->user_id)
+            ->exists();
+
+        if ($alreadyReviewedBySlotOwner) {
+            return redirect()->back()->with('error', 'This reviewer has already been assigned to this project. Choose another slot.');
+        }
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($slot, $user, $submission) {
+            $lockedSlot = CalendarSlot::where('id', $slot->id)
+                ->where('status', 'available')
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $lockedSlot->book($user);
+
+            \App\Models\Admin\Review::firstOrCreate(
+                [
+                    'submission_id' => $submission->id,
+                    'reviewer_id' => $lockedSlot->user_id,
+                ],
+                [
+                    'status' => 'pending',
+                    'is_auto_assigned' => true,
+                    // scheduled review start; reviewer cannot open the review before this time
+                    'started_at' => Carbon::parse($lockedSlot->date->toDateString() . ' ' . $lockedSlot->start_time),
+                    // review deadline: 24 hours after scheduled start
+                    'completed_at' => Carbon::parse($lockedSlot->date->toDateString() . ' ' . $lockedSlot->start_time)->addHours(24),
+                ]
+            );
+        });
+
+        return redirect()->back()->with('success', 'Review slot booked. The reviewer can now open it in Peer reviews.');
+    }
+
     public function submitProjectForReview(Request $request): RedirectResponse
     {
         $validated = $request->validate([
@@ -319,7 +391,7 @@ class CalendarController extends Controller
             $submission = \App\Models\Admin\Submission::where('project_id', $validated['project_id'])
                 ->where('user_id', $user->id)
                 ->whereIn('status', ['in_progress', 'pending', 'failed', 'resubmitted'])
-                ->latest()
+                ->latest('id')
                 ->first();
         }
 
@@ -338,33 +410,17 @@ class CalendarController extends Controller
             );
         }
 
-        // Mark as tested → in_review queue will pick it up
-        $submission->update(['status' => 'tested']);
-
-        // 2) Assign peer-review slot via BookingService
-        $result = app(BookingService::class)->assignSlot(
-            $user,
-            $submission->project_id,
-            $submission->id
-        );
-
-        // Update submission to in_review
-        $submission->update(['status' => 'in_review', 'submitted_at' => now()]);
-
-        if ($result->isAssigned()) {
-            return redirect()->back()->with(
-                'success',
-                "Tests passed {$submission->tests_passed}/{$submission->tests_total} ({$submission->test_score}%). ".
-                'You have been assigned a review slot: '
-                . $result->slot->date->toDateString() . ', '
-                . substr($result->slot->start_time, 0, 5) . '.'
-            );
-        }
+        // Tests passed. The project now waits for the student to book suitable
+        // peer-review slots manually from the public calendar.
+        $submission->update([
+            'status' => 'in_review',
+            'submitted_at' => now(),
+        ]);
 
         return redirect()->back()->with(
             'success',
             "Tests passed {$submission->tests_passed}/{$submission->tests_total} ({$submission->test_score}%). ".
-            'You are in the queue (position ' . $result->position . '). A slot will be assigned when available.'
+            'Choose a free peer-review slot in the calendar.'
         );
     }
 }

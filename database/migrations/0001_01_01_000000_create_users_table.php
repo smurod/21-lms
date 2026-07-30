@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('username')->unique()->nullable(); // merged from 2026_06_20_163408_add_username_gitlab_token_to_users_table
-            $table->string('gitlab_token')->unique()->nullable(); // merged from 2026_06_20_163408_add_username_gitlab_token_to_users_table
+            $table->text('gitlab_token')->nullable(); // encrypted GitLab token; merged from 2026_06_20_163408_add_username_gitlab_token_to_users_table
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->unsignedTinyInteger('level')->default(1); // merged from 2026_05_23_000001_add_level_to_users_table
@@ -25,6 +25,7 @@ return new class extends Migration
             $table->foreignId('current_team_id')->nullable();
             $table->string('profile_photo_path', 2048)->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

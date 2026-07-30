@@ -91,9 +91,12 @@
                                 $locked  = ($userLevel ?? 1) < $project->min_level;
 
                                 /* Pill: what the user sees on the card */
-                                if ($item['is_completed']) {
-                                    $pillClass = $status === 'passed' ? 'prj-pill-done' : 'prj-pill-review';
-                                    $pillText  = $status === 'passed' ? 'Принят' : 'Провален';
+                                if (($item['is_retry'] ?? false) || $status === 'failed') {
+                                    $pillClass = 'prj-pill-review';
+                                    $pillText  = 'Провален';
+                                } elseif ($item['is_completed']) {
+                                    $pillClass = 'prj-pill-done';
+                                    $pillText  = 'Принят';
                                 } elseif ($item['is_enrolled']) {
                                     $inReview  = in_array($status, ['tested', 'in_review', 'reviewed'], true);
                                     $pillClass = $inReview ? 'prj-pill-review' : 'prj-pill-progress';
@@ -133,9 +136,14 @@
                                         <span>Reviews: {{ $item['review_status']['received'] }}/{{ $item['review_status']['required'] }}</span>
                                     </div>
                                 @endif
-                                @if ($item['is_completed'] && $item['test_status']['testsTotal'] > 0)
+                                @if (($item['is_completed'] || ($item['is_retry'] ?? false)) && $item['test_status']['testsTotal'] > 0)
                                     <div class="prj-card-time">
                                         <span>Tests: {{ $item['test_status']['testsPassed'] }}/{{ $item['test_status']['testsTotal'] }} ({{ $item['test_status']['percent'] }}%)</span>
+                                    </div>
+                                @endif
+                                @if (($item['is_retry'] ?? false) && $item['review_status']['required'] > 0)
+                                    <div class="prj-card-time">
+                                        <span>Last review: {{ $item['review_status']['received'] }}/{{ $item['review_status']['required'] }} — можно переделать</span>
                                     </div>
                                 @endif
                             </a>

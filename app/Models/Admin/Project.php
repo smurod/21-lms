@@ -21,7 +21,7 @@ class Project extends Model
         'is_published', 'is_mandatory',
         'tags', 'learning_outcomes',
         'created_by',
-        'gitlab_project_id', 'repository_url', 'default_branch',
+        'gitlab_project_id', 'gitlab_sync_status', 'repository_url', 'default_branch',
         'runtime', 'min_level',
     ];
 
@@ -45,6 +45,12 @@ class Project extends Model
     public function submissions(): HasMany
     {
         return $this->hasMany(\App\Models\Admin\Submission::class, 'project_id', 'id');
+    }
+
+    public function checklists(): HasMany
+    {
+        return $this->hasMany(ReviewChecklist::class, 'project_id', 'id')
+            ->orderBy('order_position');
     }
 
     public function activeSubmissions(): HasOne

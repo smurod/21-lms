@@ -31,32 +31,39 @@
         $projects  = collect($projects ?? []);
         $authId    = $authId ?? auth()->id();
 
-        /* Fast lookup maps: "Y-m-d|H:i" => ['m' => model, 'start' => bool].
-           A slot/event covers EVERY 15-min cell from start_time (inclusive)
-           to end_time (exclusive) — so a 01:00-02:00 slot paints 4 cells.
-           The badge is rendered only on the first (start) cell. */
+        /* Rendering model: one visible grid row is 1 hour, but slots/events
+           may start/end at 15-minute boundaries. We therefore split every
+           slot/event into per-hour visual segments with percentage top/height. */
+        $formStep = $formStep ?? 15;
         $toMin = fn ($t) => ((int) substr($t, 0, 2)) * 60 + ((int) substr($t, 3, 2));
+        $segments = [];
 
-        $slotMap = [];
+        $pushSegment = function (string $type, $model) use (&$segments, $toMin) {
+            $day = $model->date->toDateString();
+            $from = $toMin($model->start_time);
+            $till = max($toMin($model->end_time), $from + 30);
+
+            for ($h = intdiv($from, 60) * 60; $h < $till; $h += 60) {
+                $segmentStart = max($from, $h);
+                $segmentEnd = min($till, $h + 60);
+                $key = $day . '|' . sprintf('%02d:00', intdiv($h, 60));
+                $segments[$key][] = [
+                    'type' => $type,
+                    'm' => $model,
+                    'top' => (($segmentStart - $h) / 60) * 100,
+                    'height' => max(8, (($segmentEnd - $segmentStart) / 60) * 100),
+                    'is_start' => $segmentStart === $from,
+                    'start_time' => sprintf('%02d:%02d', intdiv($from, 60), $from % 60),
+                    'end_time' => sprintf('%02d:%02d', intdiv($till, 60) % 24, $till % 60),
+                ];
+            }
+        };
+
         foreach ($slots as $slot) {
-          $day  = $slot->date->toDateString();
-          $from = $toMin($slot->start_time);
-          $till = max($toMin($slot->end_time), $from + $slotStep);
-          for ($t = $from; $t < $till; $t += $slotStep) {
-            $slotMap[$day . '|' . sprintf('%02d:%02d', intdiv($t, 60), $t % 60)] =
-              ['m' => $slot, 'start' => $t === $from];
-          }
+            $pushSegment('slot', $slot);
         }
-
-        $eventMap = [];
         foreach ($events as $event) {
-          $day  = $event->date->toDateString();
-          $from = $toMin($event->start_time);
-          $till = max($toMin($event->end_time), $from + $slotStep);
-          for ($t = $from; $t < $till; $t += $slotStep) {
-            $eventMap[$day . '|' . sprintf('%02d:%02d', intdiv($t, 60), $t % 60)] =
-              ['m' => $event, 'start' => $t === $from];
-          }
+            $pushSegment('event', $event);
         }
 
         /* Validation errors: which form failed (used to reopen the modal server-side) */
@@ -123,7 +130,7 @@
                 <div class="calendar-grid-wrapper">
                     {{-- Dates and cells are ONE grid: the date headers are the first
                          (sticky) row, so each column of cells sits strictly under its date. --}}
-                    <div class="calendar-grid" id="calendarGrid">
+                    <div class="calendar-grid" id="calendarGrid" data-slot-step="{{ $slotStep }}">
                         <div class="grid-corner"></div>
 
                         @for ($d = 0; $d < 7; $d++)
@@ -134,59 +141,73 @@
                         @endfor
 
                         @for ($m = 0; $m < 1440; $m += $slotStep)
-                            <div class="grid-time-label">{{ $m % 60 === 0 ? sprintf('%02d:00', intdiv($m, 60)) : '' }}</div>
+                            <div class="grid-time-label">{{ sprintf('%02d:00', intdiv($m, 60)) }}</div>
                             @for ($d = 0; $d < 7; $d++)
                                 @php
                                     $cellDate = $weekStart->copy()->addDays($d)->toDateString();
-                                    $cellTime = sprintf('%02d:%02d', intdiv($m, 60), $m % 60);
-                                    $key  = $cellDate . '|' . $cellTime;
-                                    $slotHit = $slotMap[$key] ?? null;
-                                    $evtHit  = $eventMap[$key] ?? null;
-                                    $slot = $slotHit['m'] ?? null;
-                                    $evt  = $evtHit['m'] ?? null;
-                                    $isStart = ($evtHit['start'] ?? false) || ($slotHit['start'] ?? false);
-
-                                    $cls = '';
-                                    $badge = '';
-                                    $extra = '';
-                                    if ($evt) {
-                                      $cls = ' cell-event' . ($isStart ? '' : ' cell-cont');
-                                      $badge = $isStart ? ($evt->title ?? optional($evt->user)->name) : '';
-                                      $extra = ' data-event-id="' . $evt->id . '"'
-                                             . ' data-event-title="' . e($evt->title) . '"'
-                                             . ' data-event-author="' . e(optional($evt->user)->name) . '"'
-                                             . ' data-event-desc="' . e($evt->description ?? '') . '"'
-                                             . ' data-event-start="' . e(substr($evt->start_time, 0, 5)) . '"'
-                                             . ' data-event-end="' . e(substr($evt->end_time, 0, 5)) . '"'
-                                             . ' data-event-url="' . route('public.events.show', $evt->id) . '"';
-                                    } elseif ($slot) {
-                                      /* Grid contains ONLY the current user's slots (controller filters).
-                                         Booking is performed by the system algorithm — the owner just
-                                         sees WHO was assigned when the slot is booked. */
-                                      $cls = ($slot->isBooked() ? ' cell-booked mine' : ' cell-slot mine')
-                                           . ($isStart ? '' : ' cell-cont');
-                                      $badge = ! $isStart ? '' : ($slot->isBooked()
-                                        ? (optional($slot->bookedBy)->name ?? 'Booked')
-                                        : 'My slot');
-
-                                      /* 24h rule (server-enforced too): cancel action only when allowed */
-                                      $slotStartsAt = \Carbon\Carbon::parse($slot->date->toDateString() . ' ' . $slot->start_time);
-                                      $canCancel = now()->diffInHours($slotStartsAt, false) >= 24;
-                                      $extra = $canCancel
-                                        ? ' data-cancel-action="' . route('calendar.slots.destroy', $slot->id) . '"'
-                                        : ' data-cancel-locked="1"';
-                                      if ($slot->isBooked()) {
-                                        $extra .= ' data-booked-by="' . e(optional($slot->bookedBy)->name ?? '') . '"';
-                                      }
-                                    }
+                                    $cellTime = sprintf('%02d:00', intdiv($m, 60));
+                                    $key = $cellDate . '|' . $cellTime;
+                                    $cellSegments = $segments[$key] ?? [];
                                 @endphp
-                                <button class="grid-cell{{ $cls }}" type="button"
-                                        data-date="{{ $cellDate }}"
-                                        data-time="{{ $cellTime }}"{!! $extra !!}>
-                                    @if ($badge)<span class="cell-badge">{{ $badge }}</span>@endif
-                                </button>
+                                <div class="grid-cell{{ count($cellSegments) ? ' has-segments' : '' }}"
+                                     data-date="{{ $cellDate }}"
+                                     data-time="{{ $cellTime }}">
+                                    @foreach ($cellSegments as $segment)
+                                        @php
+                                            $model = $segment['m'];
+                                            $segClass = '';
+                                            $segLabel = '';
+                                            $segExtra = '';
+
+                                            if ($segment['type'] === 'event') {
+                                                $segClass = ' cell-event';
+                                                $segLabel = $segment['is_start'] ? ($model->title ?? optional($model->user)->name) : '';
+                                                $segExtra = ' data-event-id="' . $model->id . '"'
+                                                    . ' data-event-title="' . e($model->title) . '"'
+                                                    . ' data-event-author="' . e(optional($model->user)->name) . '"'
+                                                    . ' data-event-desc="' . e($model->description ?? '') . '"'
+                                                    . ' data-event-start="' . e($segment['start_time']) . '"'
+                                                    . ' data-event-end="' . e($segment['end_time']) . '"'
+                                                    . ' data-event-url="' . route('public.events.show', $model->id) . '"';
+                                            } else {
+                                                $isOwner = (int) $model->user_id === (int) $authId;
+                                                $isBookedByMe = (int) ($model->booked_by_user_id ?? 0) === (int) $authId;
+                                                $segClass = $model->isBooked()
+                                                    ? ' cell-booked' . ($isOwner ? ' mine' : ' booked-by-me')
+                                                    : ' cell-slot' . ($isOwner ? ' mine' : ' public-free');
+                                                $segLabel = $segment['is_start']
+                                                    ? ($model->isBooked() ? 'Booked slot' : 'Free slot')
+                                                    : '';
+
+                                                $slotStartsAt = \Carbon\Carbon::parse($model->date->toDateString() . ' ' . $model->start_time);
+                                                $canCancel = now()->diffInMinutes($slotStartsAt, false) >= 30;
+                                                if (($isOwner || $isBookedByMe) && $canCancel) {
+                                                    $segExtra = ' data-cancel-action="' . route('calendar.slots.destroy', $model->id) . '"';
+                                                    if ($isBookedByMe && ! $isOwner) {
+                                                        $segExtra .= ' data-cancel-booking="1"';
+                                                    }
+                                                } elseif ($isOwner || $isBookedByMe) {
+                                                    $segExtra = ' data-cancel-locked="1"';
+                                                } elseif (! $model->isBooked()) {
+                                                    $segExtra = ' data-book-action="' . route('calendar.slots.book', $model->id) . '"';
+                                                } else {
+                                                    $segExtra = '';
+                                                }
+                                            }
+                                        @endphp
+                                        <button class="cell-segment{{ $segClass }}" type="button"
+                                                style="top: {{ $segment['top'] }}%; height: {{ $segment['height'] }}%;"
+                                                data-date="{{ $cellDate }}"
+                                                data-time="{{ $segment['start_time'] }}"{!! $segExtra !!}>
+                                            @if($segLabel)<span class="cell-badge">{{ $segLabel }}</span>@endif
+                                        </button>
+                                    @endforeach
+                                </div>
                             @endfor
                         @endfor
+                    </div>
+                    <div class="calendar-now-line" id="calendarNowLine" aria-hidden="true">
+                        <span class="calendar-now-dot"></span>
                     </div>
                 </div>
             </div>
@@ -242,7 +263,7 @@
                             </div>
                             @php
                                 $slotStartsAt = \Carbon\Carbon::parse($slot->date->toDateString() . ' ' . $slot->start_time);
-                                $canCancel = now()->diffInHours($slotStartsAt, false) >= 24;
+                                $canCancel = now()->diffInMinutes($slotStartsAt, false) >= 30;
                             @endphp
                             @if ($canCancel)
                                 <form method="POST" action="{{ route('calendar.slots.destroy', $slot->id) }}" class="calendar-list-actions">
@@ -252,7 +273,7 @@
                                 </form>
                             @else
                                 <div class="calendar-list-actions">
-                                    <span class="calendar-cancel-locked" title="Cannot cancel less than 24 hours before the slot starts">🔒 Locked</span>
+                                    <span class="calendar-cancel-locked" title="Cannot cancel less than 30 minutes before the slot starts">🔒 Locked</span>
                                 </div>
                             @endif
                         </article>
@@ -302,7 +323,7 @@
                             <div class="time-field">
                                 <label for="slotFrom">From</label>
                                 <select id="slotFrom" name="start_time">
-                                    @for ($m = 0; $m < 1440; $m += $slotStep)
+                                    @for ($m = 0; $m < 1440; $m += $formStep)
                                         @php $t = sprintf('%02d:%02d', intdiv($m, 60), $m % 60); @endphp
                                         <option value="{{ $t }}" @selected(old('start_time') === $t)>{{ $t }}</option>
                                     @endfor
@@ -311,7 +332,7 @@
                             <div class="time-field">
                                 <label for="slotTo">to</label>
                                 <select id="slotTo" name="end_time">
-                                    @for ($m = $slotStep; $m <= 1440; $m += $slotStep)
+                                    @for ($m = $formStep; $m <= 1440; $m += $formStep)
                                         @php $t = sprintf('%02d:%02d', intdiv($m, 60) % 24, $m % 60); @endphp
                                         <option value="{{ $t }}" @selected(old('end_time') === $t)>{{ $t }}</option>
                                     @endfor
@@ -324,7 +345,7 @@
                         </div>
                     </form>
 
-                    {{-- ---------- EVENT form: title / description / project ---------- --}}
+                    {{-- ---------- EVENT form: title / description ---------- --}}
                     <form method="POST" action="{{ route('calendar.events.create') }}" id="eventForm" @if($failedForm !== 'event') hidden @endif>
                         @csrf
                         <input type="hidden" name="form_type" value="event">
@@ -341,15 +362,7 @@
                                 <label for="eventDesc">Description</label>
                                 <textarea id="eventDesc" name="description" rows="3" placeholder="What is this event about? (optional)">{{ old('description') }}</textarea>
                             </div>
-                            <div class="event-field">
-                                <label for="eventProject">Project</label>
-                                <select id="eventProject" name="project_id">
-                                    <option value="">— No project —</option>
-                                    @foreach ($projects as $project)
-                                        <option value="{{ $project->id }}" @selected((string) old('project_id') === (string) $project->id)>{{ $project->title ?? $project->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
+
                         </div>
 
                         <div class="calendar-modal-foot">
@@ -395,7 +408,7 @@
                 <div class="calendar-modal-body">
                     <h2 id="calendarCancelTitle">Cancel Peer Review slot?</h2>
                     <p class="calendar-modal-time" id="calendarCancelTime"></p>
-                    <p class="calendar-modal-note">The slot will be removed from the schedule. If someone has already booked it, the booking will be cancelled too.</p>
+                    <p class="calendar-modal-note" id="calendarCancelNote">The slot will be removed from your schedule. If it was booked, the assigned project will return to the review queue.</p>
                 </div>
 
                 <div class="calendar-modal-foot">
@@ -404,6 +417,34 @@
                         @method('DELETE')
                         <button type="button" class="keep-btn" id="calendarCancelKeep">Keep slot</button>
                         <button type="submit" class="cancel-confirm-btn">Cancel slot</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {{-- ==================== Book free slot confirmation ==================== --}}
+        <div class="calendar-modal-backdrop" id="calendarBookBackdrop" hidden>
+            <div class="calendar-modal" role="dialog" aria-modal="true" aria-labelledby="calendarBookTitle">
+                <div class="calendar-modal-head">
+                    <div class="calendar-modal-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    </div>
+                    <button class="calendar-modal-close" id="calendarBookClose" aria-label="Close">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
+                <div class="calendar-modal-body">
+                    <h2 id="calendarBookTitle">Book Peer Review slot?</h2>
+                    <p class="calendar-modal-time" id="calendarBookTime"></p>
+                    <p class="calendar-modal-note">The slot will be booked for your latest project waiting for review. Both participants can cancel no later than 30 minutes before the slot starts.</p>
+                </div>
+
+                <div class="calendar-modal-foot">
+                    <form method="POST" action="" id="calendarBookForm">
+                        @csrf
+                        <button type="button" class="keep-btn" id="calendarBookKeep">Keep searching</button>
+                        <button type="submit" class="save-btn">Book slot</button>
                     </form>
                 </div>
             </div>

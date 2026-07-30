@@ -9,11 +9,13 @@
 </head>
 <body>
 
-<div class="@yield('name')">
+<div class="@yield('name') app-shell">
     <!-- Header / Navigation -->
     @include('public.layouts.header')
 
-    @yield('content')
+    <div class="app-main">
+        @yield('content')
+    </div>
 
     <!-- Footer -->
     @include('public.layouts.footer')

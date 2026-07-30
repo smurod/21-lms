@@ -5,6 +5,7 @@
         <button class="activities-close" aria-label="Close projects">×</button>
         <div class="activities-list">
             <a href="{{ route('public.projects.index') }}" class="activity-btn" data-activity="projects">Projects</a>
+            <a href="{{ route('reviews.index') }}" class="activity-btn" data-activity="reviews">Peer reviews</a>
             <a href="{{ route('public.projects.map') }}" class="activity-btn" data-activity="project-map">Project map</a>
             <a href="#video" class="activity-btn" data-activity="video">Video</a>
             <a href="{{ route('public.gitlab') }}" class="activity-btn" data-activity="gitlab">My Projects in Gitlab</a>

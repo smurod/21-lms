@@ -15,6 +15,8 @@ class ReviewController extends Controller
     {
         $user = auth()->user();
 
+        $this->syncReviewStartTimesForReviewer($user->id);
+
         // Reviews assigned to this user as reviewer
         $reviews = Review::where('reviewer_id', $user->id)
             ->with(['submission.project', 'submission.user'])
@@ -22,19 +24,9 @@ class ReviewController extends Controller
             ->orderBy('completed_at')
             ->paginate(15);
 
-        // Trigger auto-assignment for pending submissions without enough reviews
-        $pendingSubmissions = \App\Models\Admin\Submission::where('status', 'in_progress')
-            ->whereDoesntHave('reviews', function ($q) {
-                $q->where('status', 'pending');
-            })
-            ->with('project')
-            ->get();
+        $view = $request->routeIs('admin.*') ? 'admin.reviews.index' : 'public.reviews.index';
 
-        foreach ($pendingSubmissions as $submission) {
-            $reviewerService->assign($submission);
-        }
-
-        return view('admin.reviews.index', compact('reviews'));
+        return view($view, compact('reviews'));
     }
 
     public function show(Review $review, ReviewAssignmentService $reviewerService)
@@ -44,12 +36,25 @@ class ReviewController extends Controller
             abort(403, 'Unauthorized review access.');
         }
 
-        // Auto-assign additional reviewers if needed
-        $reviewerService->assign($review->submission);
+        $this->syncReviewStartTime($review);
+        $review->refresh();
 
-        $review->load(['submission.user', 'submission.project', 'submission.testResults', 'submission.reviews']);
+        if ($review->started_at && $review->started_at->isFuture()) {
+            return redirect()->route('reviews.index')
+                ->withErrors(['review' => 'Review ещё не начался. Дождитесь назначенного времени.']);
+        }
 
-        return view('admin.reviews.show', compact('review'));
+        if ($review->status === 'pending') {
+            $review->update([
+                'status' => 'in_progress',
+            ]);
+        }
+
+        $review->load(['submission.user', 'submission.project.checklists', 'submission.testResults', 'submission.reviews.reviewer']);
+
+        $view = request()->routeIs('admin.*') ? 'admin.reviews.show' : 'public.reviews.show';
+
+        return view($view, compact('review'));
     }
 
     public function submit(Review $review, Request $request, XpService $xp)
@@ -63,18 +68,35 @@ class ReviewController extends Controller
             'feedback' => 'required|string',
             'private_notes' => 'nullable|string',
             'confidence_score' => 'nullable|numeric|min:0|max:100',
+            'checklist' => 'nullable|array',
+            'checklist.*' => 'required|in:passed,failed,not_applicable',
         ]);
+
+        $review->loadMissing('submission.project.checklists');
+        $requiredChecklistKeys = $review->submission->project->checklists
+            ->where('is_required', true)
+            ->pluck('item_key')
+            ->all();
+        $evaluatedChecklist = array_keys($data['checklist'] ?? []);
+        $missingChecklist = array_diff($requiredChecklistKeys, $evaluatedChecklist);
+
+        if (!empty($missingChecklist)) {
+            return back()
+                ->withInput()
+                ->withErrors(['checklist' => 'Оцените все обязательные пункты чек-листа перед отправкой review.']);
+        }
 
         $review->update([
             'score' => $data['score'],
             'feedback' => $data['feedback'],
             'private_notes' => $data['private_notes'] ?? null,
-            'confidence_score' => $data['confidence_score'] ?? 1.0,
+            'checklist_data' => $this->formatChecklistData($review, $data['checklist'] ?? []),
+            'confidence_score' => isset($data['confidence_score']) ? round(((float) $data['confidence_score']) / 100, 2) : 1.0,
             'status' => 'completed',
             'completed_at' => now(),
         ]);
 
-        $submission = $review->submission()->with('project')->first();
+        $submission = $review->submission()->with(['project', 'user'])->first();
         $project = $submission->project;
 
         // Recalculate review stats
@@ -123,7 +145,7 @@ class ReviewController extends Controller
                     }
                 }
 
-                return redirect()->route('admin.reviews.index')
+                return redirect()->route('reviews.index')
                     ->with('success', "Review saved. Project PASSED ({$averageScore}%). XP awarded: {$project->xp_reward}.");
             } else {
                 // FAILED → allow resubmission
@@ -133,14 +155,68 @@ class ReviewController extends Controller
                     'completed_at' => now(),
                 ]);
 
-                return redirect()->route('admin.reviews.index')
+                return redirect()->route('reviews.index')
                     ->with('error', "Review saved. Project FAILED ({$averageScore}% < {$passingScore}%). User can resubmit.");
             }
         }
 
-        // Still waiting for more reviews
-        return redirect()->route('admin.reviews.show', $review)
-            ->with('success', "Review submitted ({$completedCount}/{$requiredCount}). Avg: ".round($averageScore,1)."%");
+        // Still waiting for more reviews. No auto-assignment here:
+        // the student must manually choose the next free slot in the calendar.
+        return redirect()->route('reviews.index')
+            ->with('success', "Review submitted ({$completedCount}/{$requiredCount}). Avg: ".round($averageScore,1)."%. Student must book the next free slot manually.");
+    }
+
+    private function formatChecklistData(Review $review, array $checklistResults): array
+    {
+        return $review->submission->project->checklists
+            ->map(fn ($item) => [
+                'item_key' => $item->item_key,
+                'item_label' => $item->item_label,
+                'is_required' => $item->is_required,
+                'result' => $checklistResults[$item->item_key] ?? null,
+            ])
+            ->values()
+            ->all();
+    }
+
+    private function syncReviewStartTimesForReviewer(int $reviewerId): void
+    {
+        Review::where('reviewer_id', $reviewerId)
+            ->whereIn('status', ['pending', 'in_progress'])
+            ->with('submission')
+            ->get()
+            ->each(fn (Review $review) => $this->syncReviewStartTime($review));
+    }
+
+    private function syncReviewStartTime(Review $review): void
+    {
+        $review->loadMissing('submission');
+        $submission = $review->submission;
+
+        if (! $submission) {
+            return;
+        }
+
+        $slot = \App\Models\CalendarSlot::where('status', 'booked')
+            ->where('user_id', $review->reviewer_id)
+            ->where('booked_by_user_id', $submission->user_id)
+            ->orderBy('date', 'asc')
+            ->orderBy('start_time', 'asc')
+            ->first();
+
+        if (! $slot) {
+            return;
+        }
+
+        $startsAt = \Illuminate\Support\Carbon::parse($slot->date->toDateString() . ' ' . $slot->start_time);
+        $deadlineAt = $startsAt->copy()->addHours(24);
+
+        if (! $review->started_at || ! $review->started_at->equalTo($startsAt)) {
+            $review->forceFill([
+                'started_at' => $startsAt,
+                'completed_at' => $deadlineAt,
+            ])->save();
+        }
     }
 
     public function destroy(Review $review)

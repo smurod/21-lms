@@ -8182,3 +8182,1592 @@ body.auth-page .eye-btn.is-revealed .eye-off {
     box-shadow: 0 0 16px rgba(125, 211, 252, 0.35);
     animation: none;
 }
+
+/* =====================================================================
+   Public utility pages: chats, legal docs, achievements
+   Added for Blade pages that must use the single public stylesheet only.
+   ===================================================================== */
+.public-kicker {
+    margin: 0 0 10px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #8bea9a;
+}
+
+.public-doc-page,
+.achievements-page,
+.chat-list-page {
+    width: min(1180px, calc(100% - 40px));
+    margin: 0 auto;
+    padding: 42px 0 72px;
+}
+
+.public-doc-hero,
+.achievements-hero,
+.chat-list-hero {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    min-height: 210px;
+    margin-bottom: 26px;
+    padding: 34px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 34px;
+    background:
+        radial-gradient(circle at 12% 10%, rgba(139, 234, 154, 0.16), transparent 32%),
+        radial-gradient(circle at 85% 18%, rgba(125, 211, 252, 0.12), transparent 34%),
+        linear-gradient(135deg, rgba(17, 24, 39, 0.96), rgba(10, 14, 24, 0.98));
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.32);
+}
+
+.public-doc-hero::after,
+.achievements-hero::after,
+.chat-list-hero::after {
+    content: "";
+    position: absolute;
+    right: 34px;
+    top: 28px;
+    width: 76px;
+    height: 76px;
+    border-radius: 22px;
+    background: linear-gradient(135deg, rgba(125, 211, 252, 0.18), rgba(139, 234, 154, 0.16));
+    filter: blur(0.2px);
+    transform: rotate(10deg);
+}
+
+.public-doc-hero h1,
+.achievements-hero h1,
+.chat-list-hero h1 {
+    position: relative;
+    z-index: 1;
+    margin: 0;
+    max-width: 760px;
+    font-size: clamp(34px, 5vw, 64px);
+    line-height: 0.95;
+    letter-spacing: -0.06em;
+    color: #f8fafc;
+}
+
+.public-doc-hero p:not(.public-kicker),
+.achievements-hero p:not(.public-kicker),
+.chat-list-hero p:not(.public-kicker) {
+    position: relative;
+    z-index: 1;
+    max-width: 620px;
+    margin: 14px 0 0;
+    color: rgba(226, 232, 240, 0.72);
+    font-size: 16px;
+    line-height: 1.7;
+}
+
+.public-doc-card,
+.achievement-section,
+.chat-list-panel,
+.chat-preview-panel {
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 30px;
+    background: rgba(17, 24, 39, 0.84);
+    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.24);
+    backdrop-filter: blur(18px);
+}
+
+.public-doc-card {
+    max-width: 880px;
+    padding: clamp(24px, 4vw, 46px);
+}
+
+.public-doc-card h2 {
+    margin: 32px 0 10px;
+    color: #f8fafc;
+    font-size: 22px;
+    letter-spacing: -0.03em;
+}
+
+.public-doc-card p {
+    margin: 0 0 14px;
+    color: rgba(226, 232, 240, 0.72);
+    font-size: 16px;
+    line-height: 1.85;
+}
+
+.achievements-summary {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(92px, 1fr));
+    gap: 10px;
+}
+
+.achievements-summary div {
+    padding: 16px 18px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 22px;
+    background: rgba(255, 255, 255, 0.05);
+    text-align: center;
+}
+
+.achievements-summary strong {
+    display: block;
+    color: #f8fafc;
+    font-size: 28px;
+    line-height: 1;
+}
+
+.achievements-summary span {
+    display: block;
+    margin-top: 7px;
+    color: rgba(226, 232, 240, 0.58);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.achievement-section {
+    margin-top: 22px;
+    padding: 24px;
+}
+
+.achievement-section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.achievement-section-head h2 {
+    margin: 0;
+    color: #f8fafc;
+    font-size: 22px;
+    letter-spacing: -0.03em;
+}
+
+.achievement-section-head span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    height: 30px;
+    padding: 0 10px;
+    border-radius: 999px;
+    color: #8bea9a;
+    background: rgba(139, 234, 154, 0.1);
+    border: 1px solid rgba(139, 234, 154, 0.18);
+    font-weight: 800;
+}
+
+.achievement-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 16px;
+}
+
+.achievement-card {
+    min-height: 210px;
+    padding: 22px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.035);
+    transition: transform 0.22s ease, border-color 0.22s ease, background 0.22s ease;
+}
+
+.achievement-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(139, 234, 154, 0.22);
+    background: rgba(255, 255, 255, 0.055);
+}
+
+.achievement-card--unlocked {
+    border-color: rgba(139, 234, 154, 0.22);
+    background: linear-gradient(180deg, rgba(139, 234, 154, 0.08), rgba(255, 255, 255, 0.035));
+}
+
+.achievement-card--hidden {
+    opacity: 0.68;
+}
+
+.achievement-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 58px;
+    height: 58px;
+    margin-bottom: 16px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.07);
+    font-size: 30px;
+}
+
+.achievement-icon--locked {
+    filter: grayscale(0.2);
+}
+
+.achievement-card h3 {
+    margin: 0 0 8px;
+    color: #f8fafc;
+    font-size: 17px;
+    letter-spacing: -0.02em;
+}
+
+.achievement-card p {
+    margin: 0;
+    color: rgba(226, 232, 240, 0.62);
+    font-size: 14px;
+    line-height: 1.55;
+}
+
+.achievement-meta,
+.achievement-meta-row {
+    margin-top: 16px;
+}
+
+.achievement-meta {
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.achievement-meta--success {
+    color: #8bea9a;
+}
+
+.achievement-meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.achievement-pill {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 6px 10px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.achievement-pill--xp {
+    color: #052e16;
+    background: linear-gradient(135deg, #8bea9a, #7dd3fc);
+}
+
+.achievement-pill--rarity {
+    color: #dbeafe;
+    background: rgba(96, 165, 250, 0.12);
+    border: 1px solid rgba(96, 165, 250, 0.18);
+}
+
+.achievement-rarity-common { color: #cbd5e1; }
+.achievement-rarity-uncommon { color: #8bea9a; }
+.achievement-rarity-rare { color: #7dd3fc; }
+.achievement-rarity-epic { color: #c4b5fd; }
+.achievement-rarity-legendary { color: #fbbf24; }
+
+.public-empty-state {
+    grid-column: 1 / -1;
+    padding: 42px 24px;
+    border: 1px dashed rgba(255, 255, 255, 0.12);
+    border-radius: 24px;
+    text-align: center;
+    color: rgba(226, 232, 240, 0.62);
+}
+
+.public-empty-state > div {
+    margin-bottom: 12px;
+    font-size: 42px;
+}
+
+.public-empty-state h3 {
+    margin: 0 0 8px;
+    color: #f8fafc;
+    font-size: 20px;
+}
+
+.public-empty-state p {
+    margin: 0 auto;
+    max-width: 460px;
+    line-height: 1.6;
+}
+
+.chat-list-hero {
+    min-height: 180px;
+}
+
+.chat-list-back {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0 18px;
+    border-radius: 999px;
+    color: #08111f;
+    background: linear-gradient(135deg, #7dd3fc, #8bea9a);
+    font-weight: 800;
+    text-decoration: none;
+    box-shadow: 0 14px 28px rgba(125, 211, 252, 0.18);
+}
+
+.chat-list-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
+    gap: 22px;
+}
+
+.chat-list-panel,
+.chat-preview-panel {
+    min-height: 420px;
+}
+
+.chat-list-panel {
+    overflow: hidden;
+}
+
+.chat-list-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 22px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.chat-list-panel-head h2 {
+    margin: 0;
+    color: #f8fafc;
+    font-size: 20px;
+}
+
+.chat-list-panel-head span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    height: 28px;
+    padding: 0 10px;
+    border-radius: 999px;
+    color: #7dd3fc;
+    background: rgba(125, 211, 252, 0.1);
+    border: 1px solid rgba(125, 211, 252, 0.16);
+    font-weight: 800;
+}
+
+.chat-list-items {
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-list-item {
+    display: flex;
+    gap: 14px;
+    padding: 18px 22px;
+    color: inherit;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    transition: background 0.2s ease;
+}
+
+.chat-list-item:hover,
+.chat-list-item.is-active {
+    background: rgba(255, 255, 255, 0.055);
+}
+
+.chat-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 46px;
+    width: 46px;
+    height: 46px;
+    border-radius: 16px;
+    color: #fff;
+    background: linear-gradient(135deg, #38bdf8, #8b5cf6);
+    font-size: 18px;
+    font-weight: 900;
+}
+
+.chat-list-body {
+    min-width: 0;
+    flex: 1;
+}
+
+.chat-list-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.chat-list-row strong {
+    overflow: hidden;
+    color: #f8fafc;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.chat-list-row time {
+    flex: 0 0 auto;
+    color: rgba(226, 232, 240, 0.42);
+    font-size: 12px;
+}
+
+.chat-project,
+.chat-last-message {
+    overflow: hidden;
+    margin: 5px 0 0;
+    color: rgba(226, 232, 240, 0.56);
+    font-size: 13px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.chat-last-message {
+    color: rgba(226, 232, 240, 0.38);
+}
+
+.chat-preview-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 34px;
+    text-align: center;
+}
+
+.chat-preview-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 86px;
+    height: 86px;
+    margin-bottom: 18px;
+    border-radius: 28px;
+    background: rgba(255, 255, 255, 0.06);
+    font-size: 42px;
+}
+
+.chat-preview-panel h2 {
+    margin: 0 0 10px;
+    color: #f8fafc;
+    font-size: 26px;
+    letter-spacing: -0.04em;
+}
+
+.chat-preview-panel p {
+    max-width: 360px;
+    margin: 0;
+    color: rgba(226, 232, 240, 0.6);
+    line-height: 1.65;
+}
+
+.chat-pagination {
+    padding: 18px 22px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+@media (max-width: 900px) {
+    .public-doc-hero,
+    .achievements-hero,
+    .chat-list-hero {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .achievements-summary {
+        width: 100%;
+    }
+
+    .chat-list-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .chat-preview-panel {
+        display: none;
+    }
+}
+
+@media (max-width: 640px) {
+    .public-doc-page,
+    .achievements-page,
+    .chat-list-page {
+        width: min(100% - 24px, 1180px);
+        padding-top: 24px;
+    }
+
+    .public-doc-hero,
+    .achievements-hero,
+    .chat-list-hero {
+        padding: 24px;
+        border-radius: 26px;
+    }
+
+    .achievements-summary {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* GitLab connection page additions */
+body.gitlab-page .gl-help-text {
+    margin: 12px 0 18px;
+    color: #626168;
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+body.gitlab-page .gl-help-text strong {
+    color: #2f2a6b;
+    font-weight: 700;
+}
+
+body.gitlab-page .gl-success {
+    display: none;
+    margin-bottom: 14px;
+    padding: 10px 12px;
+    border-radius: 6px;
+    background: #ecfdf3;
+    border: 1px solid #bbf7d0;
+    color: #166534;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+body.gitlab-page .gl-success.show {
+    display: block;
+}
+
+body.gitlab-page .gl-connected-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+body.gitlab-page .gl-connected-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    background: #fafafa;
+}
+
+body.gitlab-page .gl-connected-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 42px;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    color: #fff;
+    background: linear-gradient(135deg, #7ace82, #4f46e5);
+    font-weight: 800;
+}
+
+body.gitlab-page .gl-connected-card strong,
+body.gitlab-page .gl-connected-card span {
+    display: block;
+}
+
+body.gitlab-page .gl-connected-card strong {
+    color: #1f1f1f;
+    font-size: 14px;
+}
+
+body.gitlab-page .gl-connected-card span {
+    margin-top: 2px;
+    color: #73717a;
+    font-size: 12px;
+}
+
+body.gitlab-page .gl-secondary-btn {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #d0d0d0;
+    border-radius: 6px;
+    color: #3b3b3b;
+    background: #fff;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+body.gitlab-page .gl-secondary-btn:hover {
+    background: #f7f7f7;
+}
+
+/* GitLab School21 auto-provision flow */
+body.gitlab-page .gl-panels-wide {
+    grid-template-columns: minmax(320px, 640px);
+    justify-content: center;
+}
+
+body.gitlab-page .gl-field input[readonly] {
+    color: #55515f;
+    background: #f3f3f3;
+    cursor: not-allowed;
+}
+
+body.gitlab-page .gl-warning-box {
+    margin: 12px 0 16px;
+    padding: 12px 14px;
+    border: 1px solid #facc15;
+    border-radius: 8px;
+    color: #713f12;
+    background: #fef9c3;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.45;
+}
+
+body.gitlab-page .gl-credentials-list {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+body.gitlab-page .gl-credentials-list div {
+    padding: 12px;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    background: #fafafa;
+}
+
+body.gitlab-page .gl-credentials-list span,
+body.gitlab-page .gl-credentials-list strong {
+    display: block;
+}
+
+body.gitlab-page .gl-credentials-list span {
+    margin-bottom: 4px;
+    color: #73717a;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+body.gitlab-page .gl-credentials-list strong {
+    overflow-wrap: anywhere;
+    color: #1f1f1f;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 13px;
+}
+
+body.gitlab-page .gl-token-value {
+    color: #2f2a6b;
+}
+
+body.gitlab-page .gl-link-btn {
+    display: block;
+    text-align: center;
+    text-decoration: none;
+}
+
+body.gitlab-page .gl-actions-row {
+    display: grid;
+    gap: 10px;
+}
+
+body.gitlab-page .gl-secondary-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    border: 1px solid #d0d0d0;
+    border-radius: 6px;
+    color: #3b3b3b;
+    background: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+body.gitlab-page .gl-secondary-link:hover {
+    background: #f7f7f7;
+}
+
+/* Compact GitLab auth switcher (login/register style, CSS-only tabs) */
+body.gitlab-page .gl-auth-switcher {
+    max-width: 520px;
+    width: 100%;
+}
+
+body.gitlab-page .gl-auth-radio {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+body.gitlab-page .gl-auth-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    margin-bottom: 18px;
+    padding: 4px;
+    border: 1px solid #dedee3;
+    border-radius: 8px;
+    background: #f6f6f7;
+}
+
+body.gitlab-page .gl-auth-tabs label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 38px;
+    padding: 0 12px;
+    border-radius: 6px;
+    color: #626168;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+    cursor: pointer;
+    transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+}
+
+body.gitlab-page #glModeSchool21:checked ~ .gl-auth-tabs label[for="glModeSchool21"],
+body.gitlab-page #glModeToken:checked ~ .gl-auth-tabs label[for="glModeToken"] {
+    color: #1f1f1f;
+    background: #fff;
+    box-shadow: 0 1px 6px rgba(31, 31, 31, 0.08);
+}
+
+body.gitlab-page .gl-auth-pane {
+    display: none;
+}
+
+body.gitlab-page #glModeSchool21:checked ~ .gl-school21-pane,
+body.gitlab-page #glModeToken:checked ~ .gl-token-pane {
+    display: block;
+}
+
+body.gitlab-page .gl-auth-pane form {
+    margin: 0;
+}
+
+/* Compact one-click School21 GitLab connection */
+body.gitlab-page .gl-compact-connect {
+    max-width: 520px;
+    width: 100%;
+}
+
+body.gitlab-page .gl-compact-connect .gl-sso-btn {
+    width: 100%;
+    margin-bottom: 12px;
+}
+
+body.gitlab-page .gl-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 22px 0 18px;
+    color: #8a8791;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+body.gitlab-page .gl-divider::before,
+body.gitlab-page .gl-divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: #dedee3;
+}
+
+body.gitlab-page .gl-divider span {
+    white-space: nowrap;
+}
+
+/* Project details: error toasts must be red, not success-green */
+.pd-toast.pd-toast-error {
+    background: #7f1d1d;
+    color: #fee2e2;
+    border: 1px solid rgba(248, 113, 113, 0.45);
+    box-shadow: 0 12px 36px rgba(127, 29, 29, 0.35);
+}
+
+.pd-toast.pd-toast-error svg:first-child,
+.pd-toast.pd-toast-error .pd-toast-close {
+    color: #fecaca;
+}
+
+/* Public P2P reviews pages */
+.review-page {
+    width: min(1220px, calc(100% - 40px));
+    margin: 0 auto;
+    padding: 42px 0 72px;
+}
+
+.review-hero {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    min-height: 210px;
+    margin-bottom: 26px;
+    padding: 34px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 34px;
+    background:
+        radial-gradient(circle at 14% 12%, rgba(139, 234, 154, 0.15), transparent 32%),
+        radial-gradient(circle at 84% 20%, rgba(125, 211, 252, 0.12), transparent 34%),
+        linear-gradient(135deg, rgba(17, 24, 39, 0.96), rgba(10, 14, 24, 0.98));
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.32);
+}
+
+.review-hero-small {
+    min-height: 170px;
+}
+
+.review-hero h1 {
+    margin: 0;
+    color: #f8fafc;
+    font-size: clamp(34px, 5vw, 58px);
+    line-height: 0.98;
+    letter-spacing: -0.06em;
+}
+
+.review-hero p:not(.public-kicker) {
+    max-width: 650px;
+    margin: 14px 0 0;
+    color: rgba(226, 232, 240, 0.72);
+    line-height: 1.7;
+}
+
+.review-hero-link,
+.review-primary,
+.review-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    padding: 0 18px;
+    border-radius: 999px;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.review-hero-link,
+.review-primary {
+    color: #08111f;
+    background: linear-gradient(135deg, #7dd3fc, #8bea9a);
+}
+
+.review-secondary {
+    color: #dbeafe;
+    background: rgba(125, 211, 252, 0.12);
+    border: 1px solid rgba(125, 211, 252, 0.22);
+}
+
+.review-card {
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 30px;
+    background: rgba(17, 24, 39, 0.84);
+    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.24);
+    backdrop-filter: blur(18px);
+    overflow: hidden;
+}
+
+.review-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 22px 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.review-card-head h2 {
+    margin: 0;
+    color: #f8fafc;
+    font-size: 20px;
+}
+
+.review-card-head span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    height: 28px;
+    padding: 0 10px;
+    border-radius: 999px;
+    color: #8bea9a;
+    background: rgba(139, 234, 154, 0.1);
+    border: 1px solid rgba(139, 234, 154, 0.18);
+    font-weight: 800;
+}
+
+.review-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.review-item {
+    display: grid;
+    grid-template-columns: 52px 1fr auto;
+    gap: 16px;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.review-item:last-child {
+    border-bottom: none;
+}
+
+.review-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    color: #fff;
+    background: linear-gradient(135deg, #38bdf8, #8b5cf6);
+    font-weight: 900;
+}
+
+.review-title-row,
+.review-meta,
+.review-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.review-title-row h3 {
+    margin: 0;
+    color: #f8fafc;
+    font-size: 17px;
+}
+
+.review-main p,
+.review-meta,
+.review-side-text {
+    margin: 6px 0 0;
+    color: rgba(226, 232, 240, 0.62);
+    font-size: 14px;
+}
+
+.review-meta span {
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.055);
+    font-size: 12px;
+}
+
+.review-status {
+    padding: 5px 9px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.review-status-pending { color: #fbbf24; background: rgba(251, 191, 36, 0.12); }
+.review-status-in_progress { color: #7dd3fc; background: rgba(125, 211, 252, 0.12); }
+
+.review-pagination {
+    padding: 18px 24px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+.review-layout {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 24px;
+    align-items: start;
+}
+
+.review-card-form {
+    padding-bottom: 24px;
+}
+
+.review-details-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    padding: 24px;
+}
+
+.review-details-grid div,
+.review-repo-box,
+.review-completed-item {
+    padding: 14px;
+    border-radius: 16px;
+    background: rgba(255,255,255,0.045);
+    border: 1px solid rgba(255,255,255,0.07);
+}
+
+.review-details-grid span,
+.review-repo-box span {
+    display: block;
+    margin-bottom: 4px;
+    color: rgba(226,232,240,0.48);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.review-details-grid strong,
+.review-repo-box a {
+    color: #f8fafc;
+}
+
+.review-repo-box {
+    margin: 0 24px 24px;
+}
+
+.review-repo-box a {
+    display: inline-flex;
+    margin-top: 8px;
+    color: #8bea9a;
+    font-weight: 800;
+}
+
+.review-form {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    padding: 0 24px;
+}
+
+.review-form label {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    color: rgba(226,232,240,0.72);
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.review-form input,
+.review-form textarea {
+    width: 100%;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 14px;
+    padding: 12px 14px;
+    color: #f8fafc;
+    background: rgba(255,255,255,0.055);
+    outline: none;
+    font: inherit;
+}
+
+.review-form-wide,
+.review-form-actions {
+    grid-column: 1 / -1;
+}
+
+.review-form-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.review-side {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.review-score {
+    padding: 24px 24px 0;
+    color: #f8fafc;
+    font-size: 46px;
+    font-weight: 900;
+}
+
+.review-score.is-pass { color: #8bea9a; }
+.review-score.is-wait { color: #fbbf24; }
+
+.review-side .review-side-text {
+    padding: 0 24px 24px;
+}
+
+.review-completed-item {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 0 24px 12px;
+    color: #f8fafc;
+}
+
+@media (max-width: 900px) {
+    .review-hero,
+    .review-item,
+    .review-layout {
+        grid-template-columns: 1fr;
+    }
+    .review-hero {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+    .review-actions {
+        justify-content: flex-start;
+    }
+}
+
+@media (max-width: 640px) {
+    .review-page {
+        width: min(100% - 24px, 1220px);
+        padding-top: 24px;
+    }
+    .review-details-grid,
+    .review-form {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Public reviews: keep footer at the bottom on empty review lists */
+.review-page {
+    min-height: calc(100vh - 260px);
+}
+
+/* Public review checklist */
+.review-checklist {
+    display: grid;
+    gap: 12px;
+    padding: 18px;
+    border: 1px solid rgba(139, 234, 154, 0.16);
+    border-radius: 18px;
+    background: rgba(139, 234, 154, 0.055);
+}
+
+.review-checklist h2 {
+    margin: 0;
+    color: #f8fafc;
+    font-size: 20px;
+}
+
+.review-checklist p {
+    margin: 0 0 4px;
+    color: rgba(226, 232, 240, 0.66);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.review-checklist-item {
+    display: grid !important;
+    grid-template-columns: 20px 1fr;
+    gap: 12px !important;
+    align-items: start;
+    padding: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.045);
+    cursor: pointer;
+}
+
+.review-checklist-item input {
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+    accent-color: #8bea9a;
+}
+
+.review-checklist-item strong,
+.review-checklist-item small,
+.review-checklist-item em {
+    display: block;
+}
+
+.review-checklist-item strong {
+    color: #f8fafc;
+    font-size: 14px;
+}
+
+.review-checklist-item em {
+    display: inline-flex;
+    margin-left: 6px;
+    padding: 2px 7px;
+    border-radius: 999px;
+    color: #052e16;
+    background: #8bea9a;
+    font-size: 10px;
+    font-style: normal;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.review-checklist-item small {
+    margin-top: 5px;
+    color: rgba(226, 232, 240, 0.6);
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.review-checklist-empty {
+    padding: 14px;
+    border-radius: 14px;
+    color: rgba(226, 232, 240, 0.62);
+    background: rgba(255, 255, 255, 0.045);
+}
+
+/* Review checklist uses radio evaluation: required means "must evaluate", not "must pass" */
+.review-checklist-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.review-checklist-options label {
+    display: inline-flex !important;
+    flex-direction: row !important;
+    align-items: center;
+    gap: 6px !important;
+    padding: 6px 10px;
+    border-radius: 999px;
+    color: rgba(226, 232, 240, 0.76);
+    background: rgba(255, 255, 255, 0.055);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.review-checklist-options input[type="radio"] {
+    width: 14px;
+    height: 14px;
+    accent-color: #8bea9a;
+}
+
+.review-checklist-text {
+    min-width: 0;
+}
+
+/* Fix checklist radio layout after switching from checkbox to Да/Нет evaluation */
+.review-checklist .review-checklist-item {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+}
+
+.review-checklist-text strong,
+.review-checklist-text small {
+    overflow-wrap: anywhere;
+}
+
+.review-checklist .review-checklist-options {
+    justify-content: flex-end;
+    align-self: start;
+    margin-top: 0;
+    min-width: 150px;
+}
+
+.review-checklist .review-checklist-options label {
+    white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+    .review-checklist .review-checklist-item {
+        grid-template-columns: 1fr;
+    }
+
+    .review-checklist .review-checklist-options {
+        justify-content: flex-start;
+        min-width: 0;
+    }
+}
+
+/* Project details timeline: center checkmarks inside the green circles */
+.pd-step.done .pd-step-dot {
+    position: relative;
+}
+
+.pd-step.done .pd-step-dot::after {
+    left: 50% !important;
+    top: 50% !important;
+    width: 5px !important;
+    height: 9px !important;
+    border-left: 0 !important;
+    border-top: 0 !important;
+    border-right: 2.5px solid #15803d !important;
+    border-bottom: 2.5px solid #15803d !important;
+    transform: translate(-50%, -58%) rotate(45deg) !important;
+    transform-origin: center !important;
+    animation: none !important;
+}
+
+/* Calendar current-time indicator (moves in real time via app.js) */
+.calendar-grid-wrapper {
+    position: relative;
+}
+
+.calendar-now-line {
+    position: absolute;
+    z-index: 5;
+    height: 0;
+    border-top: 2px solid rgba(239, 68, 68, 0.82);
+    pointer-events: none;
+    filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.35));
+}
+
+.calendar-now-line[hidden] {
+    display: none !important;
+}
+
+.calendar-now-dot {
+    position: absolute;
+    left: var(--now-dot-left, 0px);
+    top: -5px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.18);
+    transform: translateX(-50%);
+}
+
+/* Calendar: no inner scrollbar, full-width hourly grid */
+.calendar-body {
+    max-width: none;
+    width: 100%;
+    padding-left: 24px;
+    padding-right: 24px;
+}
+
+.calendar-toolbar,
+.calendar-grid-wrapper {
+    width: min(100%, 1440px);
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.calendar-grid-wrapper {
+    overflow: visible;
+    max-height: none;
+}
+
+.calendar-grid {
+    width: 100%;
+    min-width: 0;
+    grid-template-columns: 64px repeat(7, minmax(0, 1fr));
+    grid-auto-rows: 58px;
+}
+
+.grid-day-header,
+.grid-cell {
+    min-width: 0;
+}
+
+@media (max-width: 900px) {
+    .calendar-body {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+    .calendar-grid {
+        grid-template-columns: 52px repeat(7, minmax(92px, 1fr));
+        min-width: 760px;
+    }
+
+    .calendar-grid-wrapper {
+        overflow-x: auto;
+        overflow-y: visible;
+    }
+}
+
+/* Calendar hourly cells with 15-minute visual segments */
+.grid-cell.has-segments {
+    background: transparent;
+}
+
+.cell-segment {
+    position: absolute;
+    left: 4px;
+    right: 4px;
+    z-index: 2;
+    overflow: hidden;
+    border-radius: 8px;
+    border: 1px solid rgba(17, 24, 39, 0.08);
+    color: #111827;
+    text-align: left;
+    cursor: pointer;
+    transition: filter 0.15s ease, transform 0.15s ease;
+}
+
+.cell-segment:hover {
+    filter: brightness(0.97);
+    transform: translateY(-1px);
+}
+
+.cell-segment.cell-slot {
+    background: rgba(139, 234, 154, 0.52);
+    border-color: rgba(21, 128, 61, 0.22);
+}
+
+.cell-segment.cell-booked {
+    background: rgba(251, 191, 36, 0.54);
+    border-color: rgba(180, 130, 10, 0.28);
+}
+
+.cell-segment.cell-event {
+    background: rgba(125, 211, 252, 0.54);
+    border-color: rgba(14, 116, 144, 0.24);
+}
+
+.cell-segment .cell-badge {
+    left: 6px;
+    top: 6px;
+    transform: none;
+    max-width: calc(100% - 12px);
+    pointer-events: none;
+}
+
+/* Calendar privacy: public free slots and private booked slots */
+.cell-segment.cell-slot.public-free,
+.cell-segment.cell-slot {
+    background: #ffffff;
+    border-color: rgba(17, 24, 39, 0.10);
+    color: #111827;
+    box-shadow: 0 4px 14px rgba(17, 24, 39, 0.08);
+}
+
+.cell-segment.cell-slot.public-free .cell-badge,
+.cell-segment.cell-slot .cell-badge {
+    color: #111827;
+    background: transparent;
+    padding: 0;
+    font-weight: 800;
+}
+
+.cell-segment.cell-booked {
+    background: rgba(251, 191, 36, 0.54);
+    border-color: rgba(180, 130, 10, 0.28);
+}
+
+.cell-segment.cell-booked .cell-badge {
+    color: #451a03;
+    background: rgba(255, 255, 255, 0.55);
+}
+
+/* Reviews: countdown replaces Repo/Review buttons until scheduled start */
+.review-countdown {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    max-width: 220px;
+    min-height: 42px;
+    padding: 8px 12px;
+    border-radius: 14px;
+    color: #fbbf24;
+    background: rgba(251, 191, 36, 0.10);
+    border: 1px solid rgba(251, 191, 36, 0.22);
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.35;
+    text-align: center;
+}
+
+.review-countdown strong {
+    margin-left: 4px;
+    color: #fde68a;
+}
+
+.review-countdown.is-ready {
+    color: #8bea9a;
+    background: rgba(139, 234, 154, 0.10);
+    border-color: rgba(139, 234, 154, 0.22);
+}
+
+/* Reviews: reveal actions automatically when countdown reaches zero */
+.review-actions-ready {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.review-actions-ready[hidden] {
+    display: none !important;
+}
+
+.review-actions-ready.is-visible {
+    animation: reviewActionsReadyIn 0.25s ease-out both;
+}
+
+@keyframes reviewActionsReadyIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Global public layout: footer stays at the bottom on short pages,
+   content expands naturally when data grows. */
+html,
+body {
+    min-height: 100%;
+}
+
+.app-shell {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.app-main {
+    flex: 1 0 auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.app-main > main {
+    flex: 1 0 auto;
+}
+
+.app-shell .site-footer {
+    flex-shrink: 0;
+    margin-top: auto;
+}
+
+/* GitLab page: full-width School21 sign-in button */
+body.gitlab-page .gl-sso-btn-full {
+    width: 100%;
+    text-decoration: none;
+}
+
+/* Auth register password hint: mirrors the minimal GitLab password policy discovered locally. */
+body.auth-page .auth-password-hint {
+    margin: -6px 2px 14px;
+    font-size: 12px;
+    line-height: 1.45;
+    color: rgba(255, 255, 255, 0.68);
+}
+
+body.auth-page .auth-password-hint strong {
+    color: var(--green);
+    font-weight: 800;
+}
+
+/* GitLab page: ordinary username/password GitLab login link without auto SSO. */
+body.gitlab-page .gl-manual-login-link {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    margin-top: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #4f6f9f;
+    text-decoration: none;
+}
+
+body.gitlab-page .gl-manual-login-link:hover {
+    color: #2f4f7f;
+    text-decoration: underline;
+}

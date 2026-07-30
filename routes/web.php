@@ -3,6 +3,7 @@
 use App\Http\Controllers\Public\ProjectController as PublicProjectController;
 use App\Http\Controllers\Public\CourseController;
 use App\Http\Controllers\Public\ProgressController;
+use App\Http\Controllers\Public\GitlabController;
 use App\Http\Controllers\Public\CalendarController;
 use App\Http\Controllers\Public\ActivitiesController;
 use App\Http\Controllers\Admin\ProjectController as AdminProjectController;
@@ -15,7 +16,13 @@ use App\Http\Controllers\ChatController;
 use App\Http\Controllers\GamificationController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\OidcController;
 use Illuminate\Support\Facades\Route;
+
+// School21 OpenID Connect provider for GitLab SSO.
+Route::get('/.well-known/openid-configuration', [OidcController::class, 'discovery'])->name('oidc.discovery');
+Route::get('/oidc/jwks', [OidcController::class, 'jwks'])->name('oidc.jwks');
+Route::get('/oidc/authorize', [OidcController::class, 'authorize'])->middleware('auth')->name('oidc.authorize');
 
 // Auth pages — accessible without auth, redirect if already logged in
 Route::view('/login', 'auth.login')->name('login')->middleware('guest');
@@ -33,8 +40,6 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         return redirect()->route('public.home');
     })->name('dashboard');
 
-    Route::get('/admin/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
-
     Route::get('/public', function () {
         return view('public.layouts.app');
     });
@@ -47,19 +52,22 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         ->middleware(['role:admin'])
         ->name('admin.')
         ->group(function () {
-            Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+            Route::get('/', fn () => redirect()->route('admin.dashboard'));
+            Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
             // Users management
             Route::get('/users', [UserController::class, 'index'])->name('users.index');
             Route::patch('/users/{user}/role', [UserController::class, 'updateRole'])->name('users.role');
+            Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+            Route::patch('/users/{user}/restore', [UserController::class, 'restore'])->name('users.restore');
 
             // Projects CRUD
             Route::get('/projects', [AdminProjectController::class, 'index'])->name('projects.index');
             Route::get('/projects/create', [AdminProjectController::class, 'create'])->name('projects.create');
             Route::post('/projects', [AdminProjectController::class, 'store'])->name('projects.store');
-            Route::get('/projects/{project}/edit', [AdminProjectController::class, 'edit'])->name('projects.edit');
-            Route::put('/projects/{project}', [AdminProjectController::class, 'update'])->name('projects.update');
-            Route::delete('/projects/{project}', [AdminProjectController::class, 'destroy'])->name('projects.destroy');
+            Route::get('/projects/{project:id}/edit', [AdminProjectController::class, 'edit'])->name('projects.edit');
+            Route::put('/projects/{project:id}', [AdminProjectController::class, 'update'])->name('projects.update');
+            Route::delete('/projects/{project:id}', [AdminProjectController::class, 'destroy'])->name('projects.destroy');
 
             // Courses CRUD
             Route::get('/courses', [AdminCourseController::class, 'index'])->name('courses.index');
@@ -96,6 +104,14 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
             Route::delete('/reviews/{review}', [ReviewController::class, 'destroy'])->name('reviews.destroy');
         });
 
+    // P2P Reviews — available to regular users assigned as reviewers.
+    Route::prefix('reviews')->name('reviews.')->group(function () {
+        Route::get('/', [ReviewController::class, 'index'])->name('index');
+        Route::get('/{review}', [ReviewController::class, 'show'])->name('show');
+        Route::post('/{review}/submit', [ReviewController::class, 'submit'])->name('submit');
+        Route::delete('/{review}', [ReviewController::class, 'destroy'])->name('destroy');
+    });
+
     // P2P Chat
     Route::prefix('chats')->name('chats.')->group(function () {
         Route::get('/', [ChatController::class, 'index'])->name('index');
@@ -121,9 +137,8 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     Route::get('/courses/{course}/modules/{module}', [App\Http\Controllers\Public\CourseController::class, 'moduleShow'])->name('public.courses.module');
     Route::get('/courses/{course}/modules/{module}/lessons/{lesson}', [App\Http\Controllers\Public\CourseController::class, 'lessonShow'])->name('public.courses.lesson');
 
-    // Progress page — REMOVED: profile page deleted
-    // Route::get('/progress', ProgressController::class)->name('public.progress');
-    Route::get('/progress', fn() => redirect()->route('public.home'))->name('public.progress');
+    // Progress page
+    Route::get('/progress', ProgressController::class)->name('public.progress');
 
     /* ------------------------------------------------------------------
        Calendar — fully server-side (no AJAX endpoints).
@@ -151,6 +166,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     Route::get('/calendar/events', fn () => redirect()->route('public.events.index')); // old URL keeps working
 
     Route::post('/calendar/slots', [CalendarController::class, 'createSlot'])->name('calendar.slots.create');
+    Route::post('/calendar/slots/{slot}/book', [CalendarController::class, 'bookSlot'])->name('calendar.slots.book');
     Route::delete('/calendar/slots/{slot}', [CalendarController::class, 'destroySlot'])->name('calendar.slots.destroy');
     Route::post('/calendar/events', [CalendarController::class, 'createEvent'])->name('calendar.events.create');
     Route::delete('/calendar/events/{event}', [CalendarController::class, 'destroyEvent'])->name('calendar.events.destroy');
@@ -158,8 +174,9 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
 
     Route::get('/activities', ActivitiesController::class)->name('public.activities');
 
-    // GitLab sign-in page (static for now, opened from the Projects overlay)
-    Route::view('/gitlab', 'public.gitlab')->name('public.gitlab');
+    // School21 GitLab account. API access is managed automatically via admin API.
+    Route::get('/gitlab', [GitlabController::class, 'show'])->name('public.gitlab');
+    Route::post('/gitlab/sign-in', [GitlabController::class, 'signIn'])->name('public.gitlab.sign-in');
 
     // Tribes page (opened from the Activities overlay)
     Route::view('/tribes', 'public.tribes')->name('public.tribes');
