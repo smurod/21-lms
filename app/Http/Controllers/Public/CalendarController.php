@@ -399,28 +399,94 @@ class CalendarController extends Controller
             return redirect()->back()->with('error', 'Active submission not found. Subscribe to the project first.');
         }
 
-        // 1) Run automated tests
-        $testRunner = app(\App\Services\TestRunnerService::class);
-        $submission = $testRunner->run($submission);
+        $submission->loadMissing('project', 'user');
+        $project = $submission->project;
+        $this->lockSubmissionCommit($submission);
+        $hasAutotests = (bool) ($project->has_automated_tests ?? false);
+        $requiresPeerReview = (bool) ($project->requires_peer_review ?? false);
 
-        if (! $testRunner->passes($submission)) {
-            return redirect()->back()->with('error',
-                "Autotests failed: {$submission->tests_passed}/{$submission->tests_total} ({$submission->test_score}%). ".
-                "Passing score: ".($submission->project->passing_score ?? 70)."%. Fix and resubmit."
+        if ($requiresPeerReview) {
+            // P2P-first flow: if the project also has autotests, they run only
+            // after the required peer reviews are completed successfully.
+            $submission->update([
+                'status' => 'in_review',
+                'submitted_at' => now(),
+            ]);
+
+            $message = $hasAutotests
+                ? 'Project submitted. Choose free P2P review slots in the calendar. Autotests will run after required peer reviews are completed.'
+                : 'Project submitted. Choose free P2P review slots in the calendar.';
+
+            return redirect()->back()->with('success', $message);
+        }
+
+        if ($hasAutotests) {
+            // Autotest-only flow: no peer review is required, so tests run now
+            // and decide the final project state.
+            $submission->update([
+                'status' => 'queued',
+                'submitted_at' => now(),
+            ]);
+
+            \App\Jobs\RunSubmissionTestsJob::dispatch($submission->id);
+
+            return redirect()->back()->with(
+                'success',
+                'Autotests queued. The project will be marked passed/failed after the sandbox runner finishes.'
             );
         }
 
-        // Tests passed. The project now waits for the student to book suitable
-        // peer-review slots manually from the public calendar.
-        $submission->update([
-            'status' => 'in_review',
-            'submitted_at' => now(),
-        ]);
+        // Projects without any validation gate must not be auto-passed.
+        // Admin validation prevents this for new projects; this guard protects
+        // legacy data and partially configured projects.
+        return redirect()->back()->with('error', 'Project has no validation gate configured. Enable automated tests or P2P review in the admin panel.');
+    }
 
-        return redirect()->back()->with(
-            'success',
-            "Tests passed {$submission->tests_passed}/{$submission->tests_total} ({$submission->test_score}%). ".
-            'Choose a free peer-review slot in the calendar.'
+    private function lockSubmissionCommit(\App\Models\Admin\Submission $submission): void
+    {
+        if (! empty($submission->git_commit_hash) || empty($submission->git_url)) {
+            return;
+        }
+
+        $branch = $submission->project?->default_branch ?: 'main';
+        $token = $submission->user?->connectedGitlabToken();
+        $hash = app(\App\Services\GitlabService::class)->latestCommitHash(
+            repositoryUrl: $submission->git_url,
+            branch: $branch,
+            token: $token,
+        );
+
+        if ($hash) {
+            $submission->forceFill(['git_commit_hash' => $hash])->save();
+        }
+    }
+
+    private function awardSubmissionXp(\App\Models\Admin\Submission $submission): void
+    {
+        $submission->loadMissing('project');
+        $project = $submission->project;
+
+        if (! $project || (int) $project->xp_reward <= 0) {
+            return;
+        }
+
+        $alreadyAwarded = \App\Models\XpTransaction::where([
+            'user_id' => $submission->user_id,
+            'source_type' => 'submission',
+            'source_id' => $submission->id,
+        ])->exists();
+
+        if ($alreadyAwarded) {
+            return;
+        }
+
+        app(\App\Services\XpService::class)->add(
+            userId: $submission->user_id,
+            amount: (int) $project->xp_reward,
+            reason: 'project_completed',
+            sourceType: 'submission',
+            sourceId: $submission->id,
+            description: "Project '{$project->title}' completed – {$submission->final_score}%"
         );
     }
 }

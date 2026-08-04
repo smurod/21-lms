@@ -13,14 +13,19 @@
 }" class="max-w-4xl space-y-8 anim-up" style="animation-delay: 0.1s">
 
         <!-- Page Header -->
-        <div class="flex items-center gap-4">
-            <a href="{{ route('admin.projects.index') }}" class="w-10 h-10 rounded-2xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-zinc-400 hover:text-white transition-all duration-300">
-                <i data-lucide="arrow-left" class="w-5 h-5"></i>
-            </a>
-            <div>
-                <h1 class="text-3xl font-semibold tracking-tight text-white">Редактировать проект</h1>
-                <p class="text-zinc-400 mt-1 font-medium text-sm">{{ $project->title ?? 'Название проекта' }}</p>
+        <div class="flex items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <a href="{{ route('admin.projects.index') }}" class="w-10 h-10 rounded-2xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-zinc-400 hover:text-white transition-all duration-300">
+                    <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                </a>
+                <div>
+                    <h1 class="text-3xl font-semibold tracking-tight text-white">Редактировать проект</h1>
+                    <p class="text-zinc-400 mt-1 font-medium text-sm">{{ $project->title ?? 'Название проекта' }}</p>
+                </div>
             </div>
+            <a href="{{ route('admin.projects.tests', $project->id) }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/20 transition-colors font-semibold">
+                <i data-lucide="flask-conical" class="w-4 h-4"></i> Autotests
+            </a>
         </div>
 
         <form method="POST" action="{{ route('admin.projects.update', $project->id ?? 1) }}" @submit="submit" class="space-y-6">

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Admin\Project;
+use App\Models\Admin\ProjectTest;
 use App\Services\GitlabCacheService;
 use App\Services\GitlabService;
 use Illuminate\Http\Request;
@@ -77,6 +78,12 @@ class ProjectController extends Controller
         $data['is_mandatory'] = $request->boolean('is_mandatory');
         $data['has_automated_tests'] = $request->boolean('has_automated_tests');
         $data['requires_peer_review'] = $request->boolean('requires_peer_review', true);
+
+        if (! $data['has_automated_tests'] && ! $data['requires_peer_review']) {
+            return back()
+                ->withInput()
+                ->withErrors(['validation' => 'Project must have at least one validation gate: automated tests or P2P review.']);
+        }
 
         $data['xp_reward'] = $data['xp_reward'] ?? 100;
         $data['passing_score'] = $data['passing_score'] ?? 70;
@@ -153,6 +160,13 @@ class ProjectController extends Controller
         $data['is_mandatory'] = $request->boolean('is_mandatory');
         $data['has_automated_tests'] = $request->boolean('has_automated_tests');
         $data['requires_peer_review'] = $request->boolean('requires_peer_review');
+
+        if (! $data['has_automated_tests'] && ! $data['requires_peer_review']) {
+            return back()
+                ->withInput()
+                ->withErrors(['validation' => 'Project must have at least one validation gate: automated tests or P2P review.']);
+        }
+
         $data['xp_reward'] = $data['xp_reward'] ?? 100;
         $data['passing_score'] = $data['passing_score'] ?? 70;
         $data['required_reviews_count'] = $data['required_reviews_count'] ?? 2;
@@ -206,6 +220,68 @@ class ProjectController extends Controller
                 ->withInput()
                 ->withErrors(['gitlab' => 'GitLab error: ' . $e->getMessage()]);
         }
+    }
+
+
+    public function tests(Project $project)
+    {
+        $project->load(['tests', 'submissions' => fn ($query) => $query->latest('id')->limit(5)]);
+
+        return view('admin.projects.tests', compact('project'));
+    }
+
+    public function storeTest(Request $request, Project $project)
+    {
+        $data = $this->validateProjectTest($request);
+        $data['is_hidden'] = $request->boolean('is_hidden', true);
+        $data['timeout_seconds'] = $data['timeout_seconds'] ?? $project->test_timeout_seconds ?? 120;
+
+        $project->tests()->create($data);
+
+        if (! $project->has_automated_tests) {
+            $project->update(['has_automated_tests' => true]);
+        }
+
+        return redirect()->route('admin.projects.tests', $project->id)
+            ->with('success', 'Autotest definition created.');
+    }
+
+    public function updateTest(Request $request, Project $project, ProjectTest $test)
+    {
+        abort_unless((int) $test->project_id === (int) $project->id, 404);
+
+        $data = $this->validateProjectTest($request);
+        $data['is_hidden'] = $request->boolean('is_hidden');
+        $data['timeout_seconds'] = $data['timeout_seconds'] ?? $project->test_timeout_seconds ?? 120;
+
+        $test->update($data);
+
+        return redirect()->route('admin.projects.tests', $project->id)
+            ->with('success', 'Autotest definition updated.');
+    }
+
+    public function destroyTest(Project $project, ProjectTest $test)
+    {
+        abort_unless((int) $test->project_id === (int) $project->id, 404);
+
+        $test->delete();
+
+        return redirect()->route('admin.projects.tests', $project->id)
+            ->with('success', 'Autotest definition deleted.');
+    }
+
+    private function validateProjectTest(Request $request): array
+    {
+        return $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string|max:2000',
+            'test_code' => 'required|string',
+            'points' => 'required|integer|min:1|max:1000',
+            'order_position' => 'nullable|integer|min:0|max:10000',
+            'is_hidden' => 'nullable|boolean',
+            'test_type' => 'required|in:unit,integration,performance,style',
+            'timeout_seconds' => 'nullable|integer|min:1|max:3600',
+        ]);
     }
 
     public function destroy(Project $project, GitlabService $gitlab, GitlabCacheService $gitlabCache)

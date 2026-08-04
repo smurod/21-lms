@@ -45,6 +45,8 @@ return [
         'visibility' => env('GITLAB_VISIBILITY', 'public'),
         'cache_ttl' => env('GITLAB_CACHE_TTL', 300),
         'user_token_scopes' => array_values(array_filter(array_map('trim', explode(',', env('GITLAB_USER_TOKEN_SCOPES', 'api,write_repository'))))),
+        // Keep below GitLab max PAT lifetime. Some GitLab versions reject exactly +1 year.
+        'user_token_expires_days' => (int) env('GITLAB_USER_TOKEN_EXPIRES_DAYS', 300),
         'sign_in_url' => rtrim(env('GITLAB_URL', ''), '/') . '/users/sign_in',
         'login_url' => env('GITLAB_LOGIN_URL', rtrim(env('GITLAB_URL', ''), '/') . '/users/sign_in?auto_sign_in=false'),
         'sso_url' => env('GITLAB_SSO_URL', rtrim(env('GITLAB_URL', ''), '/') . '/users/sign_in'),

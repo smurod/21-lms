@@ -32,6 +32,7 @@ class Project extends Model
 
     protected $casts = [
         'requires_peer_review' => 'boolean',
+        'has_automated_tests' => 'boolean',
         'is_published' => 'boolean',
         'is_mandatory' => 'boolean',
         'runtime' => 'array',
@@ -51,6 +52,13 @@ class Project extends Model
     {
         return $this->hasMany(ReviewChecklist::class, 'project_id', 'id')
             ->orderBy('order_position');
+    }
+
+    public function tests(): HasMany
+    {
+        return $this->hasMany(ProjectTest::class, 'project_id', 'id')
+            ->orderBy('order_position')
+            ->orderBy('id');
     }
 
     public function activeSubmissions(): HasOne

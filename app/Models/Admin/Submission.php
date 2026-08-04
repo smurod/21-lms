@@ -4,12 +4,15 @@ namespace App\Models\Admin;
 
 use App\Models\TestResult;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Submission extends Model
 {
+    use HasFactory;
+
     protected $table = 'submissions';
     protected $fillable = [
         'user_id', 'project_id',
@@ -60,5 +63,10 @@ class Submission extends Model
     public function testResults(): HasMany
     {
         return $this->hasMany(TestResult::class, 'submission_id', 'id');
+    }
+
+    public function testRuns(): HasMany
+    {
+        return $this->hasMany(\App\Models\TestRun::class, 'submission_id', 'id');
     }
 }

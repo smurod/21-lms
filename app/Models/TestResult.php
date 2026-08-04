@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class TestResult extends Model
 {
     protected $fillable = [
-        'submission_id', 'project_test_id', 'test_name',
+        'submission_id', 'test_run_id', 'project_test_id', 'test_name',
         'passed', 'error_message', 'output',
         'execution_time_ms', 'points_earned', 'points_possible',
     ];
@@ -23,6 +23,11 @@ class TestResult extends Model
     public function submission(): BelongsTo
     {
         return $this->belongsTo(\App\Models\Admin\Submission::class);
+    }
+
+    public function testRun(): BelongsTo
+    {
+        return $this->belongsTo(TestRun::class);
     }
 
     public function projectTest(): BelongsTo

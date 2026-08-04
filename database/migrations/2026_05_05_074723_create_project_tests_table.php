@@ -15,19 +15,22 @@ return new class extends Migration
             $table->id();
             $table->foreignId('project_id')->constrained()->onDelete('cascade');
 
-            $table->string('name'); // "Test basic functionality"
+            $table->string('name');
             $table->text('description')->nullable();
-            $table->longText('test_code'); // код теста
+            // Hidden/public server-side test script. It is written outside the
+            // student repository and mounted read-only into the test sandbox.
+            $table->longText('test_code');
 
-            $table->unsignedInteger('points')->default(10); // вес теста
+            $table->unsignedInteger('points')->default(10);
             $table->unsignedInteger('order_position')->default(0);
-            $table->boolean('is_hidden')->default(false); // скрыт от студента
-
+            $table->boolean('is_hidden')->default(false);
             $table->enum('test_type', ['unit', 'integration', 'performance', 'style'])->default('unit');
+            $table->unsignedInteger('timeout_seconds')->nullable();
 
             $table->timestamps();
 
             $table->index(['project_id', 'order_position']);
+            $table->index(['project_id', 'is_hidden']);
         });
     }
 

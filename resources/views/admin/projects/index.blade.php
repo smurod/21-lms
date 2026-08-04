@@ -136,6 +136,9 @@
 
                             <td class="px-6 py-4 text-right">
                                 <div class="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                    <a href="{{ route('admin.projects.tests', $project->id ?? 1) }}" class="p-2 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 hover:text-cyan-200 transition-colors" title="Autotests">
+                                        <i data-lucide="flask-conical" class="w-4 h-4"></i>
+                                    </a>
                                     <a href="{{ route('admin.projects.edit', $project->id ?? 1) }}" class="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white transition-colors" title="Edit">
                                         <i data-lucide="edit-2" class="w-4 h-4"></i>
                                     </a>

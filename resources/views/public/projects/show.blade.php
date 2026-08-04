@@ -33,9 +33,12 @@
         elseif ($isWorking)   { $pillClass = 'prj-pill-progress'; $pillText = 'В процессе'; }
         else                  { $pillClass = 'prj-pill-open';     $pillText = 'Запись открыта'; }
 
-        /* Active view: task becomes available once enrolled */
-        $activeView = request('view', $isWorking || $isInReview || $isFailed ? 'task' : 'about');
-        if ($activeView === 'task' && !($isWorking || $isInReview || $isFailed)) $activeView = 'about';
+        /* Active view: task is available after enrollment and remains available
+           after completion, so passed/failed users can reopen repository,
+           instructions and autotest logs. */
+        $canViewTask = $isWorking || $isInReview || $isFailed || $isPassed || (bool) $completedSubmission;
+        $activeView = request('view', $canViewTask ? 'task' : 'about');
+        if ($activeView === 'task' && ! $canViewTask) $activeView = 'about';
 
         $templateRepoUrl = $gitlabProject['web_url'] ?? $project->repository_url;
         $templateCloneUrl = $gitlabProject['ssh_url_to_repo'] ?? ($gitlabProject['http_url_to_repo'] ?? $templateRepoUrl);
@@ -136,14 +139,26 @@
                                     @endif
                                 @endif
                             @elseif ($isWorking)
-                                {{-- Submit for review → CalendarController@submitProjectForReview (BookingService FIFO) --}}
+                                @php
+                                    $hasValidationGate = $project->requires_peer_review || $project->has_automated_tests;
+                                    $submitLabel = $project->requires_peer_review
+                                        ? 'Сдать на P2P review'
+                                        : ($project->has_automated_tests ? 'Запустить автотесты' : 'Проверка не настроена');
+                                    $submitNote = $project->requires_peer_review && $project->has_automated_tests
+                                        ? 'После P2P review автоматически запустятся автотесты'
+                                        : ($project->requires_peer_review
+                                            ? 'После сдачи выберите свободный P2P slot в календаре'
+                                            : ($project->has_automated_tests
+                                                ? 'Проект будет оценён автотестами без P2P review'
+                                                : 'Администратор должен включить автотесты или P2P review'));
+                                @endphp
                                 <form method="POST" action="{{ route('calendar.submit-review') }}">
                                     @csrf
                                     <input type="hidden" name="project_id" value="{{ $project->id }}" />
                                     <input type="hidden" name="submission_id" value="{{ $activeSubmission->id }}" />
-                                    <button class="pd-subscribe" type="submit">Сдать на review</button>
+                                    <button class="pd-subscribe" type="submit" @disabled(! $hasValidationGate)>{{ $submitLabel }}</button>
                                 </form>
-                                <div class="pd-subscribe-note">Попытка №{{ $activeSubmission->attempt_number }}</div>
+                                <div class="pd-subscribe-note">Попытка №{{ $activeSubmission->attempt_number }} — {{ $submitNote }}</div>
                             @else
                                 <button class="pd-subscribe subscribed" type="button" disabled>Ожидает review</button>
                                 <div class="pd-subscribe-note">Reviews: {{ $reviewStatus['received'] }}/{{ $reviewStatus['required'] }}</div>
@@ -161,7 +176,7 @@
             <div class="pd-tabs">
                 <a class="pd-tab {{ $activeView === 'about' ? 'active' : '' }}"
                    href="{{ route('public.projects.show', $project) }}?view=about">About</a>
-                @if ($isWorking || $isInReview || $isFailed)
+                @if ($canViewTask)
                     <a class="pd-tab {{ $activeView === 'task' ? 'active' : '' }}"
                        href="{{ route('public.projects.show', $project) }}?view=task">Task</a>
                 @else
@@ -187,9 +202,13 @@
                             <div class="pd-condition">Language: {{ strtoupper($project->language ?? '—') }}</div>
                             <span class="pd-cond-op">AND</span>
                             <div class="pd-condition">Level {{ $project->min_level }}+</div>
+                            @if ($project->requires_peer_review)
+                                <span class="pd-cond-op">AND</span>
+                                <div class="pd-condition">P2P review: {{ $project->required_reviews_count ?? 2 }} reviewer(s)</div>
+                            @endif
                             @if ($project->has_automated_tests)
                                 <span class="pd-cond-op">AND</span>
-                                <div class="pd-condition">Autotests: passing score {{ $project->passing_score }}%</div>
+                                <div class="pd-condition">Autotests: {{ $project->requires_peer_review ? 'after P2P review' : 'on submit' }}, passing score {{ $project->passing_score }}%</div>
                             @endif
                         </div>
                     </article>
@@ -387,6 +406,9 @@
                                 <button class="pd-finish-btn" type="submit">Переделать</button>
                             </form>
                             <p class="pd-about-text">Исправьте ошибки в этом же репозитории и начните новую попытку без нового fork.</p>
+                        @elseif($isPassed)
+                            <button class="pd-finish-btn" type="button" disabled>Пройден</button>
+                            <p class="pd-about-text">Проект завершён. Репозиторий, задание и логи автотестов доступны для просмотра.</p>
                         @else
                             <button class="pd-finish-btn" type="button" disabled>Ожидает review</button>
                         @endif
@@ -396,6 +418,14 @@
                         <div class="pd-repo-label">Git project</div>
                         <div class="pd-repo-name">{{ $displayRepoName }}</div>
                     </div>
+
+                    @if($anySub && $project->has_automated_tests)
+                        <div class="pd-repo-card test-run-mini-card">
+                            <div class="pd-repo-label">Autotests</div>
+                            <div class="pd-repo-name">{{ $anySub->test_score ?? 0 }}%</div>
+                            <a class="pd-git-open test-run-link" href="{{ route('public.submissions.tests.index', $anySub) }}">View logs</a>
+                        </div>
+                    @endif
                 </aside>
             </section>
         @endif
