@@ -114,41 +114,11 @@ class ReviewController extends Controller
             'status' => $completedCount >= $requiredCount ? 'reviewed' : 'in_review',
         ]);
 
-        // Finalize if enough reviews AND passing score
+        // Finalize if enough reviews. If the project also has automated tests,
+        // tests run AFTER the required P2P reviews are completed successfully.
         $passingScore = $project->passing_score ?? 70;
         if ($completedCount >= $requiredCount) {
-            if ($averageScore >= $passingScore) {
-                // PASSED → close submission, award XP
-                if ($submission->status !== 'passed') {
-                    $submission->update([
-                        'status' => 'passed',
-                        'final_score' => $averageScore,
-                        'completed_at' => now(),
-                    ]);
-
-                    // Award XP (idempotent guard: check if already awarded)
-                    $alreadyAwarded = \App\Models\XpTransaction::where([
-                        'user_id' => $submission->user_id,
-                        'source_type' => 'submission',
-                        'source_id' => $submission->id,
-                    ])->exists();
-
-                    if (! $alreadyAwarded && $project->xp_reward > 0) {
-                        $xp->add(
-                            userId: $submission->user_id,
-                            amount: (int) $project->xp_reward,
-                            reason: 'project_completed',
-                            sourceType: 'submission',
-                            sourceId: $submission->id,
-                            description: "Project '{$project->title}' completed – {$averageScore}%"
-                        );
-                    }
-                }
-
-                return redirect()->route('reviews.index')
-                    ->with('success', "Review saved. Project PASSED ({$averageScore}%). XP awarded: {$project->xp_reward}.");
-            } else {
-                // FAILED → allow resubmission
+            if ($averageScore < $passingScore) {
                 $submission->update([
                     'status' => 'failed',
                     'final_score' => $averageScore,
@@ -156,14 +126,66 @@ class ReviewController extends Controller
                 ]);
 
                 return redirect()->route('reviews.index')
-                    ->with('error', "Review saved. Project FAILED ({$averageScore}% < {$passingScore}%). User can resubmit.");
+                    ->with('error', "Review saved. Project FAILED on P2P review ({$averageScore}% < {$passingScore}%). User can resubmit.");
             }
+
+            if ($project->has_automated_tests) {
+                $submission->update([
+                    'status' => 'queued',
+                    'review_score' => $averageScore,
+                    'reviews_received' => $completedCount,
+                ]);
+
+                \App\Jobs\RunSubmissionTestsJob::dispatch($submission->id);
+
+                return redirect()->route('reviews.index')
+                    ->with('success', "Review saved. P2P passed ({$averageScore}%). Autotests queued and will decide final passed/failed status.");
+            }
+
+            $submission->update([
+                'status' => 'passed',
+                'final_score' => $averageScore,
+                'completed_at' => now(),
+            ]);
+            $this->awardSubmissionXp($submission, $xp);
+
+            return redirect()->route('reviews.index')
+                ->with('success', "Review saved. Project PASSED ({$averageScore}%). XP awarded: {$project->xp_reward}.");
         }
 
         // Still waiting for more reviews. No auto-assignment here:
         // the student must manually choose the next free slot in the calendar.
         return redirect()->route('reviews.index')
             ->with('success', "Review submitted ({$completedCount}/{$requiredCount}). Avg: ".round($averageScore,1)."%. Student must book the next free slot manually.");
+    }
+
+    private function awardSubmissionXp(\App\Models\Admin\Submission $submission, XpService $xp): void
+    {
+        $submission->loadMissing('project');
+        $project = $submission->project;
+
+        if (! $project || (int) $project->xp_reward <= 0) {
+            return;
+        }
+
+        $alreadyAwarded = \App\Models\XpTransaction::where([
+            'user_id' => $submission->user_id,
+            'source_type' => 'submission',
+            'source_id' => $submission->id,
+        ])->exists();
+
+        if ($alreadyAwarded) {
+            return;
+        }
+
+        $xp->add(
+            userId: $submission->user_id,
+            amount: (int) $project->xp_reward,
+            reason: 'project_completed',
+            sourceType: 'submission',
+            sourceId: $submission->id,
+            description: "Project '{$project->title}' completed – {$submission->final_score}%"
+        );
     }
 
     private function formatChecklistData(Review $review, array $checklistResults): array

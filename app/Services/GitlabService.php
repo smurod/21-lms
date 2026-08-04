@@ -164,10 +164,12 @@ class GitlabService
             $scopes = ['api', 'write_repository'];
         }
 
+        $expiresDays = max(1, min(300, (int) config('services.gitlab.user_token_expires_days', 300)));
+
         $response = $this->adminClient()->post($this->baseUrl . "/users/{$userId}/impersonation_tokens", [
             'name' => $name,
             'scopes' => array_values($scopes),
-            'expires_at' => now()->addYear()->toDateString(),
+            'expires_at' => now()->addDays($expiresDays)->toDateString(),
         ]);
 
         if (!$response->successful()) {
@@ -311,6 +313,47 @@ class GitlabService
             ->toString();
 
         return $normalized !== '' ? $normalized : Str::random(8);
+    }
+
+    public function latestCommitHash(string $repositoryUrl, string $branch = 'main', ?string $token = null): ?string
+    {
+        $path = $this->projectPathFromRepositoryUrl($repositoryUrl);
+        if ($path === null) {
+            return null;
+        }
+
+        $response = $this->client($token)->get(
+            $this->baseUrl . '/projects/' . rawurlencode($path) . '/repository/commits/' . rawurlencode($branch)
+        );
+
+        if (! $response->successful()) {
+            Log::warning('GitLab latest commit lookup failed', [
+                'repository_url' => $repositoryUrl,
+                'path' => $path,
+                'branch' => $branch,
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+
+            return null;
+        }
+
+        return $response->json('id');
+    }
+
+    private function projectPathFromRepositoryUrl(string $repositoryUrl): ?string
+    {
+        $path = parse_url($repositoryUrl, PHP_URL_PATH);
+        if (! is_string($path) || $path === '') {
+            return null;
+        }
+
+        $path = trim($path, '/');
+        if (str_ends_with($path, '.git')) {
+            $path = substr($path, 0, -4);
+        }
+
+        return $path !== '' ? $path : null;
     }
 
     /**

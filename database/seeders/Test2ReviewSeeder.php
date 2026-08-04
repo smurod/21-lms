@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Admin\Project;
 use App\Models\Admin\Review;
 use App\Models\Admin\Submission;
+use App\Models\CalendarSlot;
 use App\Models\User;
 use App\Services\GitlabService;
 use Illuminate\Database\Seeder;
@@ -44,6 +45,28 @@ class Test2ReviewSeeder extends Seeder
             ]
         );
 
+        $startsAt = now()->subHour()->second(0);
+        $deadlineAt = $startsAt->copy()->addDay();
+
+        CalendarSlot::where('user_id', $reviewer->id)
+            ->where('booked_by_user_id', $student->id)
+            ->delete();
+
+        CalendarSlot::updateOrCreate(
+            [
+                'user_id' => $reviewer->id,
+                'project_id' => $project->id,
+                'date' => $startsAt->toDateString(),
+                'start_time' => $startsAt->format('H:i'),
+            ],
+            [
+                'end_time' => $startsAt->copy()->addHour()->format('H:i'),
+                'status' => 'booked',
+                'booked_by_user_id' => $student->id,
+                'notes' => 'Seeded always-ready P2P review slot for test2 review page editing.',
+            ]
+        );
+
         Review::updateOrCreate(
             [
                 'submission_id' => $submission->id,
@@ -62,12 +85,12 @@ class Test2ReviewSeeder extends Seeder
                 'status' => 'pending',
                 'is_calibration' => false,
                 'accuracy_score' => null,
-                'started_at' => now()->subHour(),
-                'completed_at' => now()->addHours(23),
+                'started_at' => $startsAt,
+                'completed_at' => $deadlineAt,
             ]
         );
 
-        $this->command?->info('Seeded ready P2P review: reviewer test2@gmail.com, student test@gmail.com, project SimpleBashUtils.');
+        $this->command?->info('Seeded always-ready P2P review: reviewer test2@gmail.com, student test@gmail.com, project SimpleBashUtils.');
     }
 
     private function studentRepositoryUrl(GitlabService $gitlab, User $student, Project $project): ?string

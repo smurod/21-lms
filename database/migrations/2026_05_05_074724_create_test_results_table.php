@@ -11,9 +11,32 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::create('test_runs', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('submission_id')->constrained()->onDelete('cascade');
+            $table->string('status')->default('queued'); // queued, running, passed, failed, error, cancelled
+            $table->string('runner')->default('process_git_runtime_v1');
+            $table->string('image')->nullable();
+            $table->longText('command')->nullable();
+            $table->string('commit_hash')->nullable();
+            $table->timestamp('started_at')->nullable();
+            $table->timestamp('finished_at')->nullable();
+            $table->unsignedInteger('duration_ms')->nullable();
+            $table->integer('exit_code')->nullable();
+            $table->decimal('score', 5, 2)->default(0);
+            $table->longText('logs')->nullable();
+            $table->string('artifacts_path')->nullable();
+            $table->json('metadata')->nullable();
+            $table->timestamps();
+
+            $table->index(['submission_id', 'status']);
+            $table->index(['submission_id', 'created_at']);
+        });
+
         Schema::create('test_results', function (Blueprint $table) {
             $table->id();
             $table->foreignId('submission_id')->constrained()->onDelete('cascade');
+            $table->foreignId('test_run_id')->nullable()->constrained('test_runs')->nullOnDelete();
             $table->foreignId('project_test_id')->nullable()->constrained()->nullOnDelete();
 
             $table->string('test_name');
@@ -28,6 +51,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index('submission_id');
+            $table->index('test_run_id');
         });
     }
 
@@ -37,5 +61,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('test_results');
+        Schema::dropIfExists('test_runs');
     }
 };

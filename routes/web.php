@@ -3,6 +3,7 @@
 use App\Http\Controllers\Public\ProjectController as PublicProjectController;
 use App\Http\Controllers\Public\CourseController;
 use App\Http\Controllers\Public\ProgressController;
+use App\Http\Controllers\Public\SubmissionTestController;
 use App\Http\Controllers\Public\GitlabController;
 use App\Http\Controllers\Public\CalendarController;
 use App\Http\Controllers\Public\ActivitiesController;
@@ -67,34 +68,40 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
             Route::post('/projects', [AdminProjectController::class, 'store'])->name('projects.store');
             Route::get('/projects/{project:id}/edit', [AdminProjectController::class, 'edit'])->name('projects.edit');
             Route::put('/projects/{project:id}', [AdminProjectController::class, 'update'])->name('projects.update');
+            Route::get('/projects/{project:id}/tests', [AdminProjectController::class, 'tests'])->name('projects.tests');
+            Route::post('/projects/{project:id}/tests', [AdminProjectController::class, 'storeTest'])->name('projects.tests.store');
+            Route::put('/projects/{project:id}/tests/{test:id}', [AdminProjectController::class, 'updateTest'])->name('projects.tests.update');
+            Route::delete('/projects/{project:id}/tests/{test:id}', [AdminProjectController::class, 'destroyTest'])->name('projects.tests.destroy');
             Route::delete('/projects/{project:id}', [AdminProjectController::class, 'destroy'])->name('projects.destroy');
 
-            // Courses CRUD
+            // Courses use numeric IDs in the admin panel. The public Course model
+            // is still resolved by slug (see Course::getRouteKeyName()), therefore
+            // every admin binding explicitly uses the primary key.
             Route::get('/courses', [AdminCourseController::class, 'index'])->name('courses.index');
             Route::get('/courses/create', [AdminCourseController::class, 'create'])->name('courses.create');
             Route::post('/courses', [AdminCourseController::class, 'store'])->name('courses.store');
-            Route::get('/courses/{course}/edit', [AdminCourseController::class, 'edit'])->name('courses.edit');
-            Route::put('/courses/{course}', [AdminCourseController::class, 'update'])->name('courses.update');
-            Route::delete('/courses/{course}', [AdminCourseController::class, 'destroy'])->name('courses.destroy');
+            Route::get('/courses/{course:id}/edit', [AdminCourseController::class, 'edit'])->name('courses.edit');
+            Route::put('/courses/{course:id}', [AdminCourseController::class, 'update'])->name('courses.update');
+            Route::delete('/courses/{course:id}', [AdminCourseController::class, 'destroy'])->name('courses.destroy');
 
-            // Module CRUD (nested under course)
-            Route::prefix('courses/{course}/modules')->name('courses.modules.')->group(function () {
+            // Module CRUD (nested under a numeric admin course ID).
+            Route::prefix('courses/{course:id}/modules')->name('courses.modules.')->group(function () {
                 Route::get('/', [ModuleController::class, 'index'])->name('index');
                 Route::get('/create', [ModuleController::class, 'create'])->name('create');
                 Route::post('/', [ModuleController::class, 'store'])->name('store');
-                Route::get('/{module}/edit', [ModuleController::class, 'edit'])->name('edit');
-                Route::put('/{module}', [ModuleController::class, 'update'])->name('update');
-                Route::delete('/{module}', [ModuleController::class, 'destroy'])->name('destroy');
+                Route::get('/{module:id}/edit', [ModuleController::class, 'edit'])->name('edit');
+                Route::put('/{module:id}', [ModuleController::class, 'update'])->name('update');
+                Route::delete('/{module:id}', [ModuleController::class, 'destroy'])->name('destroy');
             });
 
-            // Lesson CRUD (nested under module)
-            Route::prefix('modules/{module}/lessons')->name('modules.lessons.')->group(function () {
+            // Lesson CRUD (nested under a numeric admin module ID).
+            Route::prefix('modules/{module:id}/lessons')->name('modules.lessons.')->group(function () {
                 Route::get('/', [LessonController::class, 'index'])->name('index');
                 Route::get('/create', [LessonController::class, 'create'])->name('create');
                 Route::post('/', [LessonController::class, 'store'])->name('store');
-                Route::get('/{lesson}/edit', [LessonController::class, 'edit'])->name('edit');
-                Route::put('/{lesson}', [LessonController::class, 'update'])->name('update');
-                Route::delete('/{lesson}', [LessonController::class, 'destroy'])->name('destroy');
+                Route::get('/{lesson:id}/edit', [LessonController::class, 'edit'])->name('edit');
+                Route::put('/{lesson:id}', [LessonController::class, 'update'])->name('update');
+                Route::delete('/{lesson:id}', [LessonController::class, 'destroy'])->name('destroy');
             });
 
             // Reviews
@@ -103,6 +110,11 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
             Route::post('/reviews/{review}/submit', [ReviewController::class, 'submit'])->name('reviews.submit');
             Route::delete('/reviews/{review}', [ReviewController::class, 'destroy'])->name('reviews.destroy');
         });
+
+    // Autotest logs for submission owners, assigned reviewers and admins.
+    Route::get('/submissions/{submission}/tests', [SubmissionTestController::class, 'index'])->name('public.submissions.tests.index');
+    Route::post('/submissions/{submission}/tests/rerun', [SubmissionTestController::class, 'rerun'])->name('public.submissions.tests.rerun');
+    Route::get('/submissions/{submission}/tests/{testRun}', [SubmissionTestController::class, 'show'])->name('public.submissions.tests.show');
 
     // P2P Reviews — available to regular users assigned as reviewers.
     Route::prefix('reviews')->name('reviews.')->group(function () {

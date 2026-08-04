@@ -9771,3 +9771,214 @@ body.gitlab-page .gl-manual-login-link:hover {
     color: #2f4f7f;
     text-decoration: underline;
 }
+
+/* Autotest runs/logs pages */
+.test-page {
+    width: min(1120px, calc(100% - 32px));
+    margin: 0 auto;
+    padding: 40px 0 72px;
+}
+
+.test-hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 24px;
+    padding: 40px 44px;
+    border-radius: 28px;
+    background: radial-gradient(circle at 12% 15%, rgba(139, 234, 154, 0.16), transparent 34%), linear-gradient(135deg, #202838, #111522 70%);
+    color: #fff;
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.22);
+}
+
+.test-hero h1 {
+    margin: 6px 0 12px;
+    font-size: clamp(34px, 5vw, 56px);
+    line-height: 1;
+    letter-spacing: -0.06em;
+}
+
+.test-hero p {
+    max-width: 720px;
+    color: rgba(255, 255, 255, 0.72);
+    line-height: 1.65;
+}
+
+.test-card {
+    margin-bottom: 22px;
+    padding: 24px;
+    border-radius: 24px;
+    background: #343949;
+    color: #f8fafc;
+    box-shadow: 0 18px 44px rgba(15, 23, 42, 0.18);
+}
+
+.test-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.test-summary-item {
+    padding: 16px;
+    border-radius: 18px;
+    background: rgba(15, 23, 42, 0.34);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.test-summary-item span,
+.test-summary-item em {
+    display: block;
+    color: rgba(255, 255, 255, 0.58);
+    font-size: 12px;
+    font-style: normal;
+}
+
+.test-summary-item strong {
+    display: block;
+    margin: 7px 0 4px;
+    font-size: 20px;
+    color: #fff;
+}
+
+.test-run-list,
+.test-result-list {
+    display: grid;
+    gap: 14px;
+}
+
+.test-run-item,
+.test-result-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 18px;
+    border-radius: 20px;
+    background: rgba(15, 23, 42, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.test-run-main {
+    min-width: 0;
+    flex: 1;
+}
+
+.test-run-title-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.test-run-title-row h3,
+.test-result-row h3 {
+    margin: 0;
+    color: #fff;
+    font-size: 17px;
+}
+
+.test-run-meta,
+.test-result-row p {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+    color: rgba(255, 255, 255, 0.62);
+    font-size: 13px;
+}
+
+.test-run-meta span,
+.test-result-pill {
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.test-result-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.test-result-pill.passed { color: #8bea9a; }
+.test-result-pill.failed { color: #fecaca; }
+
+.test-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.test-status-passed { background: rgba(139, 234, 154, 0.18); color: #8bea9a; }
+.test-status-failed,
+.test-status-error { background: rgba(248, 113, 113, 0.18); color: #fecaca; }
+.test-status-running,
+.test-status-queued { background: rgba(125, 211, 252, 0.18); color: #bae6fd; }
+.test-status-cancelled { background: rgba(148, 163, 184, 0.18); color: #cbd5e1; }
+
+.test-log-box {
+    max-height: 560px;
+    overflow: auto;
+    padding: 18px;
+    border-radius: 18px;
+    background: #0b1020;
+    color: #d1fae5;
+    font-size: 12px;
+    line-height: 1.55;
+    white-space: pre-wrap;
+}
+
+.test-error-text {
+    margin-top: 8px !important;
+    color: #fecaca !important;
+}
+
+.test-run-mini-card {
+    margin-top: 14px;
+}
+
+.test-run-link {
+    display: inline-flex;
+    margin-top: 10px;
+    text-decoration: none;
+}
+
+@media (max-width: 860px) {
+    .test-hero,
+    .test-run-item,
+    .test-result-row {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .test-summary-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Autotest rerun controls */
+.test-rerun-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 18px;
+    padding-top: 18px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.test-rerun-row span {
+    color: rgba(255, 255, 255, 0.62);
+    font-size: 13px;
+}
+
+.test-rerun-row .review-primary[disabled] {
+    opacity: 0.55;
+    cursor: not-allowed;
+}

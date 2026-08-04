@@ -16,7 +16,9 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        }
 
         $this->call([
             RolesAndPermissionsSeeder::class,
@@ -25,5 +27,13 @@ class DatabaseSeeder extends Seeder
             CalendarSeeder::class,
             Test2ReviewSeeder::class,
         ]);
+
+        if (filter_var(env('SEED_DEMO_USERS', false), FILTER_VALIDATE_BOOLEAN)) {
+            $this->call(DemoLmsSimulationSeeder::class);
+        }
+
+        if (filter_var(env('SEED_AUTOTEST_WORKFLOW', false), FILTER_VALIDATE_BOOLEAN)) {
+            $this->call(AutotestWorkflowSeeder::class);
+        }
     }
 }
