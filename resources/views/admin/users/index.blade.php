@@ -3,31 +3,7 @@
 @section('title', 'Users')
 
 @section('content')
-    <div x-data="{
-    search: '{{ request()->search ?? "" }}',
-    selectedRole: '{{ request()->role ?? "" }}',
-    debouncedSearch: '',
-    debouncedRole: ''
-}"
-         x-init="
-    $watch('search', value => {
-        if (value === '' || value === debouncedSearch) return;
-        debouncedSearch = value;
-        setTimeout(() => {
-            window.history.replaceState({}, '', '{{ route('admin.users.index') }}' + (debouncedRole ? '?role=' + encodeURIComponent(debouncedRole) : '') + (debouncedRole ? '&' : '?') + 'search=' + encodeURIComponent(debouncedSearch));
-            window.location.reload();
-        }, 400);
-    });
-    $watch('selectedRole', value => {
-        if (value === debouncedRole) return;
-        debouncedRole = value;
-        setTimeout(() => {
-            window.history.replaceState({}, '', '{{ route('admin.users.index') }}' + (value ? '?role=' + encodeURIComponent(value) : '') + (debouncedSearch ? (value ? '&' : '?') + 'search=' + encodeURIComponent(debouncedSearch) : ''));
-            window.location.reload();
-        }, 400);
-    });
-"
-         class="space-y-8 anim-up" style="animation-delay: 0.1s">
+    <div class="space-y-8 anim-up" style="animation-delay: 0.1s">
 
         <!-- Header -->
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -41,22 +17,30 @@
             </a>
         </div>
 
-        <!-- Filters -->
-        <div class="bg-zinc-900 rounded-3xl p-6 border border-white/5">
+        <!-- Filters: a native GET form avoids requests while the administrator is typing. -->
+        <form method="GET" action="{{ route('admin.users.index') }}" class="bg-zinc-900 rounded-3xl p-6 border border-white/5">
             <div class="flex flex-col sm:flex-row gap-4">
-                <div class="relative flex-1 group">
-                    <div class="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-cyan-400 transition-colors">
-                        <i data-lucide="search" class="w-4 h-4"></i>
+                <div class="flex flex-1 gap-3">
+                    <div class="relative flex-1 group">
+                        <div class="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-cyan-400 transition-colors">
+                            <i data-lucide="search" class="w-4 h-4"></i>
+                        </div>
+                        <input type="search" name="search" value="{{ request('search') }}" placeholder="Поиск по имени или email..."
+                               class="w-full bg-zinc-950 border border-white/10 focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 pl-12 pr-4 py-3.5 rounded-2xl text-sm placeholder:text-zinc-500 text-white outline-none transition-all duration-300">
                     </div>
-                    <input type="text" x-model="search" placeholder="Поиск по имени или email..."
-                           class="w-full bg-zinc-950 border border-white/10 focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 pl-12 pr-4 py-3.5 rounded-2xl text-sm placeholder:text-zinc-500 text-white outline-none transition-all duration-300">
+
+                    <button type="submit"
+                            class="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3.5 text-sm font-semibold text-black transition-all duration-300 hover:bg-white/90 active:scale-95">
+                        <i data-lucide="search" class="w-4 h-4"></i>
+                        Поиск
+                    </button>
                 </div>
 
                 <div class="relative">
-                    <select x-model="selectedRole" class="appearance-none w-full sm:w-48 bg-zinc-950 border border-white/10 focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 px-5 py-3.5 pr-10 rounded-2xl text-sm text-white outline-none transition-all duration-300 cursor-pointer">
+                    <select name="role" class="appearance-none w-full sm:w-48 bg-zinc-950 border border-white/10 focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 px-5 py-3.5 pr-10 rounded-2xl text-sm text-white outline-none transition-all duration-300 cursor-pointer">
                         <option value="" class="bg-zinc-900">Все роли</option>
                         @foreach($roles ?? [] as $role)
-                            <option value="{{ $role->name ?? $role }}" class="bg-zinc-900">{{ $role->name ?? $role }}</option>
+                            <option value="{{ $role->name ?? $role }}" @selected(request('role') === ($role->name ?? $role)) class="bg-zinc-900">{{ $role->name ?? $role }}</option>
                         @endforeach
                     </select>
                     <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-500">
@@ -64,7 +48,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </form>
 
         <!-- Users Table -->
         <div class="bg-zinc-900 rounded-3xl border border-white/5 overflow-hidden">
