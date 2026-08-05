@@ -16,9 +16,13 @@ class UserController extends Controller
         $query = User::withTrashed()->with(['roles'])->latest();
 
         if ($search = $request->input('search')) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'ilike', "%{$search}%")
-                    ->orWhere('email', 'ilike', "%{$search}%");
+            $needle = '%' . $search . '%';
+
+            $query->where(function ($q) use ($needle) {
+                // LOWER(... ) LIKE LOWER(?) works in both MySQL and PostgreSQL.
+                // PostgreSQL-only ILIKE caused the admin user search to fail on MySQL.
+                $q->whereRaw('LOWER(name) LIKE LOWER(?)', [$needle])
+                    ->orWhereRaw('LOWER(email) LIKE LOWER(?)', [$needle]);
             });
         }
 
