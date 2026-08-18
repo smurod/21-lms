@@ -1,0 +1,9 @@
+# Local 21-LMS overrides for DataLens.
+# Auth and US are reachable only from this laptop, never from LAN.
+services:
+  auth:
+    ports:
+      - "127.0.0.1:8088:8080"
+  us:
+    ports:
+      - "127.0.0.1:3030:8080"

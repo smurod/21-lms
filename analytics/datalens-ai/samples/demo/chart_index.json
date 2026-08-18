@@ -1,0 +1,464 @@
+[
+  {
+    "entryId": "lqifl0t8hhrga",
+    "key": "1507164782317277082/Demo: Sales",
+    "name": "Demo: Sales",
+    "type": "metric_wizard_node"
+  },
+  {
+    "entryId": "qvnkq3hl9zjyf",
+    "key": "1507164776889847651/Demo: Sales in time",
+    "name": "Demo: Sales in time",
+    "type": "graph_wizard_node"
+  },
+  {
+    "entryId": "mrjgm1522opyb",
+    "key": "1507164782971588511/Demo: Shipping time",
+    "name": "Demo: Shipping time",
+    "type": "metric_wizard_node"
+  },
+  {
+    "entryId": "nskhn3wc2rk8c",
+    "key": "1507164784498315184/Demo: Avg shipping time",
+    "name": "Demo: Avg shipping time",
+    "type": "graph_wizard_node"
+  },
+  {
+    "entryId": "kphekyrgzony9",
+    "key": "1507164780035575681/Demo: Avg sales",
+    "name": "Demo: Avg sales",
+    "type": "metric_wizard_node"
+  },
+  {
+    "entryId": "8d528ok4io2ax",
+    "key": "1507164784691253169/Demo: Clients",
+    "name": "Demo: Clients",
+    "type": "metric_wizard_node"
+  },
+  {
+    "entryId": "otlio209vg4md",
+    "key": "1507164780379508613/Demo: Table by Region 2",
+    "name": "Demo: Table by Region 2",
+    "type": "table_wizard_node"
+  },
+  {
+    "entryId": "nskhn3dhudj0c",
+    "key": "1507164783357464484/Demo: Table by regions",
+    "name": "Demo: Table by regions",
+    "type": "table_wizard_node"
+  },
+  {
+    "entryId": "gldagp2ekyge5",
+    "key": "1507164770061520677/Demo: Table by categories",
+    "name": "Demo: Table by categories",
+    "type": "table_wizard_node"
+  },
+  {
+    "entryId": "tyqnt9bovid8i",
+    "key": "1507164785051963318/Demo: Top products",
+    "name": "Demo: Top products",
+    "type": "table_wizard_node"
+  },
+  {
+    "entryId": "y3vsy9yj0cb2n",
+    "key": "1507164773123362623/Demo: Platform share",
+    "name": "Demo: Platform share",
+    "type": "graph_wizard_node"
+  },
+  {
+    "entryId": "qvnkq51ahceaf",
+    "key": "1507164782493437851/Demo: Platforms in time",
+    "name": "Demo: Platforms in time",
+    "type": "graph_wizard_node"
+  },
+  {
+    "entryId": "27zw2juwp5emr",
+    "key": "1507164785655943099/Cohorts: Abs and Retention",
+    "name": "Cohorts: Abs and Retention",
+    "type": "table_wizard_node"
+  },
+  {
+    "entryId": "nskhn5tf9nw4c",
+    "key": "1507164788675842012/Demo: Delivered %",
+    "name": "Demo: Delivered %",
+    "type": "graph_wizard_node"
+  },
+  {
+    "entryId": "16yxd7gojiacq",
+    "key": "1507171345740337126/Scatter by regions",
+    "name": "Scatter by regions",
+    "type": "graph_wizard_node"
+  },
+  {
+    "entryId": "27z4q4cl8umqr",
+    "key": "1507189203752980463/Sales by regions",
+    "name": "Sales by regions",
+    "type": "graph_wizard_node"
+  },
+  {
+    "entryId": "mrjgmvxq6yo2b",
+    "key": "1507164769407209247/Charts: Column chart 3",
+    "name": "Charts: Column chart 3",
+    "type": "graph_wizard_node"
+  },
+  {
+    "entryId": "ch96cmbbxrc21",
+    "key": "1507164770850049837/Charts: Normalized column chart",
+    "name": "Charts: Normalized column chart",
+    "type": "graph_wizard_node"
+  },
+  {
+    "entryId": "05xu0e1so1o6p",
+    "key": "1507164779666476925/Charts: Column chart 2",
+    "name": "Charts: Column chart 2",
+    "type": "graph_wizard_node"
+  },
+  {
+    "entryId": "6b306hs4db0iv",
+    "key": "1507164774415208267/Charts: Column chart 4",
+    "name": "Charts: Column chart 4",
+    "type": "graph_wizard_node"
+  },
+  {
+    "entryId": "sxpms29dmzfuh",
+    "key": "1507164771974123317/Charts: Line chart",
+    "name": "Charts: Line chart",
+    "type": "graph_wizard_node"
+  },
+  {
+    "entryId": "x2urxfzzoeicm",
+    "key": "1507164788449349594/Charts: Area chart",
+    "name": "Charts: Area chart",
+    "type": "graph_wizard_node"
+  },
+  {
+    "entryId": "infciwr6tkfq7",
+    "key": "1507164780203347843/Charts: Bar chart 2",
+    "name": "Charts: Bar chart 2",
+    "type": "graph_wizard_node"
+  },
+  {
+    "entryId": "ch96cs0b54by1",
+    "key": "1507164785421062073/Charts: Pie chart",
+    "name": "Charts: Pie chart",
+    "type": "graph_wizard_node"
+  },
+  {
+    "entryId": "sxpms3j78li2h",
+    "key": "1507164772569714489/Charts: Donut chart",
+    "name": "Charts: Donut chart",
+    "type": "graph_wizard_node"
+  },
+  {
+    "entryId": "tyqntb2nacawi",
+    "key": "1507164788860391390/Demo: Quantity",
+    "name": "Demo: Quantity",
+    "type": "metric_wizard_node"
+  },
+  {
+    "entryId": "05xu0bafozgep",
+    "key": "1507164773718953797/Demo: Clients 2",
+    "name": "Demo: Clients 2",
+    "type": "metric_wizard_node"
+  },
+  {
+    "entryId": "491y4iy424wmt",
+    "key": "1507164779255435129/Charts: Indicator 1",
+    "name": "Charts: Indicator 1",
+    "type": "metric_wizard_node"
+  },
+  {
+    "entryId": "y3vsy9b5iv86n",
+    "key": "1507164773886725959/Charts: Indicator 2",
+    "name": "Charts: Indicator 2",
+    "type": "metric_wizard_node"
+  },
+  {
+    "entryId": "27zw2cgw2r12r",
+    "key": "1507164771747630899/Charts: Bar chart 4",
+    "name": "Charts: Bar chart 4",
+    "type": "graph_wizard_node"
+  },
+  {
+    "entryId": "ejb8eqs2fid63",
+    "key": "1507164776151650139/Charts: Bar chart 3",
+    "name": "Charts: Bar chart 3",
+    "type": "graph_wizard_node"
+  },
+  {
+    "entryId": "hmebhy1hzd606",
+    "key": "1507164787358830542/Charts: Treemap",
+    "name": "Charts: Treemap",
+    "type": "graph_wizard_node"
+  },
+  {
+    "entryId": "qvnkq0t05u52f",
+    "key": "1507164771110096687/Charts: Normalized column chart 2",
+    "name": "Charts: Normalized column chart 2",
+    "type": "graph_wizard_node"
+  },
+  {
+    "entryId": "z4wtzfkww8r0o",
+    "key": "1507164785236512696/Charts: Normalized bar chart",
+    "name": "Charts: Normalized bar chart",
+    "type": "graph_wizard_node"
+  },
+  {
+    "entryId": "6b306i1uz3euv",
+    "key": "1507164775002410831/Charts: Normalized area chart",
+    "name": "Charts: Normalized area chart",
+    "type": "graph_wizard_node"
+  },
+  {
+    "entryId": "ch96cpyzl3hm1",
+    "key": "1507164778810838901/Charts: Pivot table",
+    "name": "Charts: Pivot table",
+    "type": "table_wizard_node"
+  },
+  {
+    "entryId": "x2urxes3f5vwm",
+    "key": "1507164785857269694/Charts: Table simple",
+    "name": "Charts: Table simple",
+    "type": "table_wizard_node"
+  },
+  {
+    "entryId": "gldagxhlpx4q5",
+    "key": "1507164786217979841/Charts: Scatterplot",
+    "name": "Charts: Scatterplot",
+    "type": "graph_wizard_node"
+  },
+  {
+    "entryId": "y3vsyf3u2yaan",
+    "key": "1507164786444472259/Charts: Column chart",
+    "name": "Charts: Column chart",
+    "type": "graph_wizard_node"
+  },
+  {
+    "entryId": "27zw2cohp6war",
+    "key": "1507164772267724599/Charts: Bar chart 5",
+    "name": "Charts: Bar chart 5",
+    "type": "graph_wizard_node"
+  },
+  {
+    "entryId": "rwolr4a7460kg",
+    "key": "1507164778617900916/Charts: Dual axis",
+    "name": "Charts: Dual axis",
+    "type": "graph_wizard_node"
+  },
+  {
+    "entryId": "nskhn4ak09vwc",
+    "key": "1507164787534991312/Charts: Table with bars",
+    "name": "Charts: Table with bars",
+    "type": "table_wizard_node"
+  },
+  {
+    "entryId": "27zw2cr72wyir",
+    "key": "1507164770254458663/Charts: Combo chart",
+    "name": "Charts: Combo chart",
+    "type": "graph_wizard_node"
+  },
+  {
+    "entryId": "otlio1uyld8ud",
+    "key": "1507164777820983149/Charts: Split",
+    "name": "Charts: Split",
+    "type": "graph_wizard_node"
+  },
+  {
+    "entryId": "af74anjr2bqyz",
+    "key": "1507164778013921135/Charts: Split by region",
+    "name": "Charts: Split by region",
+    "type": "graph_wizard_node"
+  },
+  {
+    "entryId": "27zw2jj0oekyr",
+    "key": "1507164787174281163/Charts: Comb Plan and Fact",
+    "name": "Charts: Comb Plan and Fact",
+    "type": "graph_wizard_node"
+  },
+  {
+    "entryId": "hmebhxanjbz86",
+    "key": "1507164783558791078/Charts: Combo with average",
+    "name": "Charts: Combo with average",
+    "type": "graph_wizard_node"
+  },
+  {
+    "entryId": "ejb8es4ih2ty3",
+    "key": "1507164779020554103/Chats: Unstacked area chart",
+    "name": "Chats: Unstacked area chart",
+    "type": "graph_wizard_node"
+  },
+  {
+    "entryId": "mrjgmyu6wn56b",
+    "key": "1507164775782551383/Hierarchy: Table",
+    "name": "Hierarchy: Table",
+    "type": "table_wizard_node"
+  },
+  {
+    "entryId": "mrjgm08df0peb",
+    "key": "1507164780933156747/Hierarchy: Pie chart",
+    "name": "Hierarchy: Pie chart",
+    "type": "graph_wizard_node"
+  },
+  {
+    "entryId": "sxpms78wdpaqh",
+    "key": "1507164782770261917/Hierarchy: Date drill down",
+    "name": "Hierarchy: Date drill down",
+    "type": "graph_wizard_node"
+  },
+  {
+    "entryId": "z4wtzhsv4vxko",
+    "key": "1507164787895701460/Formating: URL and table formating",
+    "name": "Formating: URL and table formating",
+    "type": "table_wizard_node"
+  },
+  {
+    "entryId": "infcisd68swu7",
+    "key": "1507164770648723243/Parameters: Scale",
+    "name": "Parameters: Scale",
+    "type": "graph_wizard_node"
+  },
+  {
+    "entryId": "tyqntbjs2y9oi",
+    "key": "1507164787719540690/Parameters: Scale and AGO",
+    "name": "Parameters: Scale and AGO",
+    "type": "graph_wizard_node"
+  },
+  {
+    "entryId": "uzrou89hw5hej",
+    "key": "1507164780564057991/Parameters: Currency calculator",
+    "name": "Parameters: Currency calculator",
+    "type": "graph_wizard_node"
+  },
+  {
+    "entryId": "491y4djzjzumt",
+    "key": "1507164769633701665/Window functions: Moving average",
+    "name": "Window functions: Moving average",
+    "type": "graph_wizard_node"
+  },
+  {
+    "entryId": "491y4ewqzvbut",
+    "key": "1507164770464173865/Parameters: Select dimension",
+    "name": "Parameters: Select dimension",
+    "type": "table_wizard_node"
+  },
+  {
+    "entryId": "dia7dulbcwxc2",
+    "key": "1507164786629021638/Date functions: Datetrunc",
+    "name": "Date functions: Datetrunc",
+    "type": "graph_wizard_node"
+  },
+  {
+    "entryId": "bg85bre1z5ik0",
+    "key": "1507164784137605036/Date functions: Datepart",
+    "name": "Date functions: Datepart",
+    "type": "graph_wizard_node"
+  },
+  {
+    "entryId": "ch96cr73sjd21",
+    "key": "1507164781478416273/Date functions: Navigator",
+    "name": "Date functions: Navigator",
+    "type": "graph_wizard_node"
+  },
+  {
+    "entryId": "ejb8ep80pi163",
+    "key": "1507164772762652475/Date functions: Calendar table",
+    "name": "Date functions: Calendar table",
+    "type": "table_wizard_node"
+  },
+  {
+    "entryId": "27zw2f553fpqr",
+    "key": "1507164777628045163/Date functions: AGO MoM",
+    "name": "Date functions: AGO MoM",
+    "type": "table_wizard_node"
+  },
+  {
+    "entryId": "sxpms3pgygm6h",
+    "key": "1507164772947201853/Window functions: Rank",
+    "name": "Window functions: Rank",
+    "type": "table_wizard_node"
+  },
+  {
+    "entryId": "af74aq6s79dez",
+    "key": "1507164783760117671/Window functions: Top 3 each category",
+    "name": "Window functions: Top 3 each category",
+    "type": "table_wizard_node"
+  },
+  {
+    "entryId": "tyqnt5kbstbsi",
+    "key": "1507164774750752590/Window functions: Percent of total 2",
+    "name": "Window functions: Percent of total 2",
+    "type": "table_wizard_node"
+  },
+  {
+    "entryId": "ch96cl4boozy1",
+    "key": "1507164768249581337/Window functions: Percent of total",
+    "name": "Window functions: Percent of total",
+    "type": "graph_wizard_node"
+  },
+  {
+    "entryId": "8d528nx6xy7ix",
+    "key": "1507164781126094733/Window functions: Running sum",
+    "name": "Window functions: Running sum",
+    "type": "table_wizard_node"
+  },
+  {
+    "entryId": "gldagrksddhm5",
+    "key": "1507164773349855041/Window functions: Moving average 3",
+    "name": "Window functions: Moving average 3",
+    "type": "graph_wizard_node"
+  },
+  {
+    "entryId": "otlio4n8g6zed",
+    "key": "1507164783944667049/Window functions: Nested window functions",
+    "name": "Window functions: Nested window functions",
+    "type": "graph_wizard_node"
+  },
+  {
+    "entryId": "ejb8eut7kkr63",
+    "key": "1507164784867413939/Window functions: Before Filter By",
+    "name": "Window functions: Before Filter By",
+    "type": "graph_wizard_node"
+  },
+  {
+    "entryId": "w1tqwdaymiv2l",
+    "key": "1507164786998120393/Window functions: Last label",
+    "name": "Window functions: Last label",
+    "type": "graph_wizard_node"
+  },
+  {
+    "entryId": "qvnkq5oj2gy2f",
+    "key": "1507164781662965651/LOD: FIXED",
+    "name": "LOD: FIXED",
+    "type": "table_wizard_node"
+  },
+  {
+    "entryId": "rwolr3bej5gwg",
+    "key": "1507164776512360288/LOD: INCLUDE",
+    "name": "LOD: INCLUDE",
+    "type": "table_wizard_node"
+  },
+  {
+    "entryId": "y3vsya0uiqbqn",
+    "key": "1507164775379898195/Selectors: Sales by platform",
+    "name": "Selectors: Sales by platform",
+    "type": "graph_wizard_node"
+  },
+  {
+    "entryId": "491y4hy1jw5yt",
+    "key": "1507164777074397029/Cohorts: Data",
+    "name": "Cohorts: Data",
+    "type": "table_wizard_node"
+  },
+  {
+    "entryId": "sxpmsao0sscqh",
+    "key": "1507164788097028053/Cohorts: Basic",
+    "name": "Cohorts: Basic",
+    "type": "table_wizard_node"
+  },
+  {
+    "entryId": "fkc9fu79zvxg4",
+    "key": "1507164781302255504/Cohorts: Abs values",
+    "name": "Cohorts: Abs values",
+    "type": "table_wizard_node"
+  }
+]

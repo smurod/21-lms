@@ -1,0 +1,40 @@
+{
+  "entryId": "zsdn1gjhoshki",
+  "scope": "connection",
+  "type": "postgres",
+  "key": "2277294576974693390/21_lms_connection",
+  "meta": {},
+  "createdBy": "uid:a36xxdpna7rit",
+  "createdAt": "2026-08-08T22:37:48.613Z",
+  "updatedBy": "uid:a36xxdpna7rit",
+  "updatedAt": "2026-08-08T22:37:48.613Z",
+  "annotation": {
+    "description": ""
+  },
+  "savedId": "yrcm0fignrgih",
+  "publishedId": "yrcm0fignrgih",
+  "hidden": false,
+  "workbookId": "5yilgsbb13fwo",
+  "collectionId": null,
+  "workbookTitle": "21_lms_workbook",
+  "collectionTitle": null,
+  "isFavorite": false,
+  "data": {
+    "host": "172.17.0.1",
+    "name": null,
+    "port": 5432,
+    "ssl_ca": null,
+    "db_name": "21_lms",
+    "username": "wren_user",
+    "ssl_enable": false,
+    "table_name": null,
+    "cache_ttl_sec": null,
+    "raw_sql_level": "dashsql",
+    "schema_version": "1",
+    "enforce_collate": "auto",
+    "sample_table_name": null,
+    "data_export_forbidden": false
+  },
+  "isLocked": false,
+  "name": "21_lms_connection"
+}

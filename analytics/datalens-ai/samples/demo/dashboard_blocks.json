@@ -1,0 +1,3413 @@
+[
+  {
+    "tab": "Overview",
+    "id": "OgN",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "># **Marketplace Sales**"
+    }
+  },
+  {
+    "tab": "Overview",
+    "id": "Mge",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "# \n\n```\nUse selectors to filter \nand modify charts\n```"
+    }
+  },
+  {
+    "tab": "Overview",
+    "id": "jvG",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "l",
+      "text": "Main KPIs",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Overview",
+    "id": "vnv",
+    "type": "control",
+    "namespace": "default",
+    "data": {
+      "title": "Region",
+      "source": {
+        "datasetId": "qvnkqz8s0wdqf",
+        "fieldType": "string",
+        "showTitle": true,
+        "elementType": "select",
+        "datasetFieldId": "order_buyer_region_name",
+        "multiselectable": true,
+        "datasetFieldType": "DIMENSION"
+      },
+      "sourceType": "dataset"
+    }
+  },
+  {
+    "tab": "Overview",
+    "id": "ag6",
+    "type": "control",
+    "namespace": "default",
+    "data": {
+      "title": "Neighbourhood",
+      "source": {
+        "datasetId": "qvnkqz8s0wdqf",
+        "fieldType": "string",
+        "showTitle": true,
+        "elementType": "select",
+        "datasetFieldId": "4664cc4f-6a50-44cc-8dfb-b76fc814a159",
+        "datasetFieldType": "DIMENSION"
+      },
+      "sourceType": "dataset"
+    }
+  },
+  {
+    "tab": "Overview",
+    "id": "OgL",
+    "type": "control",
+    "namespace": "default",
+    "data": {
+      "title": "Scale",
+      "source": {
+        "fieldName": "scale",
+        "showTitle": true,
+        "elementType": "select",
+        "defaultValue": "month",
+        "acceptableValues": [
+          {
+            "title": "month",
+            "value": "month"
+          },
+          {
+            "title": "week",
+            "value": "week"
+          },
+          {
+            "title": "day",
+            "value": "day"
+          }
+        ]
+      },
+      "sourceType": "manual"
+    }
+  },
+  {
+    "tab": "Overview",
+    "id": "JBj",
+    "type": "control",
+    "namespace": "default",
+    "data": {
+      "title": "Order Date",
+      "source": {
+        "isRange": true,
+        "datasetId": "qvnkqz8s0wdqf",
+        "fieldType": "date",
+        "showTitle": true,
+        "elementType": "date",
+        "defaultValue": "__interval_2019-01-01T00:00:00.000Z_2020-02-13T00:00:00.000Z",
+        "datasetFieldId": "3dcc4a70-e1f0-11e9-a279-0b30c0a74ab7",
+        "datasetFieldType": "DIMENSION"
+      },
+      "sourceType": "dataset"
+    }
+  },
+  {
+    "tab": "Overview",
+    "id": "ag1",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "vnn",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "lqifl0t8hhrga",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Overview",
+    "id": "pn5",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "JBv",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "qvnkq3hl9zjyf",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Overview",
+    "id": "K89",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "G8J",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "mrjgm1522opyb",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Overview",
+    "id": "N0z",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "7dr",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "nskhn3wc2rk8c",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Overview",
+    "id": "Zg5",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "L4l",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "kphekyrgzony9",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Overview",
+    "id": "4aO",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "82B",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "8d528ok4io2ax",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Overview",
+    "id": "QjG",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "l",
+      "text": "Regions & Neighbourhoods",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Overview",
+    "id": "onD",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "#\n```\nDrill-down with click to row\nand switch charts with tabs"
+    }
+  },
+  {
+    "tab": "Overview",
+    "id": "23L",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "0AZ",
+          "title": "By region",
+          "params": {},
+          "chartId": "otlio209vg4md",
+          "isDefault": true,
+          "autoHeight": false,
+          "description": "",
+          "background": {
+            "color": "like-chart-bg"
+          }
+        },
+        {
+          "id": "gA8",
+          "title": "by population",
+          "params": {},
+          "chartId": "nskhn3dhudj0c",
+          "isDefault": false,
+          "autoHeight": false,
+          "description": "",
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": false
+    }
+  },
+  {
+    "tab": "Overview",
+    "id": "Pk3",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "l",
+      "text": "Products",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Overview",
+    "id": "BW5",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "#\n```\nDrill-down by click on ⊞\nand download data clicking on …"
+    }
+  },
+  {
+    "tab": "Overview",
+    "id": "b08",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "R1Z",
+          "title": "Table by products",
+          "params": {},
+          "chartId": "gldagp2ekyge5",
+          "isDefault": true,
+          "autoHeight": false,
+          "description": "#\n```\nⓘ Add descriptions for widgets and metrics  ",
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Overview",
+    "id": "V4y",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "#\n```\nGo to links to other business systems\nand dashboards with predefined filters"
+    }
+  },
+  {
+    "tab": "Overview",
+    "id": "9Qk",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "YL9",
+          "title": "Top products by Sales",
+          "params": {},
+          "chartId": "tyqnt9bovid8i",
+          "isDefault": true,
+          "autoHeight": false,
+          "description": "```\nUse built-in pagination for tables",
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": false
+    }
+  },
+  {
+    "tab": "Overview",
+    "id": "rXo",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "l",
+      "text": "Clients & Cohorts",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Overview",
+    "id": "nOP",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": ""
+    }
+  },
+  {
+    "tab": "Overview",
+    "id": "1R4",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "#\n```\nFilter data from different sources\nusing global selectors"
+    }
+  },
+  {
+    "tab": "Overview",
+    "id": "WzG",
+    "type": "control",
+    "namespace": "default",
+    "data": {
+      "title": "Platform",
+      "source": {
+        "datasetId": "qvnkqz8s0wdqf",
+        "fieldType": "string",
+        "showTitle": true,
+        "elementType": "select",
+        "datasetFieldId": "b76344a2-2cc1-4f65-bb40-f81035853bf2",
+        "multiselectable": true,
+        "datasetFieldType": "DIMENSION"
+      },
+      "sourceType": "dataset"
+    }
+  },
+  {
+    "tab": "Overview",
+    "id": "k3a",
+    "type": "control",
+    "namespace": "default",
+    "data": {
+      "title": "First Order",
+      "source": {
+        "isRange": true,
+        "datasetId": "infciq1c89je7",
+        "fieldType": "date",
+        "showTitle": true,
+        "elementType": "date",
+        "defaultValue": "__interval_2019-04-01T00:00:00.000Z_2020-02-29T00:00:00.000Z",
+        "datasetFieldId": "6fd23eb8-1f52-4df8-a700-7c97675a9ac8",
+        "datasetFieldType": "DIMENSION"
+      },
+      "sourceType": "dataset"
+    }
+  },
+  {
+    "tab": "Overview",
+    "id": "EWV",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "5ZZ",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "y3vsy9yj0cb2n",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Overview",
+    "id": "Kg9",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "G1J",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "qvnkq51ahceaf",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Overview",
+    "id": "dLA",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "eG3",
+          "title": "Cohorts based on Google Analytics",
+          "params": {},
+          "chartId": "27zw2juwp5emr",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": false
+    }
+  },
+  {
+    "tab": "Overview",
+    "id": "O9L",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "a16",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "nskhn5tf9nw4c",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Overview",
+    "id": "gvY",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "0Yd",
+          "title": "Regions and Neighbourhoods shipping time",
+          "params": {},
+          "chartId": "16yxd7gojiacq",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": false
+    }
+  },
+  {
+    "tab": "Overview",
+    "id": "ygL",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "2zW",
+          "title": "Sales by location",
+          "params": {},
+          "chartId": "27z4q4cl8umqr",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": false
+    }
+  },
+  {
+    "tab": "Overview",
+    "id": "zgd",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": ""
+    }
+  },
+  {
+    "tab": "Chart types",
+    "id": "2RQ",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "l",
+      "text": "Column chart",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Chart types",
+    "id": "DlP",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "l",
+      "text": "Line chart",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Chart types",
+    "id": "g20",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "08y",
+          "title": "Stacked by dimension",
+          "params": {},
+          "chartId": "mrjgmvxq6yo2b",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        },
+        {
+          "id": "aWN",
+          "title": "Stacked by measure name",
+          "params": {},
+          "chartId": "ch96cmbbxrc21",
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": false
+    }
+  },
+  {
+    "tab": "Chart types",
+    "id": "ynW",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "2j7",
+          "title": "Grouped by dimension",
+          "params": {},
+          "chartId": "05xu0e1so1o6p",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        },
+        {
+          "id": "O1n",
+          "title": "Grouped by measure name",
+          "params": {},
+          "chartId": "6b306hs4db0iv",
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": false
+    }
+  },
+  {
+    "tab": "Chart types",
+    "id": "BRd",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "PBN",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "sxpms29dmzfuh",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Chart types",
+    "id": "Y2Y",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "bAa",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "x2urxfzzoeicm",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Chart types",
+    "id": "9lN",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "l",
+      "text": "Stacked area chart",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Chart types",
+    "id": "rBB",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "l",
+      "text": "Bar chart",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Chart types",
+    "id": "nlp",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "1p1",
+          "title": "Stacked by dimension",
+          "params": {},
+          "chartId": "infciwr6tkfq7",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": false
+    }
+  },
+  {
+    "tab": "Chart types",
+    "id": "Edn",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "58e",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "ch96cs0b54by1",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Chart types",
+    "id": "epA",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "l",
+      "text": "Pie chart",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Chart types",
+    "id": "GR1",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "dEK",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "sxpms3j78li2h",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Chart types",
+    "id": "KvY",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "l",
+      "text": "Donut chart",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Chart types",
+    "id": "7KE",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "l",
+      "text": "KPIs",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Chart types",
+    "id": "AWA",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "NPY",
+          "title": "Total",
+          "params": {},
+          "chartId": "tyqntb2nacawi",
+          "isDefault": true,
+          "autoHeight": false,
+          "description": "for the whole period",
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Chart types",
+    "id": "3zr",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "M91",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "05xu0bafozgep",
+          "isDefault": true,
+          "autoHeight": false,
+          "description": "",
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Chart types",
+    "id": "abX",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "v06",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "491y4iy424wmt",
+          "isDefault": true,
+          "autoHeight": false,
+          "description": "",
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Chart types",
+    "id": "JbE",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "OPe",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "y3vsy9b5iv86n",
+          "isDefault": true,
+          "autoHeight": false,
+          "description": "",
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Chart types",
+    "id": "31r",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "># **Charts types**"
+    }
+  },
+  {
+    "tab": "Chart types",
+    "id": "anX",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "vy6",
+          "title": "Grouped by dimension",
+          "params": {},
+          "chartId": "27zw2cgw2r12r",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        },
+        {
+          "id": "py8",
+          "title": "Grouped by measure name",
+          "params": {},
+          "chartId": "ejb8eqs2fid63",
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": false
+    }
+  },
+  {
+    "tab": "Chart types",
+    "id": "JoE",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "OQe",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "hmebhy1hzd606",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Chart types",
+    "id": "pvK",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "l",
+      "text": "Treemap",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Chart types",
+    "id": "K2O",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "GN4",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "qvnkq0t05u52f",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Chart types",
+    "id": "N21",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "75n",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "z4wtzfkww8r0o",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Chart types",
+    "id": "Ml6",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "Ae8",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "6b306i1uz3euv",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Chart types",
+    "id": "Jol",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "OQz",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "ch96cpyzl3hm1",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Chart types",
+    "id": "pvR",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "l",
+      "text": "Pivot table",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Chart types",
+    "id": "L0N",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "l",
+      "text": "Normalized bar chart",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Chart types",
+    "id": "ZZ6",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "l",
+      "text": "Normalized area chart",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Chart types",
+    "id": "8kv",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "l",
+      "text": "Normalized column chart",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Chart types",
+    "id": "E1D",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "5LK",
+          "title": "Simpe table",
+          "params": {},
+          "chartId": "x2urxes3f5vwm",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": false
+    }
+  },
+  {
+    "tab": "Chart types",
+    "id": "e64",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "l",
+      "text": "Table",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Chart types",
+    "id": "74n",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "KdO",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "gldagxhlpx4q5",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Chart types",
+    "id": "N91",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "l",
+      "text": "Scatter plot",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Chart types",
+    "id": "AXP",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "N9B",
+          "title": "One measure",
+          "params": {},
+          "chartId": "y3vsyf3u2yaan",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": false
+    }
+  },
+  {
+    "tab": "Chart types",
+    "id": "350",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "MOZ",
+          "title": "One measure",
+          "params": {},
+          "chartId": "27zw2cohp6war",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": false
+    }
+  },
+  {
+    "tab": "Chart types",
+    "id": "Lrb",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "jKD",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "rwolr4a7460kg",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Chart types",
+    "id": "65e",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "lY4",
+          "title": "Table with formating and hierarchy",
+          "params": {},
+          "chartId": "nskhn4ak09vwc",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": false
+    }
+  },
+  {
+    "tab": "Chart types",
+    "id": "dKE",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "e7Z",
+          "title": "Find more examples on combo chart tab",
+          "params": {},
+          "chartId": "27zw2cr72wyir",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": false
+    }
+  },
+  {
+    "tab": "Chart types",
+    "id": "G8N",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "l",
+      "text": "Combined chart",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Chart types",
+    "id": "7d4",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "l",
+      "text": "Split by dimension",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Chart types",
+    "id": "AyO",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "N0O",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "otlio1uyld8ud",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Chart types",
+    "id": "3vW",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "Mgv",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "af74anjr2bqyz",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Combined chart",
+    "id": "DZJ",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "zdb",
+          "title": "Plan and Fact",
+          "params": {},
+          "chartId": "27zw2jj0oekyr",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": false
+    }
+  },
+  {
+    "tab": "Combined chart",
+    "id": "B9L",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "PpM",
+          "title": "Three types of layers",
+          "params": {},
+          "chartId": "27zw2cr72wyir",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": false
+    }
+  },
+  {
+    "tab": "Combined chart",
+    "id": "Y74",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "bKZ",
+          "title": "Avg by region",
+          "params": {},
+          "chartId": "hmebhxanjbz86",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": false
+    }
+  },
+  {
+    "tab": "Combined chart",
+    "id": "r0z",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "99g",
+          "title": "Unstacked area chart",
+          "params": {},
+          "chartId": "ejb8es4ih2ty3",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": false
+    }
+  },
+  {
+    "tab": "Combined chart",
+    "id": "1Xd",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "A combined chart is a chart that consists of layers. The page contains examples of the charts. \n\nCombo chart limitations:\n- The X-axis is common to all layers\n- Layers can be added, deleted, reordered, renamed\n- Each layer is executed in the database by a separate query\n- You can combine linear, columnar and area charts."
+    }
+  },
+  {
+    "tab": "Combined chart",
+    "id": "ng3",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "One of most frequent case is a comparison of a plan and a fact. The plan line can be shown as line, and factual data shown as bars."
+    }
+  },
+  {
+    "tab": "Combined chart",
+    "id": "WG4",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "You can combine several types of layers. In this example, there are three layers of different types:\n- Line chart\n- Column chart\n- Area chart"
+    }
+  },
+  {
+    "tab": "Combined chart",
+    "id": "5O6",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "In addition to the constants from the example above, you can output additional lines calculated through window or LOD functions.To calculate the average by category, a calculated field with the formula is used here:\n\n`avg(SUM([Sales] INCLUDE [Region]))`\n\nMore details about window functions can be found on the \"Window functions\" and \"Level of details functions\" tabs."
+    }
+  },
+  {
+    "tab": "Combined chart",
+    "id": "E8B",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "You can use a combined chart to display a area chart without stacking layers, hence all indicators are shown from 0 along the Y axis"
+    }
+  },
+  {
+    "tab": "Combined chart",
+    "id": "Y8Q",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "># **Combined chart**"
+    }
+  },
+  {
+    "tab": "Hierarchy",
+    "id": "yzR",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "Examples of using drill-down and tree features in DataLens"
+    }
+  },
+  {
+    "tab": "Hierarchy",
+    "id": "Dj2",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "znn",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "mrjgmyu6wn56b",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Hierarchy",
+    "id": "BjX",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "PnJ",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "mrjgm08df0peb",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Hierarchy",
+    "id": "b10",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "The hierarchy can be created in charts. To create one, click on the \"+\" button on the top panel of the chart.\n\nAfter adding a hierarchy to the chart, you can interactively drill down on it. Example:\n**Product category 1 → Product category 2 → … → Product name**\n\nUsing \"bread crumbs\" you can return to the desired level or open the entire level."
+    }
+  },
+  {
+    "tab": "Hierarchy",
+    "id": "AoP",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "You can add Hierarchy to different section, for example in color. "
+    }
+  },
+  {
+    "tab": "Hierarchy",
+    "id": "BJD",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "PJW",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "sxpms78wdpaqh",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Hierarchy",
+    "id": "V0K",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "You can add Hierarchy to different section, for example in X. "
+    }
+  },
+  {
+    "tab": "Hierarchy",
+    "id": "AgL",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "Nkz",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "gldagp2ekyge5",
+          "isDefault": true,
+          "autoHeight": false,
+          "description": "",
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Hierarchy",
+    "id": "M4e",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "The tree is created using the TREE() function\n\n1. You need create an array describing the tree, with the full path for each node.\nThe sequence of values in the array determines the sequence of tree expansion.\n\nYou can use built-in function or create array at database.\n`TREE( ARRAY([Product category 1],[Product category 2],[Product category 3])`\n\n\n\n2. After the array is created based on it, you can create a tree using the formula: `TREE()'.\n\n\n##### Limitations of the current version\n- Only in flat tables\n- Without pagination\n- Without totals\n- Without remembering the state of disclosure\n- One tree/hierarchy per chart\n- No trees in selectors\n- Intermediate nodes of the tree must be stored in the source, even those for which there is no data"
+    }
+  },
+  {
+    "tab": "Hierarchy",
+    "id": "kjW",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "># **Hierarchy**"
+    }
+  },
+  {
+    "tab": "Formating",
+    "id": "9kY",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "l",
+      "text": "Header L",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Formating",
+    "id": "rdR",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "s",
+      "text": "Header S",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Formating",
+    "id": "1ZA",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "# **Headers**\nHeaders are used to separate different sections of dashboards and for navigation in Content panel."
+    }
+  },
+  {
+    "tab": "Formating",
+    "id": "noj",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "**You can add Emojis to charts and dashboards:**\nRise and Fall  ▲ ● ▼  🔺 🔻 ↗️ ↘️\nInfo and links 🔗 ⓘ  🗯️ 🗯 ❔\nWarning ⚠ ⚠️ ❗ ❕ 📛 🔔 ⚡ 🚨\nTrue/False ✅ / ❌ ⊞ ⊟\nSearch 🔍 \nCompetitors and partners ⚔️ 🤍 ⭐\nChart type legend 📊 📈 💹\nText legend: ■ ● — ◻︎\n🟥 🟧 🟨 🟩 🟦 🟪 🟫 ⬛ ⬜\n🔴 🟠 🟡 🟢 🔵 🟣 🟤 ⚫ ⚪\n"
+    }
+  },
+  {
+    "tab": "Formating",
+    "id": "kJv",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "l",
+      "text": "Emoji",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Formating",
+    "id": "eD4",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "You can add various types of objects to a dashboard and format them using formatting functions and markdown."
+    }
+  },
+  {
+    "tab": "Formating",
+    "id": "dYz",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "**Bold text**\n_Italic text_\n**_Italic Bold  text_**\n\n**Lists**\n* Point 1\n* Point 2\n* Point 3"
+    }
+  },
+  {
+    "tab": "Formating",
+    "id": "vLn",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "l",
+      "text": "Links and formating functions",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Formating",
+    "id": "aJ1",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "You can use```URL()``` to create links to other applications or dashboards.\n ``URL(\"https://www.google.com/search$114q=\" + [Product name], [Product name])`` — link to Google\nAlso you can format text by formating functions such as BOLD(), ITALIC() and MARKUP()"
+    }
+  },
+  {
+    "tab": "Formating",
+    "id": "JAv",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "O2N",
+          "title": "Click row to go to url",
+          "params": {},
+          "chartId": "z4wtzhsv4vxko",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": false
+    }
+  },
+  {
+    "tab": "Formating",
+    "id": "3ey",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "**Code**\n\n```kotlin\n    val a: Int = 1\n```\n\n#### **Foldable sections**\n{% cut \"Show text\" %}\n\nHidden text\n\n{% endcut %}"
+    }
+  },
+  {
+    "tab": "Formating",
+    "id": "Jv7",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "># **Formating**"
+    }
+  },
+  {
+    "tab": "Formating",
+    "id": "p42",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "m",
+      "text": "Header M",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Formating",
+    "id": "jpB",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "xs",
+      "text": "Header XS",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Formating",
+    "id": "ZbQ",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "# **Text objects**\nText objects allow you to create various types of content: text with formating, images. links, code, list, foldable sections and tables "
+    }
+  },
+  {
+    "tab": "Formating",
+    "id": "8Ez",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "**Tables**\n\n#|\n|| **⚠ Status**  | **Condition**  ||\n|| Golden| more than 10 purchases||\n|| Silver | up to 10 purchases||\n|| Basic | 1 purchase per year||\n|#\n\n"
+    }
+  },
+  {
+    "tab": "Formating",
+    "id": "ljW",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "1. Point 1\n2. Point 2\n3. Point 3"
+    }
+  },
+  {
+    "tab": "Formating",
+    "id": "6N1",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": ""
+    }
+  },
+  {
+    "tab": "Formating",
+    "id": "ozN",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "#\nYou can use emojis and utf symbols to create conditional formating. And you can use formating fields options in tables for color formating and bar charts."
+    }
+  },
+  {
+    "tab": "Formating",
+    "id": "XXa",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "⌚ 📱 📲 💻 ⌨ 🖥 🖨 🖱 🖲 🕹 🗜 💽 💾 💿 📀 📼 📷 📸 📹 🎥 📽 🎞 📞 ☎ 📟 📠 📺 📻 🎙 🎚 🎛 ⏱ ⏲ ⏰ 🕰 ⏳ ⌛ 🧮 📡 🔋 🔌 💡 🔦 🕯 🧯 🗑 🛢 🛒 💸 💵 💴 💶 💷 💰 🪙 💳 🧾 💎 ⚖ 🦯 🧰 🔧 🪛 🔨 ⚒ 🛠 ⛏ 🪓 🪚 🔩 ⚙ ⛓ 🧱 🔫 🧨 💣 🔪 🗡 ⚔ 🛡 🚬 ⚰ 🪦 ⚱ 🏺 🔮 🪄 📿 🧿 💈 🧲 ⚗ 🧪 🧫 🧬 🔭 🔬 🕳 💊 💉 🩸 🩹 🩺 🌡 🏷 🔖 🚽 🪠 🚿 🛁 🛀 🪥 🪒 🧴 🧻 🧼 🧽 🧹 🧺 🪣 🔑 🗝 🪤 🛋 🪑 🛌 🛏 🚪 🪞 🪟 🧳 🛎 🖼 🧭 🗺 ⛱ 🗿 🛍 🎈 🎏 🎀 🧧 🎁 🎊 🎉 🪅 🪆 🎎 🎐 🏮 🪔 ✉ 📩 📨 📧 💌 📮 📪 📫 📬 📭 📦 📯 📥 📤 📜 📃 📑 📊 📈 📉 📄 📅 📆 🗓 📇 🗃 🗳 🗄 📋 🗒 📁 📂 🗂 🗞 📰 🪧 📓 📕 📗 📘 📙 📔 📒 📚 📖 🔗 📎 🖇 ✂ 📐 📏 📌 📍 🧷 🪡 🧵 🧶 🪢 🔐 🔒 🔓 🔏 🖊 🖋 ✒ 📝 ✏ 🖍 🖌 🔍 🔎 👚 👕 🥼 🦺 🧥 👖 👔 👗 👘 🥻 🩱 👙 🩲 🩳 💄 💋 👣 🧦 🩴 👠 👡 👢 🥿 👞 👟 🩰 🥾 🧢 👒 🎩 🎓 👑 ⛑ 🪖 🎒 👝 👛 👜 💼 👓 🕶 🥽 🧣 🧤 💍 🌂 ☂\n\n😀 😃 😄 😁 😆 😅 😂 🤣 😊 😇 🙂 🙃 😉 😌 😍 🥰 😘 😗 😙 😚 😋 😛 😝 😜 🤪 🤨 🧐 🤓 😎 🥸 🤩 🥳 😏 😒 😞 😔 😟 😕 🙁 ☹️ 😣 😖 😫 😩 🥺 😢 😭 😮‍💨 😤 😠 😡 🤬 🤯 😳 🥵 🥶 😱 😨 😰 😥 😓 😶‍🌫️ 😐 😑 😬 🙄 😯 😦 😧 😮 😲 🥱 😴 🤤 😪 😵 😵‍💫 🫥 🤐 🥴 🤢 🤮 🤧 😷 🤒\n\n👋 🤚 🖐 ✋ 🖖 👌 🤏 ✌️ 🤞 🤟 🤘 🤙 👈 👉 👆 🖕 👇 ☝️ 👍 👎 ✊ 👊 🤛 🤜 👏 🙌 👐 🤲 🤝 🙏 ✍️ 💅 🤳 💪 🦾 🦵 🦿 🦶 👣 👂 🦻 👃 🧠 🦷 🦴 👀 👁 👅 👄 💋 🩸\n\n👶 👧 🧒 👦 👩 🧑 👨 👩‍🦱 🧑‍🦱 👨‍🦱 👩‍🦰 🧑‍🦰 👨‍🦰 👱‍♀️ 👱 👱‍♂️ 👩‍🦳 🧑‍🦳 👨‍🦳 👩‍🦲 🧑‍🦲 👨‍🦲 🧔‍♀️ 🧔 🧔‍♂️ 👵 🧓 👴 👲 👳‍♀️ 👳 👳‍♂️ 🧕 👮‍♀️ 👮 👮‍♂️ 👷‍♀️ 👷 👷‍♂️ 💂‍♀️ 💂 💂‍♂️ 🕵️‍♀️ 🕵️ 🕵️‍♂️ 👩‍⚕️ 🧑‍⚕️ 👨‍⚕️ 👩‍🌾 🧑‍🌾 👨‍🌾 👩‍🍳 🧑‍🍳 👨‍🍳 👩‍🎓 🧑‍🎓 👨‍🎓 👩‍🎤 🧑‍🎤 👨‍🎤 👩‍🏫 🧑‍🏫 👨‍🏫 👩‍🏭 🧑‍🏭 👨‍🏭 👩‍💻 🧑‍💻 👨‍💻 👩‍💼 🧑‍💼 👨‍💼 👩‍🔧 🧑‍🔧 👨‍🔧 👩‍🔬 🧑‍🔬 👨‍🔬 👩‍🎨 🧑‍🎨 👨‍🎨 👩‍🚒 🧑‍🚒 👨‍🚒 👩‍✈️ 🧑‍✈️ 👨‍✈️ 👩‍🚀 🧑‍🚀 👨‍🚀 👩‍⚖️ 🧑‍⚖️ 👨‍⚖️ 👰‍♀️ 👰 👰‍♂️ 🤵‍♀️ 🤵 🤵‍♂️ 👸 🤴 🦸‍♀️ 🦸 🦸‍♂️ 🦹‍♀️ 🦹 🦹‍♂️ 🤶 🧑‍🎄 🎅 🧙‍♀️ 🧙 🧙‍♂️ 🧝‍♀️ 🧝 🧝‍♂️ 🧛‍♀️ 🧛 🧛‍♂️ 🧟‍♀️ 🧟 🧟‍♂️ 🧞‍♀️ 🧞 🧞‍♂️ 🧜‍♀️ 🧜 🧜‍♂️ 🧚‍♀️ 🧚 🧚‍♂️ 🧌 👼 🤰 🫄 🫃 🤱 👩‍🍼 🧑‍🍼 👨‍🍼 🙇‍♀️ 🙇 🙇‍♂️ 💁‍♀️ 💁 💁‍♂️ 🙅‍♀️ 🙅 🙅‍♂️ 🙆‍♀️ 🙆 🙆‍♂️ 🙋‍♀️ 🙋 🙋‍♂️ 🧏‍♀️ 🧏 🧏‍♂️ 🤦‍♀️ 🤦 🤦‍♂️ 🤷‍♀️ 🤷 🤷‍♂️ 🙎‍♀️ 🙎 🙎‍♂️ 🙍‍♀️ 🙍 🙍‍♂️ 💇‍♀️ 💇 💇‍♂️ 💆‍♀️ 💆 💆‍♂️ 🧖‍♀️ 🧖 🧖‍♂️ 💅 🤳 💃 🕺 👯‍♀️ 👯 👯‍♂️ 🕴 👩‍🦽 🧑‍🦽 👨‍🦽 👩‍🦼 🧑‍🦼 👨‍🦼 🚶‍♀️ 🚶 🚶‍♂️ 👩‍🦯 🧑‍🦯 👨‍🦯 🧎‍♀️ 🧎 🧎‍♂️ 🏃‍♀️ 🏃 🏃‍♂️ 🧍‍♀️ 🧍 🧍‍♂️ 👭 🧑‍🤝‍🧑 👬 👫 👩‍❤️‍👩 💑 👨‍❤️‍👨 👩‍❤️‍👨 👩‍❤️‍💋‍👩 💏 👨‍❤️‍💋‍👨 👩‍❤️‍💋‍👨 👪 👨‍👩‍👦 👨‍👩‍👧 👨‍👩‍👧‍👦 👨‍👩‍👦‍👦 👨‍👩‍👧‍👧 👨‍👨‍👦 👨‍👨‍👧 👨‍👨‍👧‍👦 👨‍👨‍👦‍👦 👨‍👨‍👧‍👧 👩‍👩‍👦 👩‍👩‍👧 👩‍👩‍👧‍👦 👩‍👩‍👦‍👦 👩‍👩‍👧‍👧 👨‍👦 👨‍👦‍👦 👨‍👧 👨‍👧‍👦 👨‍👧‍👧 👩‍👦 👩‍👦‍👦 👩‍👧 👩‍👧‍👦 👩‍👧‍👧 🗣 👤 👥\n\n🐶 🐱 🐭 🐹 🐰 🦊 🐻 🐼 🐻‍❄️ 🐨 🐯 🦁 🐮 🐷 🐽 🐸 🐵 🙈 🙉 🙊 🐒 🐔 🐧 🐦 🐤 🐣 🐥 🦆 🦅 🦉 🦇 🐺 🐗 🐴 🦄 🐝 🪱 🐛 🦋 🐌 🐞 🐜🦟 🦗 🕷 🕸 🦂 🐢 🐍 🦎 🦖 🦕 🐙 🦑 🦐 🦞 🦀 🪸 🐡 🐠 🐟 🐬 🐳 🐋 🦈 🐊 🐅 🐆 🦓 🦍 🦧 🦣 🐘 🦛 🦏 🐪 🐫 🦒 🦘 🦬 🐃 🐂 🐄 🐎 🐖 🐏 🐑 🦙 🐐 🦌 🐕 🐩 🦮 🐕‍🦺 🐈 🐈‍⬛ 🐓 🦃 🦤 🦚 🦜 🦢 🦩 🕊 🐇 🦝 🦨 🦡 🦫 🦦 🦥 🐁 🐀 🐿 🦔 🐾 🐉 🐲 🌵 🎄 🌲 🌳 🌴 🌱 🌿 ☘️ 🍀 🎍 🪴 🎋 🍃 🍂 🍁 🍄 🐚 🪨 🌾 💐 🌷 🪷 🌹 🥀 🌺 🌸 🌼 🌻 🌞 🌝 🌛 🌜 🌚 🌕 🌖 🌗 🌘 🌑 🌒 🌓 🌔 🌙 🌎 🌍 🌏 🪐 💫 ⭐️ 🌟 ✨ ⚡️ ☄️ 💥 🔥 🌪 🌈 ☀️ 🌤 ⛅️ 🌥 ☁️ 🌦 🌧 ⛈ 🌩 🌨 ❄️ ☃️ ⛄️ 🌬 💨 💧 💦 🫧 ☔️ ☂️ 🌊 🌫\n\n🍏 🍎 🍐 🍊 🍋 🍌 🍉 🍇 🍓🍈 🍒 🍑 🥭 🍍 🥥 🥝 🍅 🍆 🥑 🥦 🥬 🥒 🌶 🌽 🥕 🧄 🧅 🥔 🍠 🥐 🥯 🍞 🥖 🥨 🧀 🥚 🍳 🧈 🥞 🧇 🥓 🥩 🍗 🍖 🦴 🌭 🍔 🍟 🍕 🥪 🥙 🧆 🌮 🌯 🥗 🥘 🥫 🍝 🍜 🍲 🍛 🍣 🍱 🥟 🦪 🍤 🍙 🍚 🍘 🍥 🥠 🥮 🍢 🍡 🍧 🍨 🍦 🥧 🧁 🍰 🎂 🍮 🍭 🍬 🍫 🍿 🍩 🍪 🌰 🥜 🍯 🥛 🍼 ☕️ 🍵 🧃 🥤 🍶 🍺 🍻 🥂 🍷 🫗 🥃 🍸 🍹 🧉 🍾 🧊 🥄 🍴 🍽 🥣 🥡 🥢 🧂\n\n⚽️ 🏀 🏈 ⚾️ 🥎 🎾 🏐 🏉 🥏 🎱 🪀 🏓 🏸 🏒 🏑 🥍 🏏 🪃 🥅 ⛳️ 🪁 🏹 🎣 🤿 🥊 🥋 🎽 🛹 🛼 🛷 ⛸ 🥌 🎿 ⛷ 🏂 🪂 🏋️‍♀️ 🏋️ 🏋️‍♂️ 🤼‍♀️ 🤼 🤼‍♂️ 🤸‍♀️ 🤸 🤸‍♂️ ⛹️‍♀️ ⛹️ ⛹️‍♂️ 🤺 🤾‍♀️ 🤾 🤾‍♂️ 🏌️‍♀️ 🏌️ 🏌️‍♂️ 🏇 🧘‍♀️ 🧘 🧘‍♂️ 🏄‍♀️ 🏄 🏄‍♂️ 🏊‍♀️ 🏊 🏊‍♂️ 🤽‍♀️ 🤽 🤽‍♂️ 🚣‍♀️ 🚣 🚣‍♂️ 🧗‍♀️ 🧗 🧗‍♂️ 🚵‍♀️ 🚵 🚵‍♂️ 🚴‍♀️ 🚴 🚴‍♂️ 🏆 🥇 🥈 🥉 🏅 🎖 🏵 🎗 🎫 🎟 🎪 🤹 🤹‍♂️ 🤹‍♀️ 🎭 🩰 🎨 🎬 🎤 🎧 🎼 🎹 🥁 🪘 🎷 🎺 🪗 🎸 🪕 🎻 🎲 ♟ 🎯 🎳 🎮 🎰 🧩\n\n🡣\t🡫\t🡳\t🡻\t🢃\t⇓\t⇩\t⬇\n🡩\t🡡\t🡱\t🡹\t🢁\t⇑\t⇧\t⬆\n🡮\t🡦\t🡶\t🡾\t🢆\t⇘\t⬂\t⬊\n🡢\t🡪\t🡲\t🡺\t🢂\t⇒\t⇨\t⬇\n🡥\t🡭\t🡵\t🡽\t🢅\t⇗\t⬀\t⬈\n🡧\t🡯\t🡷\t🡿\t🢇\t⇙\t⬃\t⬋\n🡠\t🡨\t🡰\t🡸\t🢀\t⇐\t⇦\t⬅\n🡤\t🡬\t🡴\t🡼\t🢄\t⇖\t⬁\t⬉"
+    }
+  },
+  {
+    "tab": "Parameters",
+    "id": "4oG",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "8Rb",
+          "title": "Scale",
+          "params": {},
+          "chartId": "infcisd68swu7",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": false
+    }
+  },
+  {
+    "tab": "Parameters",
+    "id": "lP4",
+    "type": "control",
+    "namespace": "default",
+    "data": {
+      "title": "Scale",
+      "source": {
+        "fieldName": "scale",
+        "operation": null,
+        "showTitle": true,
+        "elementType": "select",
+        "defaultValue": "month",
+        "multiselectable": false,
+        "acceptableValues": [
+          {
+            "title": "day",
+            "value": "day"
+          },
+          {
+            "title": "week",
+            "value": "week"
+          },
+          {
+            "title": "month",
+            "value": "month"
+          },
+          {
+            "title": "year",
+            "value": "year"
+          }
+        ]
+      },
+      "sourceType": "manual"
+    }
+  },
+  {
+    "tab": "Parameters",
+    "id": "6We",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "l",
+      "text": "Scale date fields",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Parameters",
+    "id": "Q94",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "The parameters allow to configure calculated fields.On the dashboard, parameter values are set with selectors. Selectors should be created not based on the dataset, but using \"manual input\" tab, using the name of the parameter. \n\n**⚠ Important!** After adding a manual selector to the dashboard disconnect this selector from all other selectors on the dashboard tab. If the connection is not set to ignore the drop-down list of available values of other selectors will be empty."
+    }
+  },
+  {
+    "tab": "Parameters",
+    "id": "oPa",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "Create a parameter `scale` at dataset\n\nCreate a calculated field `DATETRUNC([date], [scale])`. Use as field in charts.\n"
+    }
+  },
+  {
+    "tab": "Parameters",
+    "id": "zZb",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "l",
+      "text": "Using with AGO function",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Parameters",
+    "id": "P2M",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "D1J",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "tyqntbjs2y9oi",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Parameters",
+    "id": "BXL",
+    "type": "control",
+    "namespace": "default",
+    "data": {
+      "title": "ago-period",
+      "source": {
+        "fieldName": "ago-period",
+        "showTitle": true,
+        "elementType": "input",
+        "defaultValue": "2"
+      },
+      "sourceType": "manual"
+    }
+  },
+  {
+    "tab": "Parameters",
+    "id": "VzB",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "Creare parameters `scale` and `ago-period` at dataset\n\nSales AGO = `AGO([Sales], [Date (scaled)], [scale], [ago-period])`, where:\n- `AGO()` — function with date displacement\n- `[Date (scaled)],` — `DATETRUNC([Date], [scale]) `\n- `[scale]` — scale parameter\n- `[ago-period]` — displacement parameter "
+    }
+  },
+  {
+    "tab": "Parameters",
+    "id": "RRK",
+    "type": "control",
+    "namespace": "default",
+    "data": {
+      "title": "Группировка",
+      "source": {
+        "fieldName": "scale",
+        "operation": null,
+        "showTitle": true,
+        "elementType": "select",
+        "defaultValue": "month",
+        "multiselectable": false,
+        "acceptableValues": [
+          {
+            "title": "day",
+            "value": "day"
+          },
+          {
+            "title": "week",
+            "value": "week"
+          },
+          {
+            "title": "month",
+            "value": "month"
+          },
+          {
+            "title": "year",
+            "value": "year"
+          }
+        ]
+      },
+      "sourceType": "manual"
+    }
+  },
+  {
+    "tab": "Parameters",
+    "id": "bpZ",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "l",
+      "text": "Currency calculator and other What-if cases",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Parameters",
+    "id": "95g",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "YP4",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "uzrou89hw5hej",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Parameters",
+    "id": "rrz",
+    "type": "control",
+    "namespace": "default",
+    "data": {
+      "title": "Currency",
+      "source": {
+        "fieldName": "currency",
+        "showTitle": true,
+        "elementType": "select",
+        "defaultValue": "EUR",
+        "acceptableValues": [
+          {
+            "title": "ILS",
+            "value": "ILS"
+          },
+          {
+            "title": "EUR",
+            "value": "EUR"
+          },
+          {
+            "title": "USD",
+            "value": "USD"
+          }
+        ]
+      },
+      "sourceType": "manual"
+    }
+  },
+  {
+    "tab": "Parameters",
+    "id": "1Yd",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "Create parameters `currency`, `ISL-USD` and `ISL-EUR`\n\nUse calculated field\n```sql\nif( [currency] = 'ILS', [Sales], \n    [currency] = 'USD', [Sales]/[ILS-USD], \n    [currency] = 'EUR', [Sales]/[ILS-EUR], NULL)\n```"
+    }
+  },
+  {
+    "tab": "Parameters",
+    "id": "nP3",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "l",
+      "text": "Moving average window control",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Parameters",
+    "id": "kPe",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "WE4",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "491y4djzjzumt",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Parameters",
+    "id": "5E6",
+    "type": "control",
+    "namespace": "default",
+    "data": {
+      "title": "Window",
+      "source": {
+        "fieldName": "mavg-value",
+        "showTitle": true,
+        "elementType": "input",
+        "defaultValue": "7"
+      },
+      "sourceType": "manual"
+    }
+  },
+  {
+    "tab": "Parameters",
+    "id": "E2B",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "Creare parameters `scale` and `mavg-value` at dataset\n\nSales MAVG = `MAVG([Sales], [mavg-value])`, where:\n- `MAVG()` — moving average function\n- `[Date (scaled)],` — `DATETRUNC([Date], [scale]) `\n- `[scale]` — scale parameter\n- `[mavg-value]` — moving average window"
+    }
+  },
+  {
+    "tab": "Parameters",
+    "id": "eAZ",
+    "type": "control",
+    "namespace": "default",
+    "data": {
+      "title": "ILS-USD",
+      "source": {
+        "fieldName": "ILS-USD",
+        "showTitle": true,
+        "elementType": "input",
+        "defaultValue": "0.27"
+      },
+      "sourceType": "manual"
+    }
+  },
+  {
+    "tab": "Parameters",
+    "id": "dNE",
+    "type": "control",
+    "namespace": "default",
+    "data": {
+      "title": "ILS-EUR",
+      "source": {
+        "fieldName": "ILS-EUR",
+        "showTitle": true,
+        "elementType": "input",
+        "defaultValue": "0.29"
+      },
+      "sourceType": "manual"
+    }
+  },
+  {
+    "tab": "Parameters",
+    "id": "G5N",
+    "type": "control",
+    "namespace": "default",
+    "data": {
+      "title": "Группировка",
+      "source": {
+        "fieldName": "scale",
+        "operation": null,
+        "showTitle": true,
+        "elementType": "select",
+        "defaultValue": "month",
+        "multiselectable": false,
+        "acceptableValues": [
+          {
+            "title": "day",
+            "value": "day"
+          },
+          {
+            "title": "week",
+            "value": "week"
+          },
+          {
+            "title": "month",
+            "value": "month"
+          },
+          {
+            "title": "year",
+            "value": "year"
+          }
+        ]
+      },
+      "sourceType": "manual"
+    }
+  },
+  {
+    "tab": "Parameters",
+    "id": "Krb",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "l",
+      "text": "Dimensions ane Measures controls",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Parameters",
+    "id": "A9O",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "NlO",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "491y4ewqzvbut",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Parameters",
+    "id": "Mrv",
+    "type": "control",
+    "namespace": "default",
+    "data": {
+      "title": "Dimension",
+      "source": {
+        "fieldName": "dimension",
+        "showTitle": true,
+        "elementType": "select",
+        "defaultValue": "Region",
+        "acceptableValues": [
+          {
+            "title": "Population group",
+            "value": "Population group"
+          },
+          {
+            "title": "Region",
+            "value": "Region"
+          },
+          {
+            "title": "Neighbourhood",
+            "value": "Neighbourhood"
+          }
+        ]
+      },
+      "sourceType": "manual"
+    }
+  },
+  {
+    "tab": "Parameters",
+    "id": "3WW",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "Create a parameter `dimension` and `metric` at dataset\n\nAdd calculated fileds:\n```\nCASE([dimension],\n    'Region', [Region],\n    'Neighbourhood',[Neighbourhood],\n    'Population group',[Population group],\n    null)\n```\n\n\n```\nIF [metric]= \"sales\" THEN INT(SUM([amount]))\nELSEIF [metric]=\"quantity\" THEN SUM([quantity])\nEND\n```\n\nMesures with same type can only be used in that case."
+    }
+  },
+  {
+    "tab": "Parameters",
+    "id": "1Jl",
+    "type": "control",
+    "namespace": "default",
+    "data": {
+      "title": "Metric",
+      "source": {
+        "fieldName": "metric",
+        "showTitle": true,
+        "elementType": "select",
+        "defaultValue": "quantity",
+        "acceptableValues": [
+          {
+            "title": "quantity",
+            "value": "quantity"
+          },
+          {
+            "title": "sales",
+            "value": "sales"
+          }
+        ]
+      },
+      "sourceType": "manual"
+    }
+  },
+  {
+    "tab": "Parameters",
+    "id": "n46",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "> # **Parameters**"
+    }
+  },
+  {
+    "tab": "Date functions",
+    "id": "lNP",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "4kz",
+          "title": "DATETRUNC([Date], \"week\")",
+          "params": {},
+          "chartId": "dia7dulbcwxc2",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": false
+    }
+  },
+  {
+    "tab": "Date functions",
+    "id": "Qnj",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "6k5",
+          "title": "DATEPART([Date], \"hour\")",
+          "params": {},
+          "chartId": "bg85bre1z5ik0",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": false
+    }
+  },
+  {
+    "tab": "Date functions",
+    "id": "z2A",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "yQ3",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "ch96cr73sjd21",
+          "isDefault": true,
+          "autoHeight": false,
+          "description": "You can add miniature date navigator for line charts in settings of the line chart",
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Date functions",
+    "id": "6B5",
+    "type": "control",
+    "namespace": "default",
+    "data": {
+      "title": "Order date",
+      "source": {
+        "isRange": true,
+        "datasetId": "qvnkqz8s0wdqf",
+        "showTitle": true,
+        "elementType": "date",
+        "defaultValue": "__interval___relative_-7y___relative_-0d",
+        "datasetFieldId": "3dcc4a70-e1f0-11e9-a279-0b30c0a74ab7"
+      },
+      "sourceType": "dataset"
+    }
+  },
+  {
+    "tab": "Date functions",
+    "id": "oZJ",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "In order to work with dates its important to set data type of fileds to date at datasource. If format you are using is not recognized automatically you can convert the data type using the functions: DATETIME(), DATE(), DATETIME_PARSE(), DATE_PARSE()."
+    }
+  },
+  {
+    "tab": "Date functions",
+    "id": "XEj",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "Date type fields support calendars as selectors and flexible automatic relative dates selections like: last year, last 7 days, last and next 3 months and so on. "
+    }
+  },
+  {
+    "tab": "Date functions",
+    "id": "gev",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "You can group dates in the interface click to left side of field or using functions like DATETRUNC() or DATEPART().\n\n`DATETRUNC([OrderDate], \"WEEK\")` — will truncate date up to weeks\n`DATEPART([OrderDate], \"hour\")` — will return names of hours"
+    }
+  },
+  {
+    "tab": "Date functions",
+    "id": "jPL",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "p15",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "ejb8ep80pi163",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Date functions",
+    "id": "L3R",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "**Rows**:\nMonth - `DATETRUNC([Order date], \"month\")`\nWeek number - `if( week([Order date])>51 and MONTH([Order date])=1, 0, week([Order date]))`  -- if statement to get right result at the end of a year\n\n**Columns**:\nDay oof Week - `CASE(DAYOFWEEK([Order date]),1,\"1-Mn\",2,\"2-Tu\",3,\"3-We\",4,\"4-Th\",5,\"5-Fr\",6,\"6-St\",7,\"7-Sn\",\"NA\")`\n\n**Cell**:\nDay - `max(DAY([Order date]))` -- Max is needed to convert it to Measure\n\n**Color**:\n`Sales - SUM([amount])` -- Metric for heatmap"
+    }
+  },
+  {
+    "tab": "Date functions",
+    "id": "e3E",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "m",
+      "text": "Month over Month and AGO()",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Date functions",
+    "id": "GAX",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "dMV",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "27zw2f553fpqr",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Date functions",
+    "id": "Ka4",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "Add calculated field `AGO([Sales], [Date Month], 'month', 1)`. \\[Documentation link\\](https://cloud.yandex.ru/docs/datalens/function-ref/AGO\n\nTo calculate MoM,% create a calculated field `([Sales] - [Ago 1 Month Sales]) / ABS([Ago 1 Month Sales])`\n\nAlso you can use functions LAG() or AT_DATE() for different cases. For example `AT_DATE([Sales],[Date], DATETRUNC([Date],'week'))` will give you Sales at the first date of the week."
+    }
+  },
+  {
+    "tab": "Date functions",
+    "id": "7Ea",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "># **Date functions**"
+    }
+  },
+  {
+    "tab": "Date functions",
+    "id": "Npo",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "m",
+      "text": "Heatmap calendar",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Date functions",
+    "id": "AY0",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "l",
+      "text": "DATETRUNC() and DATEPART()",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Window functions",
+    "id": "evd",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "EB3",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "sxpms3pgygm6h",
+          "isDefault": true,
+          "autoHeight": true,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Window functions",
+    "id": "GBp",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "dWP",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "af74aq6s79dez",
+          "isDefault": true,
+          "autoHeight": true,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Window functions",
+    "id": "7gg",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "KQn",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "tyqnt5kbstbsi",
+          "isDefault": true,
+          "autoHeight": true,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Window functions",
+    "id": "AMe",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "d6z",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "ch96cl4boozy1",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": false
+    }
+  },
+  {
+    "tab": "Window functions",
+    "id": "3g5",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "MXb",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "8d528nx6xy7ix",
+          "isDefault": true,
+          "autoHeight": true,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Window functions",
+    "id": "aYl",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "OOe",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "gldagrksddhm5",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Window functions",
+    "id": "OO2",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "l",
+      "text": "Top 5",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Window functions",
+    "id": "J5Z",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "l",
+      "text": "Top 3 for each category",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Window functions",
+    "id": "pDn",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "m",
+      "text": "Percent of total",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Window functions",
+    "id": "GB1",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "l",
+      "text": "Percent of total by years and regions",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Window functions",
+    "id": "KQY",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "m",
+      "text": "Running sum",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Window functions",
+    "id": "7gE",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "l",
+      "text": "Moving average",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Window functions",
+    "id": "NRY",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "To filter top 5 create calculated filed with `rank([Sales])` function and drug this filed to Filter section.\n\nYou can find additional info about `RANK` in documentation."
+    }
+  },
+  {
+    "tab": "Window functions",
+    "id": "AMA",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "Add calculated field `rank([Sales] WITHIN [Category])` and drag it to Filter section,\n\nYou can find additional info about `RANK` in documentation."
+    }
+  },
+  {
+    "tab": "Window functions",
+    "id": "MX1",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "Add calculated filed `[Sales] / sum([Sales] Total) `.\n\nYou can find additional info about  `SUM` in documentation."
+    }
+  },
+  {
+    "tab": "Window functions",
+    "id": "3gr",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "Add calculated filed `[Sales] / sum([Sales] WITHIN [Year])`.\n\nYou can find additional info about `SUM` in documentation."
+    }
+  },
+  {
+    "tab": "Window functions",
+    "id": "v26",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "Add calculated filed  `RSUM([Sales])`.\n\nUsing `RSUM()` requires sort by dimension in Sort section.\n\nYou can find additional info about `RSUM` in documentation."
+    }
+  },
+  {
+    "tab": "Window functions",
+    "id": "aYX",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "Add calculated filed `avg([Sales], 5)`, `mavg([Sales], 5,5)`.\n\nThe moving average allows to smooth outliers in data, for example, in sensor readings. Using `MAVG()` requires sort by dimension in Sort section.\n\nYou can find additional info about `MAVG` in documentation."
+    }
+  },
+  {
+    "tab": "Window functions",
+    "id": "J5E",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "l",
+      "text": "Calculating window function before filtering (Before Filter By feature)",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Window functions",
+    "id": "j2N",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "pDK",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "otlio4n8g6zed",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Window functions",
+    "id": "LnJ",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "l",
+      "text": "Show only top 3 categories (nested window calcualtions)",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Window functions",
+    "id": "8WP",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "ZvB",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "ejb8eut7kkr63",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Window functions",
+    "id": "4j7",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "In order to get top 3 lines by sales create calculated field `RANK_DENSE(sum([Sales] within [Product category 1]))` and drag it to the filter.\n\nIn this formula, we first count the sum of all points inside the value `[Product category 1]`, then count `RANK_DENSE()`\n\nYou can make window functions nested in each other (in this case, `SUM` and \\`RANK_DENSE'). More complex combinations are also possible.\n\nYou can find additional info about `RANK_DENSE` function in documentation."
+    }
+  },
+  {
+    "tab": "Window functions",
+    "id": "lZk",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "We want to filter several dimension, but calculate percent of total to the values from all dimension without filtering.\n\nAdd calculated filed\n`[Sales] / sum([Sales] within [Order year] before filter by [category_name_level_1])`\nallows you to calculate the percent of each category for the year.\n\nUsing 'before filtering by' makes filtering by dimension '\\[category_name_level_1\\]' occurs after calculating the window function.\n\nFind out details about 'BEFORE FILTER BY' in documentation."
+    }
+  },
+  {
+    "tab": "Window functions",
+    "id": "n7p",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "Calculated fields are created at the dataset level or at the chart level (will be available only for this chart). In the examples, calculated fields are created at the chart level. You can edit them quickly and immediately see the result on the visualization.\n\nFor a general description of window functions, see documentation."
+    }
+  },
+  {
+    "tab": "Window functions",
+    "id": "Gl4",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "l",
+      "text": "Label only last value",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Window functions",
+    "id": "7pn",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "KbO",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "w1tqwdaymiv2l",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": false
+    }
+  },
+  {
+    "tab": "Window functions",
+    "id": "Nr1",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "Add calculated filed\n\n```sql\nif(\n    max([Order month]) = LAST(max([Order month])), --check if point is the last\n    [Sales], --if yes, show metric\n    null --if no, show nothing\n)\n```\n\nAdd it to Labels section.\n\nYou can find additional info about `MAX` in documentation."
+    }
+  },
+  {
+    "tab": "Window functions",
+    "id": "9YE",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "># **Window functions**"
+    }
+  },
+  {
+    "tab": "Level of detail functions",
+    "id": "lGA",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "4Q8",
+          "title": "FIXED",
+          "params": {},
+          "chartId": "qvnkq5oj2gy2f",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Level of detail functions",
+    "id": "64y",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "l",
+      "text": "Percent of total for COUNTD()",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Level of detail functions",
+    "id": "QLY",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "Create a calculated field `COUNTD([Client ID]) / COUNTD([Client ID] FIXED)`."
+    }
+  },
+  {
+    "tab": "Level of detail functions",
+    "id": "o6l",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "l",
+      "text": "Double aggregation",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Level of detail functions",
+    "id": "0a8",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "XaZ",
+          "title": "INCLUDE",
+          "params": {},
+          "chartId": "rwolr3bej5gwg",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Level of detail functions",
+    "id": "grL",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "Calculated field `AVG(COUNT([client ID] INCLUDE [Application date]))` allows you to perform double aggregation: first we count the number of unique buyers by day, then we count the average of them across a month. In this example, the average is calculated by month (see chart measurement). Thus, we got the \"average clients per day\"."
+    }
+  },
+  {
+    "tab": "Level of detail functions",
+    "id": "PGJ",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "Examples of using Level of Detail (LOD) or double aggregation functions in calculated fields. In some cases, LODs are similar to regular window functions. An important difference between LOD functions is the support of the `COUNTD` function."
+    }
+  },
+  {
+    "tab": "Level of detail functions",
+    "id": "Wod",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "># **Level of Details functions**"
+    }
+  },
+  {
+    "tab": "Selectors",
+    "id": "J9l",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "Obz",
+          "title": "This chart is linked only to the selecot above",
+          "params": {},
+          "chartId": "y3vsya0uiqbqn",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": false
+    }
+  },
+  {
+    "tab": "Selectors",
+    "id": "jn0",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "p6R",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "y3vsya0uiqbqn",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Selectors",
+    "id": "ZG6",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "LbN",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "y3vsya0uiqbqn",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Selectors",
+    "id": "84v",
+    "type": "control",
+    "namespace": "default",
+    "data": {
+      "title": "Main category",
+      "source": {
+        "datasetId": "qvnkqz8s0wdqf",
+        "fieldType": "string",
+        "showTitle": true,
+        "elementType": "select",
+        "datasetFieldId": "45bdfbb6-1dd9-41bd-9871-b011efd8ec6b",
+        "multiselectable": true,
+        "datasetFieldType": "DIMENSION"
+      },
+      "sourceType": "dataset"
+    }
+  },
+  {
+    "tab": "Selectors",
+    "id": "4Z8",
+    "type": "control",
+    "namespace": "default",
+    "data": {
+      "title": "Category to compare",
+      "source": {
+        "datasetId": "qvnkqz8s0wdqf",
+        "fieldType": "string",
+        "showTitle": true,
+        "elementType": "select",
+        "datasetFieldId": "45bdfbb6-1dd9-41bd-9871-b011efd8ec6b",
+        "multiselectable": true,
+        "datasetFieldType": "DIMENSION"
+      },
+      "sourceType": "dataset"
+    }
+  },
+  {
+    "tab": "Selectors",
+    "id": "l6A",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "The page provides an example of setting up links between selectors and charts. To change the settings in the dashboard editing mode, click on the \"links\" button on the top panel. This page uses only one chart added multiple times."
+    }
+  },
+  {
+    "tab": "Selectors",
+    "id": "6dy",
+    "type": "control",
+    "namespace": "default",
+    "data": {
+      "title": "Year",
+      "source": {
+        "datasetId": "qvnkqz8s0wdqf",
+        "showTitle": true,
+        "elementType": "select",
+        "datasetFieldId": "9cd1cbd0-0ee4-11ec-b9e8-6b5e199aa6f2",
+        "multiselectable": true
+      },
+      "sourceType": "dataset"
+    }
+  },
+  {
+    "tab": "Selectors",
+    "id": "QKY",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "This is the selector that linked to all charts at the tab."
+    }
+  },
+  {
+    "tab": "Selectors",
+    "id": "ojl",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "You can create comparison panels using that approach. "
+    }
+  },
+  {
+    "tab": "Selectors",
+    "id": "XMZ",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": " "
+    }
+  },
+  {
+    "tab": "Selectors",
+    "id": "voX",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "l",
+      "text": "The same chart is filtered independently by different selectors ",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Selectors",
+    "id": "5Y0",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "># **Selectors**"
+    }
+  },
+  {
+    "tab": "Cohorts",
+    "id": "bdQ",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "Ral",
+          "title": "Data",
+          "params": {},
+          "chartId": "491y4hy1jw5yt",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": false
+    }
+  },
+  {
+    "tab": "Cohorts",
+    "id": "9Kn",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "Y1g",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "sxpmsao0sscqh",
+          "isDefault": true,
+          "autoHeight": true,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Cohorts",
+    "id": "1kE",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "roE",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "fkc9fu79zvxg4",
+          "isDefault": true,
+          "autoHeight": false,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Cohorts",
+    "id": "W15",
+    "type": "widget",
+    "namespace": "default",
+    "data": {
+      "tabs": [
+        {
+          "id": "nde",
+          "title": "Title 1",
+          "params": {},
+          "chartId": "27zw2juwp5emr",
+          "isDefault": true,
+          "autoHeight": true,
+          "background": {
+            "color": "like-chart-bg"
+          }
+        }
+      ],
+      "hideTitle": true
+    }
+  },
+  {
+    "tab": "Cohorts",
+    "id": "k76",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "Cohorts analysis is a common analysis type in product analytics. You can create this type of analysis in DataLens. We need to get a dataset with three fields:\n— Client ID\n— Order date\n— First Order date or Activation date\n\nYou can create such dataset on a database level or using custom SQL in dataset like that:\n```sql\nSELECT\n\t t1.user_id,\n\t t1.order_platform,\n\t date_trunc('day', t2.FirstDate) as \"FirstOrderDate\",\n\t date_trunc('day', t1.order_creation_date) as \"OrderDate\"\nFROM\n\t public.orders as t1,\n\t (SELECT\n\t\t  user_id,\n\t\t  MIN(order_creation_date) as FirstDate\n\t FROM public.orders\n\t GROUP BY user_id) as t2\nWHERE t1.user_id = t2.user_id\n```\n\nThat will result data like on the right side."
+    }
+  },
+  {
+    "tab": "Cohorts",
+    "id": "EL4",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "Using `DATETRUNC([FirstOrderDate],'MONTH')` calculate a First order month. Using  `floor(([OrderDate]-[FirstOrderDate])/30)` calculate amount of periods past from first order date. Using COUNTD([Client ID]) calculate number of clients in each cohort. Use this fileds configure a table like that:"
+    }
+  },
+  {
+    "tab": "Cohorts",
+    "id": "e1J",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "For accurate analysis it is better to use color coding by columns. That way we will be able to compare same \"age\" cohorts. In order to do so create a filed\n`[COUNTD(Client ID)]/MAX([COUNTD(Client ID)] among [FirstOrder_Month])` and drag it to color setion."
+    }
+  },
+  {
+    "tab": "Cohorts",
+    "id": "dlQ",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "To display retention, starting from the period \"1\" (to see what percentage of the original customers remained with active), use the calculated field:\n\n```sql\nif (\n[30d]=0,\nstr(round([COUNT([Client ID])),\nconcat(str(round(100*[Client ID]/RMAX([Client ID] among [30d]))), \"%\")\n)\n```\n\nFor color:\n\n```sql\nif (\n[30d]=0,\n(round([COUNTS])),\n(round(100*[COUNTS]/RMAX([COUNTS] among [30d])))\n)\n```"
+    }
+  },
+  {
+    "tab": "Cohorts",
+    "id": "3jP",
+    "type": "text",
+    "namespace": "default",
+    "data": {
+      "text": "># **Cohorts**"
+    }
+  },
+  {
+    "tab": "Cohorts",
+    "id": "v47",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "l",
+      "text": "Data",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Cohorts",
+    "id": "a7L",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "l",
+      "text": "Basic cohorts",
+      "showInTOC": true
+    }
+  },
+  {
+    "tab": "Cohorts",
+    "id": "Oj3",
+    "type": "title",
+    "namespace": "default",
+    "data": {
+      "size": "l",
+      "text": "Retention and cohort size at one chart",
+      "showInTOC": true
+    }
+  }
+]

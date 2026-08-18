@@ -1,0 +1,27 @@
+{
+  "entryId": "jcxamcsn1wy42",
+  "scope": "widget",
+  "type": "d3_ql_node",
+  "key": "2277303067915322402/Submissions by Status",
+  "meta": {},
+  "createdBy": "uid:a36xxdpna7rit",
+  "createdAt": "2026-08-08T22:54:40.817Z",
+  "updatedBy": "uid:a36xxdpna7rit",
+  "updatedAt": "2026-08-08T22:54:40.817Z",
+  "annotation": {
+    "description": ""
+  },
+  "savedId": "ibw9lbrm0vx21",
+  "publishedId": "ibw9lbrm0vx21",
+  "hidden": false,
+  "workbookId": "5yilgsbb13fwo",
+  "collectionId": null,
+  "workbookTitle": "21_lms_workbook",
+  "collectionTitle": null,
+  "isFavorite": false,
+  "data": {
+    "shared": "{\n    \"type\": \"ql\",\n    \"chartType\": \"sql\",\n    \"connection\": {\n        \"entryId\": \"zsdn1gjhoshki\",\n        \"type\": \"postgres\",\n        \"dataExportForbidden\": false\n    },\n    \"colors\": [],\n    \"colorsConfig\": {},\n    \"labels\": [],\n    \"tooltips\": [],\n    \"shapes\": [],\n    \"shapesConfig\": {},\n    \"extraSettings\": {\n        \"title\": \"\",\n        \"titleMode\": \"show\",\n        \"labelsPosition\": \"outside\"\n    },\n    \"queryValue\": \"SELECT \\n  status,\\n  COUNT(*) AS count\\nFROM submissions\\nGROUP BY status\\nORDER BY count DESC\",\n    \"queries\": [],\n    \"params\": [],\n    \"visualization\": {\n        \"id\": \"column\",\n        \"type\": \"column\",\n        \"name\": \"label_visualization-column\",\n        \"iconProps\": {\n            \"id\": \"visColumn\",\n            \"width\": \"24\"\n        },\n        \"allowFilters\": false,\n        \"allowColors\": true,\n        \"allowSort\": false,\n        \"allowSegments\": false,\n        \"allowLabels\": true,\n        \"availableLabelModes\": [\n            \"absolute\"\n        ],\n        \"placeholders\": [\n            {\n                \"allowedTypes\": {},\n                \"allowedDataTypes\": {},\n                \"id\": \"x\",\n                \"type\": \"x\",\n                \"title\": \"section_x\",\n                \"iconProps\": {},\n                \"items\": [\n                    {\n                        \"guid\": \"status\",\n                        \"title\": \"status\",\n                        \"datasetId\": \"ql-mocked-dataset\",\n                        \"data_type\": \"string\",\n                        \"cast\": \"string\",\n                        \"type\": \"DIMENSION\",\n                        \"calc_mode\": \"direct\",\n                        \"inspectHidden\": true,\n                        \"formulaHidden\": true,\n                        \"noEdit\": true\n                    }\n                ],\n                \"required\": false,\n                \"capacity\": 2,\n                \"settings\": {\n                    \"title\": \"off\",\n                    \"titleValue\": \"\",\n                    \"type\": \"linear\",\n                    \"grid\": \"on\",\n                    \"gridStep\": \"auto\",\n                    \"gridStepValue\": 50,\n                    \"hideLabels\": \"no\",\n                    \"labelsView\": \"auto\",\n                    \"holidays\": \"off\",\n                    \"axisLabelDateFormat\": \"DD.MM.YYYY\",\n                    \"axisLabelFormating\": {},\n                    \"axisFormatMode\": \"auto\",\n                    \"axisModeMap\": {\n                        \"status\": \"discrete\"\n                    },\n                    \"axisVisibility\": \"show\",\n                    \"disableAxisMode\": true\n                }\n            },\n            {\n                \"allowedTypes\": {},\n                \"allowedFinalTypes\": {},\n                \"allowedDataTypes\": {},\n                \"id\": \"y\",\n                \"type\": \"y\",\n                \"title\": \"section_y\",\n                \"iconProps\": {},\n                \"items\": [\n                    {\n                        \"guid\": \"count\",\n                        \"title\": \"count\",\n                        \"datasetId\": \"ql-mocked-dataset\",\n                        \"data_type\": \"integer\",\n                        \"cast\": \"integer\",\n                        \"type\": \"DIMENSION\",\n                        \"calc_mode\": \"direct\",\n                        \"inspectHidden\": true,\n                        \"formulaHidden\": true,\n                        \"noEdit\": true\n                    }\n                ],\n                \"settings\": {\n                    \"scale\": \"auto\",\n                    \"scaleValue\": \"min-max\",\n                    \"title\": \"off\",\n                    \"titleValue\": \"\",\n                    \"type\": \"linear\",\n                    \"grid\": \"on\",\n                    \"gridStep\": \"auto\",\n                    \"gridStepValue\": 50,\n                    \"hideLabels\": \"no\",\n                    \"labelsView\": \"auto\",\n                    \"nulls\": \"ignore\",\n                    \"axisLabelDateFormat\": \"DD.MM.YYYY\",\n                    \"axisLabelFormating\": {},\n                    \"axisFormatMode\": \"auto\",\n                    \"axisVisibility\": \"show\"\n                }\n            }\n        ],\n        \"allowAvailable\": true\n    },\n    \"order\": null,\n    \"version\": \"7\",\n    \"geopointsConfig\": {}\n}"
+  },
+  "isLocked": false,
+  "name": "Submissions by Status"
+}

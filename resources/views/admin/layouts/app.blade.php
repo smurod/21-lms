@@ -18,6 +18,14 @@
     <style>
         [x-cloak] { display: none !important; }
 
+        .analytics-prompt-input:-webkit-autofill,
+        .analytics-prompt-input:-webkit-autofill:hover,
+        .analytics-prompt-input:-webkit-autofill:focus {
+            -webkit-text-fill-color: #ffffff;
+            -webkit-box-shadow: 0 0 0 1000px #09090b inset;
+            transition: background-color 9999s ease-out 0s;
+        }
+
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 10px; }
@@ -35,7 +43,18 @@
 
     @yield('styles')
 </head>
-<body class="bg-[#0a0c14] text-white overflow-hidden antialiased">
+<body x-data="{
+        sidebarOpen: {{ request()->routeIs('admin.analytics.*') ? 'false' : 'true' }},
+        analyticsMenuOpen: {{ request()->routeIs('admin.analytics.*') ? 'true' : 'false' }},
+        analyticsChatOpen: false,
+        analyticsLoading: false,
+        initialAgentLoading: false,
+        chatThinking: false,
+        chatDraft: '',
+        chatSubmittedMessage: '',
+        chatPendingMessage: ''
+      }"
+      class="bg-[#0a0c14] text-white overflow-hidden antialiased">
 
 <!-- Фоновый градиент -->
 <div class="fixed inset-0 bg-[radial-gradient(at_50%_30%,rgba(165,243,252,0.08)_0%,transparent_50%)] pointer-events-none"></div>
@@ -52,14 +71,13 @@
         @include('admin.layouts.header')
 
         <!-- КОНТЕНТ ВКЛАДОК / СТРАНИЦ -->
-        <div class="p-10 relative">
+        <div class="relative flex-1 p-10">
             @yield('content')
         </div>
+
+        @include('admin.layouts.footer')
     </div>
 </div>
-
-<!-- Status Bar -->
-@include('admin.layouts.footer')
 
 @yield('scripts')
 <script>
