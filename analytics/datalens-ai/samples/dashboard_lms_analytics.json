@@ -1,0 +1,205 @@
+{
+  "entryId": "ng1dosjb10go6",
+  "scope": "dash",
+  "type": "",
+  "key": "2277300115385353242/LMS Analytics Dashboard",
+  "meta": {
+    "is_release": true
+  },
+  "createdBy": "uid:a36xxdpna7rit",
+  "createdAt": "2026-08-08T22:48:48.843Z",
+  "updatedBy": "uid:a36xxdpna7rit",
+  "updatedAt": "2026-08-08T22:55:09.853Z",
+  "annotation": {
+    "description": ""
+  },
+  "savedId": "pi3gvmvcgurw8",
+  "publishedId": "pi3gvmvcgurw8",
+  "hidden": false,
+  "workbookId": "5yilgsbb13fwo",
+  "collectionId": null,
+  "workbookTitle": "21_lms_workbook",
+  "collectionTitle": null,
+  "isFavorite": false,
+  "data": {
+    "salt": "0.671551810861273",
+    "tabs": [
+      {
+        "id": "5P",
+        "items": [
+          {
+            "id": "j7",
+            "data": {
+              "size": "xs",
+              "text": "LMS Analytics Dashboard",
+              "showInTOC": true,
+              "textColor": "var(--g-color-text-primary)",
+              "autoHeight": false,
+              "background": {
+                "color": "transparent"
+              }
+            },
+            "type": "title",
+            "namespace": "default"
+          },
+          {
+            "id": "O8",
+            "data": {
+              "tabs": [
+                {
+                  "id": "9X",
+                  "hint": "",
+                  "title": "XP Dynamics by Day",
+                  "params": {},
+                  "chartId": "f8t489tj61bcy",
+                  "isDefault": true,
+                  "autoHeight": false,
+                  "background": {
+                    "color": "like-chart-bg"
+                  },
+                  "enableHint": false,
+                  "description": "",
+                  "enableDescription": false
+                }
+              ],
+              "hideTitle": false
+            },
+            "type": "widget",
+            "namespace": "default"
+          },
+          {
+            "id": "DM",
+            "data": {
+              "tabs": [
+                {
+                  "id": "E0",
+                  "hint": "",
+                  "title": "Top 10 Users by Earned XP",
+                  "params": {},
+                  "chartId": "1ufpie6mj2dck",
+                  "isDefault": true,
+                  "autoHeight": false,
+                  "background": {
+                    "color": "like-chart-bg"
+                  },
+                  "enableHint": false,
+                  "description": "",
+                  "enableDescription": false
+                }
+              ],
+              "hideTitle": false
+            },
+            "type": "widget",
+            "namespace": "default"
+          },
+          {
+            "id": "QV",
+            "data": {
+              "tabs": [
+                {
+                  "id": "v7",
+                  "hint": "",
+                  "title": "Users by Level",
+                  "params": {},
+                  "chartId": "b4p26lo4910gu",
+                  "isDefault": true,
+                  "autoHeight": false,
+                  "background": {
+                    "color": "like-chart-bg"
+                  },
+                  "enableHint": false,
+                  "description": "",
+                  "enableDescription": false
+                }
+              ],
+              "hideTitle": false
+            },
+            "type": "widget",
+            "namespace": "default"
+          },
+          {
+            "id": "nR",
+            "data": {
+              "tabs": [
+                {
+                  "id": "71",
+                  "hint": "",
+                  "title": "Submissions by Status",
+                  "params": {},
+                  "chartId": "jcxamcsn1wy42",
+                  "isDefault": true,
+                  "autoHeight": false,
+                  "background": {
+                    "color": "like-chart-bg"
+                  },
+                  "enableHint": false,
+                  "description": "",
+                  "enableDescription": false
+                }
+              ],
+              "hideTitle": false
+            },
+            "type": "widget",
+            "namespace": "default"
+          }
+        ],
+        "title": "Tab 1",
+        "layout": [
+          {
+            "h": 3,
+            "i": "j7",
+            "w": 36,
+            "x": 0,
+            "y": 0
+          },
+          {
+            "h": 19,
+            "i": "O8",
+            "w": 36,
+            "x": 0,
+            "y": 3
+          },
+          {
+            "h": 16,
+            "i": "DM",
+            "w": 36,
+            "x": 0,
+            "y": 22
+          },
+          {
+            "h": 24,
+            "i": "QV",
+            "w": 36,
+            "x": 0,
+            "y": 38
+          },
+          {
+            "h": 19,
+            "i": "nR",
+            "w": 36,
+            "x": 0,
+            "y": 62
+          }
+        ],
+        "aliases": {},
+        "connections": []
+      }
+    ],
+    "counter": 14,
+    "settings": {
+      "hideTabs": false,
+      "expandTOC": false,
+      "globalParams": {},
+      "loadPriority": "charts",
+      "hideDashTitle": false,
+      "silentLoading": false,
+      "autoupdateInterval": null,
+      "dependentSelectors": true,
+      "loadOnlyVisibleCharts": true,
+      "maxConcurrentRequests": null
+    },
+    "schemeVersion": 8
+  },
+  "isLocked": false,
+  "name": "LMS Analytics Dashboard"
+}

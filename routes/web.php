@@ -10,6 +10,7 @@ use App\Http\Controllers\Public\ActivitiesController;
 use App\Http\Controllers\Admin\ProjectController as AdminProjectController;
 use App\Http\Controllers\Admin\CourseController as AdminCourseController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\AnalyticsController;
 use App\Http\Controllers\Admin\LessonController;
 use App\Http\Controllers\Admin\ModuleController;
 use App\Http\Controllers\Admin\UserController;
@@ -55,6 +56,17 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         ->group(function () {
             Route::get('/', fn () => redirect()->route('admin.dashboard'));
             Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+            // AI Analytics — dashboards are personal to the administrator who created them.
+            Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
+            Route::get('/analytics/new', [AnalyticsController::class, 'create'])->name('analytics.create');
+            Route::get('/analytics/dashboards', [AnalyticsController::class, 'dashboards'])->name('analytics.dashboards');
+            Route::post('/analytics/generate', [AnalyticsController::class, 'generate'])->name('analytics.generate');
+            Route::post('/analytics/agent', [AnalyticsController::class, 'agent'])->name('analytics.agent');
+            Route::post('/analytics/{analyticsDashboard}/edit', [AnalyticsController::class, 'edit'])->name('analytics.edit');
+            Route::post('/analytics/{analyticsDashboard}/chat', [AnalyticsController::class, 'chat'])->name('analytics.chat');
+            Route::post('/analytics/live/generate', [AnalyticsController::class, 'startLiveGenerate'])->name('analytics.live.generate');
+            Route::post('/analytics/{analyticsDashboard}/live/edit', [AnalyticsController::class, 'startLiveEdit'])->name('analytics.live.edit');
 
             // Users management
             Route::get('/users', [UserController::class, 'index'])->name('users.index');

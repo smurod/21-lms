@@ -1,0 +1,448 @@
+{
+  "entryId": "81mvs0ne2bcer",
+  "scope": "dataset",
+  "type": "",
+  "key": "2277290292744815627/xp_transactions_dataset",
+  "meta": {
+    "created_via": "user"
+  },
+  "createdBy": "uid:a36xxdpna7rit",
+  "createdAt": "2026-08-08T22:29:17.893Z",
+  "updatedBy": "uid:a36xxdpna7rit",
+  "updatedAt": "2026-08-08T22:29:17.893Z",
+  "annotation": {
+    "description": ""
+  },
+  "savedId": "hav419wsbdak0",
+  "publishedId": "hav419wsbdak0",
+  "hidden": false,
+  "workbookId": "5yilgsbb13fwo",
+  "collectionId": null,
+  "workbookTitle": "21_lms_workbook",
+  "collectionTitle": null,
+  "isFavorite": false,
+  "data": {
+    "rls": [],
+    "name": "",
+    "revision_id": null,
+    "result_schema": [
+      {
+        "cast": "integer",
+        "guid": "id",
+        "type": "DIMENSION",
+        "title": "id",
+        "valid": true,
+        "hidden": false,
+        "source": "id",
+        "formula": "",
+        "avatar_id": "88670ed0-9378-11f1-a06f-29864106ebfd",
+        "calc_mode": "direct",
+        "data_type": "integer",
+        "managed_by": "user",
+        "aggregation": "none",
+        "description": "",
+        "ui_settings": "",
+        "guid_formula": "",
+        "default_value": null,
+        "lock_aggregation": false,
+        "value_constraint": null,
+        "initial_data_type": "integer",
+        "has_auto_aggregation": false
+      },
+      {
+        "cast": "integer",
+        "guid": "user_id",
+        "type": "DIMENSION",
+        "title": "user_id",
+        "valid": true,
+        "hidden": false,
+        "source": "user_id",
+        "formula": "",
+        "avatar_id": "88670ed0-9378-11f1-a06f-29864106ebfd",
+        "calc_mode": "direct",
+        "data_type": "integer",
+        "managed_by": "user",
+        "aggregation": "none",
+        "description": "",
+        "ui_settings": "",
+        "guid_formula": "",
+        "default_value": null,
+        "lock_aggregation": false,
+        "value_constraint": null,
+        "initial_data_type": "integer",
+        "has_auto_aggregation": false
+      },
+      {
+        "cast": "integer",
+        "guid": "amount",
+        "type": "DIMENSION",
+        "title": "amount",
+        "valid": true,
+        "hidden": false,
+        "source": "amount",
+        "formula": "",
+        "avatar_id": "88670ed0-9378-11f1-a06f-29864106ebfd",
+        "calc_mode": "direct",
+        "data_type": "integer",
+        "managed_by": "user",
+        "aggregation": "none",
+        "description": "",
+        "ui_settings": "",
+        "guid_formula": "",
+        "default_value": null,
+        "lock_aggregation": false,
+        "value_constraint": null,
+        "initial_data_type": "integer",
+        "has_auto_aggregation": false
+      },
+      {
+        "cast": "string",
+        "guid": "reason",
+        "type": "DIMENSION",
+        "title": "reason",
+        "valid": true,
+        "hidden": false,
+        "source": "reason",
+        "formula": "",
+        "avatar_id": "88670ed0-9378-11f1-a06f-29864106ebfd",
+        "calc_mode": "direct",
+        "data_type": "string",
+        "managed_by": "user",
+        "aggregation": "none",
+        "description": "",
+        "ui_settings": "",
+        "guid_formula": "",
+        "default_value": null,
+        "lock_aggregation": false,
+        "value_constraint": null,
+        "initial_data_type": "string",
+        "has_auto_aggregation": false
+      },
+      {
+        "cast": "string",
+        "guid": "source_type",
+        "type": "DIMENSION",
+        "title": "source_type",
+        "valid": true,
+        "hidden": false,
+        "source": "source_type",
+        "formula": "",
+        "avatar_id": "88670ed0-9378-11f1-a06f-29864106ebfd",
+        "calc_mode": "direct",
+        "data_type": "string",
+        "managed_by": "user",
+        "aggregation": "none",
+        "description": "",
+        "ui_settings": "",
+        "guid_formula": "",
+        "default_value": null,
+        "lock_aggregation": false,
+        "value_constraint": null,
+        "initial_data_type": "string",
+        "has_auto_aggregation": false
+      },
+      {
+        "cast": "integer",
+        "guid": "source_id",
+        "type": "DIMENSION",
+        "title": "source_id",
+        "valid": true,
+        "hidden": false,
+        "source": "source_id",
+        "formula": "",
+        "avatar_id": "88670ed0-9378-11f1-a06f-29864106ebfd",
+        "calc_mode": "direct",
+        "data_type": "integer",
+        "managed_by": "user",
+        "aggregation": "none",
+        "description": "",
+        "ui_settings": "",
+        "guid_formula": "",
+        "default_value": null,
+        "lock_aggregation": false,
+        "value_constraint": null,
+        "initial_data_type": "integer",
+        "has_auto_aggregation": false
+      },
+      {
+        "cast": "string",
+        "guid": "description",
+        "type": "DIMENSION",
+        "title": "description",
+        "valid": true,
+        "hidden": false,
+        "source": "description",
+        "formula": "",
+        "avatar_id": "88670ed0-9378-11f1-a06f-29864106ebfd",
+        "calc_mode": "direct",
+        "data_type": "string",
+        "managed_by": "user",
+        "aggregation": "none",
+        "description": "",
+        "ui_settings": "",
+        "guid_formula": "",
+        "default_value": null,
+        "lock_aggregation": false,
+        "value_constraint": null,
+        "initial_data_type": "string",
+        "has_auto_aggregation": false
+      },
+      {
+        "cast": "integer",
+        "guid": "balance_after",
+        "type": "DIMENSION",
+        "title": "balance_after",
+        "valid": true,
+        "hidden": false,
+        "source": "balance_after",
+        "formula": "",
+        "avatar_id": "88670ed0-9378-11f1-a06f-29864106ebfd",
+        "calc_mode": "direct",
+        "data_type": "integer",
+        "managed_by": "user",
+        "aggregation": "none",
+        "description": "",
+        "ui_settings": "",
+        "guid_formula": "",
+        "default_value": null,
+        "lock_aggregation": false,
+        "value_constraint": null,
+        "initial_data_type": "integer",
+        "has_auto_aggregation": false
+      },
+      {
+        "cast": "genericdatetime",
+        "guid": "created_at",
+        "type": "DIMENSION",
+        "title": "created_at",
+        "valid": true,
+        "hidden": false,
+        "source": "created_at",
+        "formula": "",
+        "avatar_id": "88670ed0-9378-11f1-a06f-29864106ebfd",
+        "calc_mode": "direct",
+        "data_type": "genericdatetime",
+        "managed_by": "user",
+        "aggregation": "none",
+        "description": "",
+        "ui_settings": "",
+        "guid_formula": "",
+        "default_value": null,
+        "lock_aggregation": false,
+        "value_constraint": null,
+        "initial_data_type": "genericdatetime",
+        "has_auto_aggregation": false
+      },
+      {
+        "cast": "genericdatetime",
+        "guid": "updated_at",
+        "type": "DIMENSION",
+        "title": "updated_at",
+        "valid": true,
+        "hidden": false,
+        "source": "updated_at",
+        "formula": "",
+        "avatar_id": "88670ed0-9378-11f1-a06f-29864106ebfd",
+        "calc_mode": "direct",
+        "data_type": "genericdatetime",
+        "managed_by": "user",
+        "aggregation": "none",
+        "description": "",
+        "ui_settings": "",
+        "guid_formula": "",
+        "default_value": null,
+        "lock_aggregation": false,
+        "value_constraint": null,
+        "initial_data_type": "genericdatetime",
+        "has_auto_aggregation": false
+      }
+    ],
+    "schema_version": "1",
+    "source_avatars": [
+      {
+        "id": "88670ed0-9378-11f1-a06f-29864106ebfd",
+        "title": "public.xp_transactions",
+        "valid": true,
+        "is_root": true,
+        "source_id": "88670ed1-9378-11f1-a06f-29864106ebfd",
+        "managed_by": "user"
+      }
+    ],
+    "avatar_relations": [],
+    "component_errors": {
+      "items": []
+    },
+    "template_enabled": false,
+    "result_schema_aux": {
+      "inter_dependencies": {
+        "deps": []
+      }
+    },
+    "obligatory_filters": [],
+    "source_collections": [
+      {
+        "id": "88670ed1-9378-11f1-a06f-29864106ebfd",
+        "title": "xp_transactions",
+        "valid": true,
+        "origin": {
+          "parameters": {
+            "db_version": "PostgreSQL 16.14 (Ubuntu 16.14-0ubuntu0.24.04.1) on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit",
+            "table_name": "xp_transactions",
+            "schema_name": "public"
+          },
+          "raw_schema": [
+            {
+              "name": "id",
+              "type": "integer",
+              "title": "id",
+              "nullable": false,
+              "description": "",
+              "native_type": {
+                "name": "bigint",
+                "nullable": false,
+                "native_type_class_name": "common_native_type"
+              },
+              "lock_aggregation": false,
+              "has_auto_aggregation": false
+            },
+            {
+              "name": "user_id",
+              "type": "integer",
+              "title": "user_id",
+              "nullable": false,
+              "description": "",
+              "native_type": {
+                "name": "bigint",
+                "nullable": false,
+                "native_type_class_name": "common_native_type"
+              },
+              "lock_aggregation": false,
+              "has_auto_aggregation": false
+            },
+            {
+              "name": "amount",
+              "type": "integer",
+              "title": "amount",
+              "nullable": false,
+              "description": "",
+              "native_type": {
+                "name": "integer",
+                "nullable": false,
+                "native_type_class_name": "common_native_type"
+              },
+              "lock_aggregation": false,
+              "has_auto_aggregation": false
+            },
+            {
+              "name": "reason",
+              "type": "string",
+              "title": "reason",
+              "nullable": false,
+              "description": "",
+              "native_type": {
+                "name": "varchar",
+                "nullable": false,
+                "native_type_class_name": "common_native_type"
+              },
+              "lock_aggregation": false,
+              "has_auto_aggregation": false
+            },
+            {
+              "name": "source_type",
+              "type": "string",
+              "title": "source_type",
+              "nullable": false,
+              "description": "",
+              "native_type": {
+                "name": "varchar",
+                "nullable": false,
+                "native_type_class_name": "common_native_type"
+              },
+              "lock_aggregation": false,
+              "has_auto_aggregation": false
+            },
+            {
+              "name": "source_id",
+              "type": "integer",
+              "title": "source_id",
+              "nullable": false,
+              "description": "",
+              "native_type": {
+                "name": "bigint",
+                "nullable": false,
+                "native_type_class_name": "common_native_type"
+              },
+              "lock_aggregation": false,
+              "has_auto_aggregation": false
+            },
+            {
+              "name": "description",
+              "type": "string",
+              "title": "description",
+              "nullable": true,
+              "description": "",
+              "native_type": {
+                "name": "text",
+                "nullable": true,
+                "native_type_class_name": "common_native_type"
+              },
+              "lock_aggregation": false,
+              "has_auto_aggregation": false
+            },
+            {
+              "name": "balance_after",
+              "type": "integer",
+              "title": "balance_after",
+              "nullable": false,
+              "description": "",
+              "native_type": {
+                "name": "bigint",
+                "nullable": false,
+                "native_type_class_name": "common_native_type"
+              },
+              "lock_aggregation": false,
+              "has_auto_aggregation": false
+            },
+            {
+              "name": "created_at",
+              "type": "genericdatetime",
+              "title": "created_at",
+              "nullable": true,
+              "description": "",
+              "native_type": {
+                "name": "timestamp",
+                "nullable": true,
+                "native_type_class_name": "common_native_type"
+              },
+              "lock_aggregation": false,
+              "has_auto_aggregation": false
+            },
+            {
+              "name": "updated_at",
+              "type": "genericdatetime",
+              "title": "updated_at",
+              "nullable": true,
+              "description": "",
+              "native_type": {
+                "name": "timestamp",
+                "nullable": true,
+                "native_type_class_name": "common_native_type"
+              },
+              "lock_aggregation": false,
+              "has_auto_aggregation": false
+            }
+          ],
+          "created_from": "PG_TABLE",
+          "connection_id": "ng0463xeiabo6"
+        },
+        "sample": null,
+        "managed_by": "user",
+        "materialization": null
+      }
+    ],
+    "data_export_forbidden": false,
+    "load_preview_by_default": true
+  },
+  "isLocked": false,
+  "name": "xp_transactions_dataset"
+}

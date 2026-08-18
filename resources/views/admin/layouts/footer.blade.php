@@ -1,7 +1,16 @@
-<div class="fixed bottom-6 right-6 bg-zinc-900 text-xs font-mono px-4 py-2 rounded-3xl border border-white/10 flex items-center gap-3 text-zinc-400 z-50">
-    <div class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></div>
-    ALL SYSTEMS OPERATIONAL
-    <div class="text-[10px] text-zinc-500">v24.7.3</div>
-</div>
+<footer class="mt-auto border-t border-white/10 bg-zinc-950/80 px-10 py-5 backdrop-blur-sm">
+    <div class="flex flex-col gap-3 text-xs text-zinc-500 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex items-center gap-3">
+            <span class="font-semibold tracking-wide text-zinc-300">21-LMS</span>
+            <span class="hidden h-3 w-px bg-white/10 sm:block"></span>
+            <span>© {{ now()->year }}. Learn · Build · Grow.</span>
+        </div>
+        <div class="flex items-center gap-4">
+            <a href="#" class="transition-colors hover:text-cyan-200">Docs</a>
+            <a href="#" class="transition-colors hover:text-cyan-200">Support</a>
+            <span class="font-mono text-[10px] text-zinc-600">Admin workspace</span>
+        </div>
+    </div>
+</footer>
 
-<div id="confetti-container" class="fixed inset-0 pointer-events-none z-[100]"></div>
+<div id="confetti-container" class="pointer-events-none fixed inset-0 z-[100]"></div>

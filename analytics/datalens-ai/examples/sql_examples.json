@@ -1,0 +1,38 @@
+[
+  {
+    "goal": "Показать динамику по дням",
+    "chart_type": "line",
+    "sql": "SELECT DATE(created_at) AS date, COUNT(*) AS count, SUM(amount) AS total FROM table_name GROUP BY DATE(created_at) ORDER BY date"
+  },
+  {
+    "goal": "Топ-10 по метрике",
+    "chart_type": "table",
+    "sql": "SELECT name, metric FROM table_name ORDER BY metric DESC LIMIT 10"
+  },
+  {
+    "goal": "Распределение по категориям",
+    "chart_type": "pie",
+    "sql": "SELECT category, COUNT(*) AS count FROM table_name GROUP BY category"
+  },
+  {
+    "goal": "Сравнение групп",
+    "chart_type": "column",
+    "sql": "SELECT group_field, AVG(metric) AS avg_metric FROM table_name GROUP BY group_field ORDER BY avg_metric DESC"
+  },
+  {
+    "goal": "Общая метрика",
+    "chart_type": "indicator",
+    "sql": "SELECT COUNT(*) AS total FROM table_name"
+  },
+  {
+    "goal": "Процентное соотношение",
+    "chart_type": "pie",
+    "sql": "SELECT status, COUNT(*) AS count, ROUND(COUNT(*)::numeric / SUM(COUNT(*)) OVER() * 100, 1) AS percentage FROM table_name GROUP BY status"
+  },
+  {
+    "goal": "Скользящее среднее",
+    "chart_type": "line",
+    "sql": "SELECT DATE(created_at) AS date, AVG(amount) OVER (ORDER BY DATE(created_at) ROWS BETWEEN 6 PRECEDING AND CURRENT ROW) AS moving_avg FROM table_name"
+  }
+]
+
