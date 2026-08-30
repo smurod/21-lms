@@ -20,7 +20,7 @@ from sql_validator import count_query_rows, validate_sql as validate_sql_request
 logger = logging.getLogger(__name__)
 
 PROMPTS_DIR = Path(__file__).parent / "prompts"
-ALLOWED_TYPES = {"line", "area", "column", "bar", "pie", "table"}
+ALLOWED_TYPES = {"line", "area", "column", "bar", "pie", "table", "metric"}
 
 CHART_RESPONSE_SCHEMA = {
     "type": "object",
@@ -29,7 +29,7 @@ CHART_RESPONSE_SCHEMA = {
         "title": {"type": "string", "minLength": 1, "maxLength": 160},
         "section": {"type": "string", "minLength": 1, "maxLength": 120},
         "note": {"type": "string", "maxLength": 300},
-        "chart_type": {"type": "string", "enum": ["line", "area", "column", "bar", "pie", "table"]},
+        "chart_type": {"type": "string", "enum": ["line", "area", "column", "bar", "pie", "table", "metric"]},
         "sql": {"type": "string", "minLength": 1},
         "columns": {
             "type": "array",
@@ -68,6 +68,8 @@ MAX_TIME_ROWS = 60
 def chart_density_error(chart_type: str, result_rows: int) -> str | None:
     """Reject dense output that becomes an unreadable chart in DataLens."""
     kind = chart_type.lower()
+    if kind in {"metric", "table", "flattable"}:
+        return None  # no density limit for single-value or detail charts
     if kind == "pie" and not 2 <= result_rows <= MAX_PIE_ROWS:
         return f"Pie требует от 2 до {MAX_PIE_ROWS} категорий, получено {result_rows}."
     if kind in {"column", "bar"} and result_rows > MAX_CATEGORY_ROWS:
@@ -84,6 +86,17 @@ def _load_prompt(file_name: str, **kwargs: str) -> str:
     return text
 
 
+# Chart types that must use wizard pipeline (dataset + wizard_chart_builder).
+# QL pipeline is used for line/area/column/bar (fast, no dataset needed).
+WIZARD_CHART_TYPES = {"pie", "metric", "flatTable", "table"}
+QL_CHART_TYPES = {"line", "area", "column", "bar", "table"}
+
+
+def is_wizard_chart(chart_type: str) -> bool:
+    """Return True when this chart type requires a DataLens dataset (wizard)."""
+    return chart_type.lower() in WIZARD_CHART_TYPES
+
+
 @dataclass
 class PlannedChart:
     title: str
@@ -93,9 +106,11 @@ class PlannedChart:
     section: str
     note: str
     sample_rows: list[dict] | None = None
+    # For wizard charts: category values from sample rows (for colour binding)
+    category_values: list[object] | None = None
 
 
-def _format_schema(schema_analysis, max_tables: int = 6) -> str:
+def _format_schema(schema_analysis, max_tables: int = 8) -> str:
     lines: list[str] = []
     # Always expose core LMS entities even when heuristics rank a technical
     # table higher. Otherwise the LLM can see submissions but not the real
@@ -115,9 +130,12 @@ def _format_schema(schema_analysis, max_tables: int = 6) -> str:
                 flags.append(f"FK->{col.foreign_table}.{col.foreign_column}")
             flag_text = f" [{', '.join(flags)}]" if flags else ""
             cols.append(f"{col.name} {col.data_type}{flag_text}")
-        lines.append(
-            f"Таблица {table.name} ({table.row_count} строк):\n  " + "\n  ".join(cols)
-        )
+        block = f"Таблица {table.name} ({table.row_count} строк):\n  " + "\n  ".join(cols)
+        # Append 2 sample rows so LLM sees real values and writes accurate SQL.
+        if table.sample_rows:
+            samples = "; ".join(str(row) for row in table.sample_rows[:2])
+            block += f"\n  Примеры: {samples}"
+        lines.append(block)
     rels = [
         r for r in schema_analysis.relationships
         if r["from_table"] in selected_tables
@@ -277,21 +295,17 @@ async def _generate_one_chart(
 
 async def _validate_and_fix(client, chart, schema_text, db_url, message: str, retries=2):
     sql = chart.sql
+    # Pie charts need all category values for colorsConfig.mountedColors.
+    # Use a higher limit so no category is missing from the sample.
+    dry_run_limit = 8 if chart.chart_type.value == "pie" else 5
     for attempt in range(retries + 1):
-        valid, rows, error = await validate_sql_request(db_url, sql)
+        valid, rows, error = await validate_sql_request(db_url, sql, limit=dry_run_limit)
         if valid:
             if not rows:
                 error = "0 строк. Выбери другие поля/таблицы."
             else:
                 chart.sql = sql
                 chart.columns = columns_from_sample_rows(rows, chart.columns)
-                # QL flat tables consistently fail to render in the current
-                # local DataLens build. Use the stable bar template: first
-                # category + first numeric metric. Wizard tables will be added
-                # separately through the dataset pipeline.
-                if chart.chart_type.value == "table":
-                    chart.chart_type = ChartType.BAR
-                    chart.columns = aggregated_bar_columns(chart.columns)
 
                 result_rows, count_error = await count_query_rows(db_url, sql)
                 if count_error:

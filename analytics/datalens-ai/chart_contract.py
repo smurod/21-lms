@@ -24,5 +24,12 @@ def ql_contract_error(chart_type: str, columns: list[tuple[str, str]]) -> str | 
         if columns[-1][1] not in numeric:
             return "Comparison chart metric must be the final numeric field."
     elif kind == "table":
-        return "QL flatTable is disabled until the wizard/dataset table pipeline is implemented."
+        # table_ql_node is supported — no restriction.
+        pass
+    elif kind == "metric":
+        # metric requires exactly one numeric column (single KPI value).
+        if not columns:
+            return "Metric requires one numeric column."
+        if columns[0][1] not in numeric:
+            return "Metric column must be numeric (integer or float)."
     return None

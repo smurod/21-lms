@@ -444,6 +444,136 @@ class DataLensClient:
         return f"{base_url}/{dashboard_id}-{slug}"
 
     # ------------------------------------------------------------
+    # Dataset (wizard pipeline)
+    # ------------------------------------------------------------
+
+    def create_dataset(
+        self,
+        *,
+        name: str,
+        workbook_id: str,
+        connection_id: str,
+        result_schema: list[dict[str, Any]],
+        source_id: str,
+        avatar_id: str,
+        sql: str,
+        raw_schema: list[dict[str, Any]],
+    ) -> str:
+        """Create a DataLens dataset with a Custom SQL source.
+
+        Returns the new dataset entryId.
+        """
+        payload = {
+            "dataset": {
+                "sources": [
+                    {
+                        "id": source_id,
+                        "connection_id": connection_id,
+                        "title": "Custom SQL",
+                        "source_type": "PG_SUBSELECT",
+                        "managed_by": "user",
+                        "valid": True,
+                        "parameters": {"subsql": sql},
+                        "raw_schema": raw_schema,
+                    }
+                ],
+                "source_avatars": [
+                    {
+                        "id": avatar_id,
+                        "source_id": source_id,
+                        "title": "Custom SQL",
+                        "is_root": True,
+                        "managed_by": "user",
+                        "valid": True,
+                    }
+                ],
+                "avatar_relations": [],
+                "result_schema": result_schema,
+                "rls": {},
+                "filters": [],
+                "component_errors": {"items": []},
+                "obligatory_filters": [],
+            },
+            "workbook_id": workbook_id,
+            "name": name,
+        }
+        result = self.gateway("bi", "createDataset", payload)
+        dataset_id = (
+            result.get("id")
+            or result.get("datasetId")
+            or (result.get("dataset") or {}).get("id")
+        )
+        if not dataset_id:
+            raise DataLensError(f"Dataset created but no ID returned: {result}")
+        logger.info("Created dataset %s: %s", dataset_id, name)
+        return dataset_id
+
+    def delete_dataset(self, dataset_id: str) -> None:
+        """Delete a DataLens dataset."""
+        try:
+            self.gateway("bi", "deleteDataset", {"datasetId": dataset_id})
+            logger.info("Deleted dataset %s", dataset_id)
+        except DataLensError as exc:
+            logger.warning("Could not delete dataset %s: %s", dataset_id, exc)
+
+    # ------------------------------------------------------------
+    # Wizard charts (metric / pie / flatTable)
+    # ------------------------------------------------------------
+
+    def create_wizard_chart(
+        self,
+        *,
+        name: str,
+        workbook_id: str,
+        chart_type: str,
+        shared: dict[str, Any],
+    ) -> str:
+        """Create a wizard chart (metric_wizard_node / graph_wizard_node / table_wizard_node).
+
+        chart_type: 'metric' | 'pie' | 'donut' | 'column' | 'bar' |
+                    'line' | 'area' | 'flatTable'
+        Returns the new chart entryId.
+        """
+        node_type_map = {
+            "metric":    "metric_wizard_node",
+            "pie":       "graph_wizard_node",
+            "donut":     "graph_wizard_node",
+            "column":    "graph_wizard_node",
+            "bar":       "graph_wizard_node",
+            "line":      "graph_wizard_node",
+            "area":      "graph_wizard_node",
+            "flatTable": "table_wizard_node",
+        }
+        node_type = node_type_map.get(chart_type, "graph_wizard_node")
+
+        unique_name = f"{name} {int(time.time() * 1000) % 100000:05d}"
+        payload = {
+            "entry": {
+                "workbookId": workbook_id,
+                "name": unique_name,
+                "type": node_type,
+                "data": {"shared": shared},
+                "meta": {},
+            },
+            "mode": "publish",
+        }
+        result = self.gateway("mix", "createChartV1", payload)
+        entry = result.get("entry", result)
+        entry_id = entry.get("entryId") or entry.get("id")
+        if not entry_id:
+            raise DataLensError(f"Wizard chart has no entryId: {result}")
+        logger.info("Created wizard chart %s (%s): %s", entry_id, node_type, name)
+        return entry_id
+
+    def delete_wizard_chart(self, entry_id: str) -> None:
+        """Delete a wizard chart entry."""
+        try:
+            self.gateway("us", "_deleteUSEntry", {"entryId": entry_id, "scope": "widget"})
+            logger.info("Deleted wizard chart %s", entry_id)
+        except DataLensError as exc:
+            logger.warning("Could not delete wizard chart %s: %s", entry_id, exc)
+
+    # ------------------------------------------------------------
     # Generic entries
     # ------------------------------------------------------------
 

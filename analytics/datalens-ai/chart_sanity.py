@@ -12,7 +12,7 @@ def chart_shape_error(chart_type: str, columns: list[tuple[str, str]]) -> str | 
     normalized_columns = [(name, data_type.lower()) for name, data_type in columns]
     types = [data_type for _name, data_type in normalized_columns]
 
-    if len(normalized_columns) < 2 and normalized_type != "table":
+    if len(normalized_columns) < 2 and normalized_type not in {"table", "metric"}:
         return "Для графика нужны минимум категория/дата и числовая метрика."
 
     if normalized_type in {"line", "area"}:
@@ -28,10 +28,10 @@ def chart_shape_error(chart_type: str, columns: list[tuple[str, str]]) -> str | 
         if len(types) < 2 or types[-1] not in NumericTypes:
             return "Сравнительный график должен содержать категорию и числовую метрику."
 
-    if normalized_type == "table" and types and all(data_type in NumericTypes for data_type in types):
-        return (
-            "Таблица из одних агрегированных чисел не является детализацией; "
-            "нужна категория, дата или сущность."
-        )
+    # table_ql_node accepts any column combination — no shape restriction.
+
+    if normalized_type == "metric":
+        if not types or types[0] not in NumericTypes:
+            return "Metric требует одну числовую колонку."
 
     return None

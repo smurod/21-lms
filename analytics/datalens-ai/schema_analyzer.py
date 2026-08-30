@@ -5,6 +5,7 @@ Supports PostgreSQL, MySQL.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import math
 from typing import Any
@@ -71,6 +72,13 @@ SKIP_TABLES = {
 }
 
 
+# Column names that must never appear in sample rows sent to LLM.
+_SENSITIVE_COLS = {
+    "password", "password_hash", "token", "secret", "key",
+    "hash", "salt", "api_key", "access_token", "refresh_token",
+}
+
+
 class SchemaAnalyzer:
     """Analyzes database schema and identifies key tables."""
 
@@ -78,7 +86,11 @@ class SchemaAnalyzer:
         self.db_url = db_url
 
     async def analyze(self) -> SchemaAnalysis:
-        """Analyze database schema and return structured metadata."""
+        """Analyze database schema without blocking the uvicorn event loop."""
+        return await asyncio.to_thread(self._analyze_sync)
+
+    def _analyze_sync(self) -> SchemaAnalysis:
+        """Synchronous schema analysis — runs in a thread pool via asyncio.to_thread."""
         conn = None
         try:
             conn = psycopg.connect(self.db_url, autocommit=True)
@@ -103,7 +115,7 @@ class SchemaAnalyzer:
                     ColumnInfo(
                         name=col_name,
                         data_type=col_type,
-                        is_nullable=nullable == 'YES',
+                        is_nullable=nullable == "YES",
                         is_primary_key=is_pk,
                         is_foreign_key=fk_table is not None,
                         foreign_table=fk_table,
@@ -121,6 +133,9 @@ class SchemaAnalyzer:
             # and starts producing weak or non-JSON answers.
             key_tables = self._identify_key_tables(tables, top_n=10)
 
+            # Collect 2 sample rows for key tables so LLM sees real data.
+            self._populate_sample_rows(conn, tables, key_tables)
+
             # Build relationships
             relationships = self._extract_relationships(tables)
 
@@ -130,8 +145,8 @@ class SchemaAnalyzer:
                 relationships=relationships,
             )
 
-        except Exception as e:
-            logger.error(f"Schema analysis failed: {e}")
+        except Exception as exc:
+            logger.error("Schema analysis failed: %s", exc)
             raise
         finally:
             if conn:
@@ -149,6 +164,31 @@ class SchemaAnalyzer:
                     table.row_count = int(cur.fetchone()[0])
                 except Exception:
                     table.row_count = 0
+
+    def _populate_sample_rows(
+        self, conn, tables: list[TableInfo], key_tables: list[str], n: int = 2
+    ) -> None:
+        """Fetch n sample rows for key tables, skipping sensitive columns."""
+        key_set = set(key_tables)
+        with conn.cursor() as cur:
+            for table in tables:
+                if table.name not in key_set or table.row_count <= 0:
+                    continue
+                safe_cols = [
+                    c.name for c in table.columns[:10]
+                    if not any(s in c.name.lower() for s in _SENSITIVE_COLS)
+                ]
+                if not safe_cols:
+                    continue
+                try:
+                    cols_sql = ", ".join(f'"{c}"' for c in safe_cols)
+                    cur.execute(
+                        f'SELECT {cols_sql} FROM "{table.db_schema}"."{table.name}" LIMIT {n}'
+                    )
+                    rows = cur.fetchall()
+                    table.sample_rows = [dict(zip(safe_cols, row)) for row in rows]
+                except Exception:
+                    table.sample_rows = []
 
     def _identify_key_tables(self, tables: list[TableInfo], top_n: int = 10) -> list[str]:
         """Identify key tables using heuristics and return top N by score."""

@@ -13,7 +13,7 @@ from chart_sanity import chart_shape_error
 from llm_client import ChatMessage, get_llm_client
 from ql_chart_builder import build_ql_chart, normalize_chart_type
 from schema_analyzer import analyze_schema
-from sql_generator import _extract_json_from_response
+from utils import _extract_json_from_response
 from sql_pipeline import _format_schema, _normalize_data_type, aggregated_bar_columns, chart_density_error, columns_from_sample_rows
 from sql_validator import count_query_rows, validate_sql as validate_sql_request
 
@@ -288,7 +288,7 @@ async def edit_dashboard(
     from datalens_client import DataLensClient
     from config import get_settings
     from database_support import ensure_ai_database_supported
-    from entity_resolver import EntityDataUnavailableError, entity_context, resolve_entities
+    from entity_resolver import EntityDataUnavailableError, entity_context, resolve_entities_async
 
     settings = get_settings()
     ensure_ai_database_supported(settings, db_url)
@@ -305,7 +305,7 @@ async def edit_dashboard(
         print("   loading DB schema…")
         schema = await analyze_schema(db_url)
         schema_text = _format_schema(schema)
-        resolved_entities = resolve_entities(db_url=db_url, schema=schema, message=instruction)
+        resolved_entities = await resolve_entities_async(db_url=db_url, schema=schema, message=instruction)
 
     with DataLensClient(settings) as client:
         if progress_callback:
@@ -341,19 +341,7 @@ async def edit_dashboard(
         print("   charts found:", len(refs), "(replacement mode)" if replace_mode else "")
         charts = _enrich_charts(client, refs)
 
-        # Backward-compatible repair: earlier versions allowed grouped
-        # aggregation SQL to be saved as a QL table. DataLens may render that
-        # combination with HTTP 500. Re-publish it through the stable bar
-        # configuration on the next edit, without changing its SQL or data.
-        repaired_aggregations = []
-        for chart in charts:
-            if normalize_chart_type(chart.chart_type) == "table":
-                chart.chart_type = "bar"
-                chart.columns = aggregated_bar_columns(chart.columns)
-                chart.changed = True
-                repaired_aggregations.append(chart.entry_id)
-        if repaired_aggregations:
-            print("   normalized legacy aggregated table charts to bar:", repaired_aggregations)
+        # table_ql_node is now supported natively — no backward-compat conversion needed.
 
         if progress_callback:
             progress_callback("plan", "AI составляет план изменений dashboard…", 5)
@@ -418,9 +406,6 @@ async def edit_dashboard(
                 continue
             columns = columns_from_sample_rows(_rows, columns)
             action = dict(action)
-            if action.get("chart_type") == "table":
-                action["chart_type"] = "bar"
-                columns = aggregated_bar_columns(columns)
             result_rows, count_error = await count_query_rows(db_url, sql)
             density_error = count_error or chart_density_error(str(action.get("chart_type") or "bar"), result_rows or 0)
             if density_error:

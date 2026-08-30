@@ -4,6 +4,7 @@ SQL Validator — validates SQL queries before execution.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import re
 
@@ -11,7 +12,10 @@ import psycopg
 
 logger = logging.getLogger(__name__)
 
-_FORBIDDEN_SQL = re.compile(r"\b(insert|update|delete|drop|alter|truncate|copy|grant|revoke|create)\b", re.IGNORECASE)
+_FORBIDDEN_SQL = re.compile(
+    r"\b(insert|update|delete|drop|alter|truncate|copy|grant|revoke|create)\b",
+    re.IGNORECASE,
+)
 
 
 def read_only_sql_error(sql: str) -> str | None:
@@ -28,84 +32,52 @@ def read_only_sql_error(sql: str) -> str | None:
     return None
 
 
-class SQLValidator:
-    """Validates SQL syntax and safety before execution."""
-
-    def __init__(self, db_url: str):
-        self.db_url = db_url
-
-    async def validate_syntax(self, sql: str) -> tuple[bool, str | None]:
-        """Validate SQL syntax using EXPLAIN."""
-        conn = None
-        try:
-            conn = psycopg.connect(self.db_url, autocommit=True)
-            with conn.cursor() as cur:
-                explain_sql = f"EXPLAIN {sql}"
-                cur.execute(explain_sql)
-            return True, None
-        except psycopg.errors.SyntaxError as e:
-            logger.warning(f"SQL syntax error: {e}")
-            return False, f"Syntax error: {str(e)}"
-        except psycopg.errors.UndefinedTable as e:
-            logger.warning(f"Table not found: {e}")
-            return False, f"Table not found: {str(e)}"
-        except psycopg.errors.UndefinedColumn as e:
-            logger.warning(f"Column not found: {e}")
-            return False, f"Column not found: {str(e)}"
-        except Exception as e:
-            logger.warning(f"Validation error: {e}")
-            return False, f"Validation error: {str(e)}"
-        finally:
-            if conn:
-                conn.close()
-
-    async def dry_run(self, sql: str, limit: int = 1) -> tuple[bool, list | None, str | None]:
-        """Execute SQL with LIMIT to verify it works and return sample data."""
-        conn = None
-        try:
-            # Add LIMIT if not present
-            safe_sql = sql
-            if "limit" not in sql.lower():
-                safe_sql = f"{sql.rstrip(';')} LIMIT {limit}"
-
-            conn = psycopg.connect(self.db_url, autocommit=True)
-            with conn.cursor() as cur:
-                cur.execute(safe_sql)
-                columns = [desc[0] for desc in cur.description] if cur.description else []
-                rows = cur.fetchall()
-
-            return True, [dict(zip(columns, row)) for row in rows], None
-
-        except Exception as e:
-            logger.warning(f"Dry run failed: {e}")
-            return False, None, str(e)
-        finally:
-            if conn:
-                conn.close()
-
-    async def validate_and_execute(
-        self, sql: str
-    ) -> tuple[bool, list[dict] | None, str | None]:
-        """Full validation: syntax check + dry run."""
-        policy_error = read_only_sql_error(sql)
-        if policy_error:
-            return False, None, policy_error
-
-        # Step 1: Syntax validation
-        valid, error = await self.validate_syntax(sql)
-        if not valid:
-            return False, None, error
-
-        # Step 2: Dry run with LIMIT
-        success, data, error = await self.dry_run(sql, limit=5)
-        if not success:
-            return False, None, error
-
-        return True, data, None
+def _validate_syntax_sync(db_url: str, sql: str) -> tuple[bool, str | None]:
+    """Synchronous EXPLAIN check — runs in a thread pool via asyncio.to_thread."""
+    conn = None
+    try:
+        conn = psycopg.connect(db_url, autocommit=True)
+        with conn.cursor() as cur:
+            cur.execute(f"EXPLAIN {sql}")
+        return True, None
+    except psycopg.errors.SyntaxError as exc:
+        logger.warning("SQL syntax error: %s", exc)
+        return False, f"Syntax error: {exc}"
+    except psycopg.errors.UndefinedTable as exc:
+        logger.warning("Table not found: %s", exc)
+        return False, f"Table not found: {exc}"
+    except psycopg.errors.UndefinedColumn as exc:
+        logger.warning("Column not found: %s", exc)
+        return False, f"Column not found: {exc}"
+    except Exception as exc:
+        logger.warning("Validation error: %s", exc)
+        return False, f"Validation error: {exc}"
+    finally:
+        if conn:
+            conn.close()
 
 
-async def count_query_rows(db_url: str, sql: str) -> tuple[int | None, str | None]:
-    """Count chart result rows without exposing query values to the AI."""
+def _dry_run_sync(db_url: str, sql: str, limit: int) -> tuple[bool, list | None, str | None]:
+    """Synchronous LIMIT-5 execution — runs in a thread pool via asyncio.to_thread."""
+    conn = None
+    try:
+        safe_sql = sql if "limit" in sql.lower() else f"{sql.rstrip(';')} LIMIT {limit}"
+        conn = psycopg.connect(db_url, autocommit=True)
+        with conn.cursor() as cur:
+            cur.execute(safe_sql)
+            columns = [desc[0] for desc in cur.description] if cur.description else []
+            rows = cur.fetchall()
+        return True, [dict(zip(columns, row)) for row in rows], None
+    except Exception as exc:
+        logger.warning("Dry run failed: %s", exc)
+        return False, None, str(exc)
+    finally:
+        if conn:
+            conn.close()
+
+
+def _count_rows_sync(db_url: str, sql: str) -> tuple[int | None, str | None]:
+    """Synchronous row count — runs in a thread pool via asyncio.to_thread."""
     conn = None
     try:
         conn = psycopg.connect(db_url, autocommit=True)
@@ -120,8 +92,56 @@ async def count_query_rows(db_url: str, sql: str) -> tuple[int | None, str | Non
             conn.close()
 
 
-async def validate_sql(db_url: str, sql: str) -> tuple[bool, list[dict] | None, str | None]:
+class SQLValidator:
+    """Validates SQL syntax and safety before execution."""
+
+    def __init__(self, db_url: str):
+        self.db_url = db_url
+
+    async def validate_syntax(self, sql: str) -> tuple[bool, str | None]:
+        """Validate SQL syntax using EXPLAIN (non-blocking)."""
+        return await asyncio.to_thread(_validate_syntax_sync, self.db_url, sql)
+
+    async def dry_run(self, sql: str, limit: int = 5) -> tuple[bool, list | None, str | None]:
+        """Execute SQL with LIMIT to verify it works and return sample data (non-blocking)."""
+        return await asyncio.to_thread(_dry_run_sync, self.db_url, sql, limit)
+
+    async def validate_and_execute(
+        self, sql: str
+    ) -> tuple[bool, list[dict] | None, str | None]:
+        """Full validation: policy check → syntax check → dry run."""
+        policy_error = read_only_sql_error(sql)
+        if policy_error:
+            return False, None, policy_error
+
+        valid, error = await self.validate_syntax(sql)
+        if not valid:
+            return False, None, error
+
+        success, data, error = await self.dry_run(sql, limit=5)
+        if not success:
+            return False, None, error
+
+        return True, data, None
+
+
+async def count_query_rows(db_url: str, sql: str) -> tuple[int | None, str | None]:
+    """Count chart result rows without blocking the event loop."""
+    return await asyncio.to_thread(_count_rows_sync, db_url, sql)
+
+
+async def validate_sql(
+    db_url: str, sql: str, limit: int = 5
+) -> tuple[bool, list[dict] | None, str | None]:
     """Convenience function for SQL validation."""
     validator = SQLValidator(db_url)
-    return await validator.validate_and_execute(sql)
-
+    policy_error = read_only_sql_error(sql)
+    if policy_error:
+        return False, None, policy_error
+    valid, error = await validator.validate_syntax(sql)
+    if not valid:
+        return False, None, error
+    success, data, error = await validator.dry_run(sql, limit=limit)
+    if not success:
+        return False, None, error
+    return True, data, None

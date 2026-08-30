@@ -62,15 +62,19 @@ class Settings(BaseSettings):
         default="postgresql://wren_user:wren_password@127.0.0.1:5432/21_lms"
     )
 
+    # Shared secret between Laravel and datalens-ai.
+    # All endpoints except /health and / require X-API-Key header matching this value.
+    # Leave empty to disable auth (local development without Laravel).
+    service_api_key: str = Field(default="", repr=False)
+
     # Official OpenAI API. The key must exist only in the local .env file.
     openai_api_key: str = Field(default="", repr=False)
     openai_base_url: str = Field(default="https://api.openai.com/v1")
     openai_model: str = Field(default="gpt-5.6-luna")
     openai_timeout: float = Field(default=180.0, gt=0)
-    # Conservative default keeps ordinary dashboard calls economical. Individual
-    # structured tasks request only the output budget they actually need.
-    openai_max_output_tokens: int = Field(default=2048, ge=256, le=32768)
-    openai_reasoning_effort: str = Field(default="low")
+    # gpt-5.6-luna editor plans can be long — keep budget sufficient for all tasks.
+    # Individual structured calls (chart_one, fix, count) override with smaller values.
+    openai_max_output_tokens: int = Field(default=4096, ge=256, le=32768)
 
 
 

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import re
 from dataclasses import dataclass
 from typing import Any
@@ -62,7 +63,7 @@ def _fetch_one(conn, table, columns: list[str], where: sql.Composed, params: tup
         return dict(zip(columns, rows[0]))
 
 
-def resolve_entities(*, db_url: str, schema, message: str) -> list[ResolvedEntity]:
+def _resolve_entities_sync(*, db_url: str, schema, message: str) -> list[ResolvedEntity]:
     """Resolve explicit emails and project names with parameterized SQL only."""
     emails = sorted(set(EMAIL_RE.findall(message)))
     project_matches = [
@@ -119,6 +120,18 @@ def resolve_entities(*, db_url: str, schema, message: str) -> list[ResolvedEntit
                 resolved.append(ResolvedEntity("project", projects.name, found))
 
     return resolved
+
+
+def resolve_entities(*, db_url: str, schema, message: str) -> list[ResolvedEntity]:
+    """Synchronous wrapper kept for callers that run outside async context (tests, scripts)."""
+    return _resolve_entities_sync(db_url=db_url, schema=schema, message=message)
+
+
+async def resolve_entities_async(*, db_url: str, schema, message: str) -> list[ResolvedEntity]:
+    """Non-blocking entity resolution — runs in a thread pool via asyncio.to_thread."""
+    return await asyncio.to_thread(
+        _resolve_entities_sync, db_url=db_url, schema=schema, message=message
+    )
 
 
 def entity_context(entities: list[ResolvedEntity]) -> str:
