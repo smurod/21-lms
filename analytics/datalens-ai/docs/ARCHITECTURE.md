@@ -1,122 +1,126 @@
 # Архитектура datalens-ai
 
-Сверено с кодом **2026-08-14** (`main.py` 0.2.0).
+Сверено с кодом **2026-08-22** (`main.py` 0.2.0).
 
 ## Размещение
 
-В проекте `21-lms` сервис живёт отдельно от Laravel-кода:
-
-```text
+```
 21-lms/
 └── analytics/
-    ├── datalens/          # README / compose платформы DataLens (не исходники UI)
-    └── datalens-ai/       # этот FastAPI-сервис
+    ├── datalens/          # Docker-инфраструктура Yandex DataLens
+    └── datalens-ai/       # этот FastAPI-сервис (:8100)
 ```
 
-Локально у пользователя:
-
-```text
-/home/smurod_8880/projects/21-lms/analytics/datalens-ai
-```
-
-В workspace:
-
-```text
-/home/user/analytics/datalens-ai
-```
-
-Код **не** кладётся в `app/`, `resources/`, `public/`, `app/Services/`.
+Код **не** кладётся в `app/`, `resources/`, `public/`.
 
 ## Поток данных
 
-```text
-Laravel  ──HTTP──>  datalens-ai (FastAPI :8100)
-                          │
-                          ├──> llama-server LLM (:8001)
-                          │
-                          ├──> PostgreSQL (схема + EXPLAIN + LIMIT 5)
-                          │         адрес: Settings.db_url / DB_URL
-                          │
-                          └──> DataLens UI/API (:8085)
-                                   ├── auth (:8088) — POST /signin
-                                   ├── gateway POST /gateway/root/<svc>/<action>
-                                   ├── charts-engine POST/DELETE /api/charts/v1/charts
-                                   └── us / bi / mix
+```
+Laravel (PHP :8000)
+    │  X-API-Key
+    ▼
+datalens-ai (FastAPI :8100)
+    │
+    ├──► OpenAI API (gpt-5.6-luna)
+    │       structured JSON output, retry на 429
+    │
+    ├──► PostgreSQL (asyncio.to_thread + psycopg)
+    │       схема, EXPLAIN, LIMIT 5, sample rows
+    │       адрес: DB_URL (127.0.0.1 на хосте)
+    │
+    └──► DataLens UI/API (:8085)
+             ├── auth (:8088)  POST /signin
+             ├── gateway       POST /gateway/root/<svc>/<action>
+             ├── charts-engine POST/DELETE /api/charts/v1/charts
+             └── us / bi / mix
 ```
 
-Два разных адреса одной БД:
+Два адреса одной БД:
+- `DB_URL` — Python видит `127.0.0.1`
+- `DATALENS_DB_HOST` — DataLens из Docker видит `172.17.0.1`
 
-- `DB_URL` — видит Python на хосте (`127.0.0.1`);
-- `DATALENS_DB_*` — видит DataLens из Docker (обычно `172.17.0.1`).
+## Модули
 
-## Модули (факт файлов)
-
-| Файл | Роль в текущем пайплайне |
+| Файл | Роль |
 |---|---|
-| `main.py` | FastAPI 0.2.0, публичные endpoint'ы |
-| `config.py` | `pydantic-settings` из `.env` |
-| `dashboard_service.py` | полный цикл generate |
-| `sql_pipeline.py` | 1 график за запрос LLM + валидация |
-| `ai_editor.py` | edit: add/update/delete/reorder |
-| `datalens_client.py` | логин, workbook, connection, QL, dash |
-| `ql_chart_builder.py` | JSON QL из `samples/chart_*.json` |
-| `dashboard_builder.py` | JSON дашборда, сетка 36 |
-| `schema_analyzer.py` | PostgreSQL `information_schema` + COUNT |
-| `sql_validator.py` | `EXPLAIN` + `LIMIT 5` через `psycopg` |
-| `llm_client.py` | llama.cpp `/v1/chat/completions` |
-| `start_llm.py` | запуск `llama-server` |
-| `sql_generator.py` | **не вызывается** текущим `main.py` / `dashboard_service.py` |
-| `models/schema.py` | Pydantic-модели; часть — наследие Дня 1 |
+| `main.py` | FastAPI, endpoints, job-система, SSE, X-API-Key middleware |
+| `config.py` | pydantic-settings из `.env` |
+| `dashboard_service.py` | Полный пайплайн generate; saga-откат при ошибке |
+| `sql_pipeline.py` | 1 чарт за LLM-запрос; валидация SQL; sample rows в схеме |
+| `ai_editor.py` | edit: add / update / delete / reorder / replace / clear |
+| `datalens_client.py` | login, workbook, connection, QL-чарты, dashboard, locks |
+| `ql_chart_builder.py` | JSON QL-чарта из шаблонов `samples/` |
+| `dashboard_builder.py` | JSON dashboard, сетка 36 колонок |
+| `schema_analyzer.py` | PostgreSQL information_schema + COUNT + sample rows |
+| `sql_validator.py` | EXPLAIN + LIMIT 5 (asyncio.to_thread, non-blocking) |
+| `llm_client.py` | OpenAI Chat Completions API + retry 429 |
+| `entity_resolver.py` | Резолв email/проект → реальные ID из БД (async) |
+| `database_support.py` | Проверка: только PostgreSQL |
+| `chart_contract.py` | Валидация полей чарта до DataLens |
+| `chart_dedup.py` | Дедупликация SQL и заголовков |
+| `chart_sanity.py` | Проверка формы чарта (тип vs поля) |
+| `utils.py` | `_extract_json_from_response` |
+| `check_and_run.py` | Диагностика стека + команды запуска |
+| `models/schema.py` | Pydantic-модели (ColumnInfo, TableInfo, SchemaAnalysis, ChartType…) |
+
+## Надёжность
+
+**Saga-откат:** при ошибке на любом шаге generate созданные DataLens-объекты
+(connection, charts, dashboard) удаляются автоматически. `cleanup_on_error=False`
+отключает откат для отладки.
+
+**Jobs persistence:** `DASHBOARD_JOBS` дампится в `jobs.json` при shutdown uvicorn
+и восстанавливается при startup. Незавершённые jobs помечаются `failed`.
+
+**Async psycopg:** все вызовы `psycopg.connect()` обёрнуты в `asyncio.to_thread()`
+— event loop uvicorn не блокируется.
+
+## Пайплайн generate (порядок)
+
+```
+1. login → ensure workbook → create connection   (DataLens)
+2. analyze_schema + sample_rows                  (PostgreSQL, async)
+3. resolve_entities (email/проект → ID)          (PostgreSQL, async)
+4. decide_chart_count                            (OpenAI)
+5. loop: _generate_one_chart → validate → fix    (OpenAI + PostgreSQL)
+6. create QL charts                              (DataLens)
+7. build_dashboard_data                          (local)
+8. create_dashboard                              (DataLens)
+9. return result
+```
+
+При ошибке на шагах 1–9: `_rollback()` удаляет всё созданное.
 
 ## Как код ходит в DataLens
 
-Из `datalens_client.py`:
-
-| Операция | Реальный вызов |
+| Операция | Вызов |
 |---|---|
 | Логин | `POST {auth}/signin` |
 | Gateway | `POST /gateway/root/{service}/{action}` |
-| Найти/создать workbook | `us.getWorkbooksList` / `us.createWorkbook` |
+| Workbook | `us.getWorkbooksList` / `us.createWorkbook` |
 | Connection | `bi.createConnection` (`workbook_id`, `raw_sql_level=dashsql`) |
-| Создать QL-чарт | `POST /api/charts/v1/charts` (не `mix.__createQLChart__`) |
+| Создать QL-чарт | `POST /api/charts/v1/charts` |
 | Обновить QL-чарт | `POST /api/charts/v1/charts/{id}` |
 | Удалить QL-чарт | `DELETE /api/charts/v1/charts/{id}` |
-| Создать дашборд | `mix.createDashboardV1` (`entry` + `mode=publish`) |
-| Прочитать дашборд | `mix.getDashboardV1` (`dashboardId`) |
-| Обновить дашборд | `mix.updateDashboardV1` (`entry.entryId`) |
+| Создать dashboard | `mix.createDashboardV1` |
+| Читать dashboard | `mix.getDashboardV1` |
+| Обновить dashboard | `mix.updateDashboardV1` |
+| Lock / unlock | `POST/DELETE {us_url}/v1/locks/{entry_id}` |
 | Удалить entry | `us._deleteUSEntry` |
 
-## Объекты в United Storage
+## QL-чарт (ql_chart_builder)
 
-- `workbook` — контейнер, заголовок по умолчанию `AI Generated`;
-- `connection` / type `postgres`;
-- `widget` — QL-чарт, SQL в `data.shared.queryValue`;
-- `dash` — `tabs → items + layout`.
+Поддерживаемые типы: `line`, `area`, `column`, `bar`, `pie`.
 
-Dataset в первой версии **не создаётся**.
+- `line` / `area`: колонка 0 = X (date), остальные = Y
+- `column` / `bar`: последнее числовое поле = Y, остальные = X
+- `pie`: dimensions + measures, colorsConfig с mountedColors
+- `table`: **отключён** (DataLens flatTable → renderer 500)
 
-## QL-чарт (что кладёт `ql_chart_builder`)
+## Dashboard (dashboard_builder)
 
-Типы шаблонов: `line`, `column`, `table` (файлы `samples/chart_xp_dynamics_by_day.json`, `chart_submissions_by_status.json`, `chart_top10_users_xp.json`).
-
-- `line`: колонка 0 → X, остальные → Y;
-- `column`: последнее числовое поле → Y, остальные → X;
-- `table`: все поля в `flat-table-columns`;
-- неизвестный тип нормализуется в `table`.
-
-## Дашборд (`dashboard_builder`)
-
-- сетка 36 колонок;
-- заголовок секции `w=12 h=2`, note справа `w=24`;
-- `column` — `w=18 h=16` (две колонки);
-- `line` / `table` — `w=36 h=20`;
-- id виджетов: 2 случайных символа + 6, чтобы не было `Duplicated id`.
-
-## Пайплайн generate (порядок в коде)
-
-1. login + ensure workbook + create connection (**до** LLM);
-2. `analyze_schema` (только PostgreSQL);
-3. `plan_and_validate_dashboard` — до 3 валидных графиков, до 8 попыток, 2 retry SQL;
-4. create QL charts + `build_dashboard_data` + `create_dashboard`.
-
-`chart_count` из HTTP-запроса передаётся в pipeline; если он не указан, LLM выбирает масштаб dashboard из схемы и запроса.
+Сетка 36 колонок:
+- `line` / `area` / full-width: `w=34 h=20`
+- `column` / `bar` / `pie` парами: `w=15 h=16`
+- Заголовок секции: `w=12 h=2`, note справа: `w=22 h=2`
+- `hideDashTitle: true` — Laravel рендерит заголовок сам

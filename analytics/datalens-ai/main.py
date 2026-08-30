@@ -8,6 +8,7 @@ import logging
 import uuid
 from inspect import signature
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import Any, Literal
 
 from fastapi import FastAPI, HTTPException, Request
@@ -31,10 +32,42 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Local development job registry. Jobs live while the FastAPI process lives.
-# The existing generate/edit API remains unchanged; these endpoints are an
-# additive UI-friendly interface for server-rendered Laravel progress pages.
+# ---------------------------------------------------------------------------
+# Job registry — persisted to disk so jobs survive uvicorn restarts.
+# ---------------------------------------------------------------------------
+
 DASHBOARD_JOBS: dict[str, dict[str, Any]] = {}
+_JOBS_FILE = Path(__file__).parent / "jobs.json"
+
+
+def _load_jobs() -> None:
+    """Load jobs from disk on startup. Mark any unfinished jobs as failed."""
+    if not _JOBS_FILE.exists():
+        return
+    try:
+        saved: dict[str, dict[str, Any]] = json.loads(_JOBS_FILE.read_text(encoding="utf-8"))
+        for job in saved.values():
+            if job.get("status") in ("queued", "running"):
+                job["status"] = "failed"
+                job["stage"] = "failed"
+                job["error"] = "Service was restarted while the job was running."
+                job["message"] = "Задача прервана перезапуском сервиса."
+        DASHBOARD_JOBS.update(saved)
+        logger.info("Loaded %d jobs from %s", len(saved), _JOBS_FILE)
+    except Exception as exc:
+        logger.warning("Could not load jobs from disk: %s", exc)
+
+
+def _save_jobs() -> None:
+    """Dump current jobs to disk on shutdown."""
+    try:
+        _JOBS_FILE.write_text(
+            json.dumps(DASHBOARD_JOBS, ensure_ascii=False, default=str, indent=2),
+            encoding="utf-8",
+        )
+        logger.info("Saved %d jobs to %s", len(DASHBOARD_JOBS), _JOBS_FILE)
+    except Exception as exc:
+        logger.warning("Could not save jobs to disk: %s", exc)
 
 
 class GenerateDashboardRequest(BaseModel):
@@ -108,10 +141,14 @@ async def lifespan(app: FastAPI):
     settings = get_settings()
     if not settings.openai_api_key:
         raise RuntimeError("OPENAI_API_KEY is required in the local datalens-ai .env file.")
+
+    _load_jobs()
+
     client = get_llm_client()
     llm_ok = await client.health_check()
     logger.info("%s OpenAI model %s", "connected to" if llm_ok else "cannot reach", settings.openai_model)
     yield
+    _save_jobs()
     await client.close()
     logger.info("DataLens AI Service stopped")
 
@@ -131,6 +168,23 @@ app.add_middleware(
     allow_methods=["GET", "POST"],
     allow_headers=["Content-Type", "X-Request-ID", "X-API-Key"],
 )
+
+
+_OPEN_PATHS = {"/health", "/", "/docs", "/openapi.json", "/redoc"}
+
+
+@app.middleware("http")
+async def verify_api_key(request: Request, call_next):
+    """Reject requests without a valid X-API-Key header (when key is configured)."""
+    s = get_settings()
+    if s.service_api_key and request.url.path not in _OPEN_PATHS:
+        provided = request.headers.get("X-API-Key", "")
+        if provided != s.service_api_key:
+            return JSONResponse(
+                status_code=403,
+                content={"detail": "Invalid or missing API key."},
+            )
+    return await call_next(request)
 
 
 @app.middleware("http")
@@ -284,10 +338,9 @@ async def agent_respond(request: AgentMessageRequest) -> dict[str, str]:
             "tool=edit_dashboard только когда dashboard уже есть и пользователь просит "
             "создать, добавить, удалить, изменить, перестроить или проанализировать визуализации. "
             "Для chat ответь кратко и дружелюбно по-русски. Для tool вызова кратко "
-            "подтверди, что начинаешь работу. Поддерживаемые сейчас проверенные "
-            "визуализации: line, area, column, bar и pie. QL table временно "
-            "заменяется bar для надёжности. Не заявляй поддержку KPI, funnel, radar, "
-            "heatmap, wizard table, pivot, selectors или dataset charts до их отдельной реализации."
+            "подтверди, что начинаешь работу. Поддерживаемые визуализации: "
+            "line, area, column, bar, pie, table (с пагинацией). "
+            "Не заявляй поддержку KPI, funnel, radar, heatmap, pivot, selectors или dataset charts."
         ),
     )
     context = request.dashboard_context or ""

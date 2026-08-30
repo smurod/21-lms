@@ -76,10 +76,9 @@ def build_dashboard_data(*, title: str, sections: list[Section], tab_title: str 
     horizontal_gutter = 2
     vertical_gap = 1
     column_width = 15  # 1 + 15 + 4 empty columns + 15 + 1 = 36
-    # `hideDashTitle` deliberately removes DataLens' own entry title. Reserve
-    # breathing room so the first section never appears clipped under Laravel's
-    # external dashboard header.
-    y = 2
+    # Start at y=0: hideDashTitle=True means no DataLens title is rendered,
+    # so no reserved space is needed at the top.
+    y = 0
 
     rendered_sections = 0
     for section in sections:

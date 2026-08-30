@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 from typing import AsyncIterator
@@ -32,8 +33,7 @@ class LLMConfig(BaseModel):
     api_key: str = Field(min_length=1)
     model: str = Field(default="gpt-5.6-luna")
     timeout: float = Field(default=180.0)
-    max_tokens: int = Field(default=8192)
-    reasoning_effort: str = Field(default="low")
+    max_tokens: int = Field(default=4096)
 
 
 class LLMClient:
@@ -47,7 +47,6 @@ class LLMClient:
             model=settings.openai_model,
             timeout=settings.openai_timeout,
             max_tokens=settings.openai_max_output_tokens,
-            reasoning_effort=settings.openai_reasoning_effort,
         )
         self.client = httpx.AsyncClient(
             base_url=self.config.base_url.rstrip("/"),
@@ -59,10 +58,29 @@ class LLMClient:
         )
 
     async def health_check(self) -> bool:
-        """Validate that the configured OpenAI model is available to this key."""
+        """Validate that the configured OpenAI model is reachable with this key.
+
+        Uses GET /models/{model} — confirmed working for gpt-5.6-luna.
+        Falls back to a minimal completion if the models endpoint returns 404.
+        """
         try:
-            response = await self.client.get(f"/models/{self.config.model}")
-            return response.status_code == 200
+            response = await self.client.get(
+                f"/models/{self.config.model}",
+                timeout=10.0,
+            )
+            if response.status_code == 200:
+                return True
+            # Some newer models may not appear in the list — try a minimal call.
+            response2 = await self.client.post(
+                "/chat/completions",
+                json={
+                    "model": self.config.model,
+                    "messages": [{"role": "user", "content": "hi"}],
+                    "max_completion_tokens": 5,
+                },
+                timeout=15.0,
+            )
+            return response2.status_code == 200
         except httpx.HTTPError as exc:
             logger.warning("OpenAI health check failed: %s", exc)
             return False
@@ -72,9 +90,25 @@ class LLMClient:
             "model": self.config.model,
             "messages": [message.model_dump() for message in messages],
             "max_completion_tokens": max_tokens or self.config.max_tokens,
-            "reasoning_effort": self.config.reasoning_effort,
             "stream": stream,
         }
+
+    async def _post_with_retry(
+        self, path: str, payload: dict, max_retries: int = 3
+    ) -> httpx.Response:
+        """POST with exponential backoff on HTTP 429 (rate limit)."""
+        for attempt in range(max_retries):
+            response = await self.client.post(path, json=payload)
+            if response.status_code == 429 and attempt < max_retries - 1:
+                wait = 2 ** attempt  # 1 s, 2 s, 4 s
+                logger.warning(
+                    "OpenAI rate limited (attempt %d/%d), retrying in %ds",
+                    attempt + 1, max_retries, wait,
+                )
+                await asyncio.sleep(wait)
+                continue
+            return response
+        return response  # last attempt result
 
     async def chat_json(
         self,
@@ -94,21 +128,27 @@ class LLMClient:
                 "schema": schema,
             },
         }
-        response = await self.client.post("/chat/completions", json=payload)
+        response = await self._post_with_retry("/chat/completions", payload)
         try:
             response.raise_for_status()
         except httpx.HTTPStatusError:
             logger.error("OpenAI structured request failed: HTTP %s", response.status_code)
             raise
         data = response.json()
-        logger.info("OpenAI structured response model=%s usage=%s", data.get("model", self.config.model), data.get("usage", {}))
+        logger.info(
+            "OpenAI structured response model=%s usage=%s",
+            data.get("model", self.config.model),
+            data.get("usage", {}),
+        )
         content = data["choices"][0]["message"].get("content") or "{}"
         return json.loads(content)
 
     async def chat(self, messages: list[ChatMessage], stream: bool = False, max_tokens: int | None = None) -> LLMResponse:
         if stream:
             raise ValueError("Use chat_stream() for streamed OpenAI responses.")
-        response = await self.client.post("/chat/completions", json=self._payload(messages, max_tokens=max_tokens))
+        response = await self._post_with_retry(
+            "/chat/completions", self._payload(messages, max_tokens=max_tokens)
+        )
         try:
             response.raise_for_status()
         except httpx.HTTPStatusError:
@@ -116,7 +156,11 @@ class LLMClient:
             raise
 
         data = response.json()
-        logger.info("OpenAI response model=%s usage=%s", data.get("model", self.config.model), data.get("usage", {}))
+        logger.info(
+            "OpenAI response model=%s usage=%s",
+            data.get("model", self.config.model),
+            data.get("usage", {}),
+        )
         content = data["choices"][0]["message"].get("content") or ""
         return LLMResponse(
             content=content,

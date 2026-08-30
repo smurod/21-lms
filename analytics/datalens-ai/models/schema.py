@@ -1,5 +1,9 @@
 """
-Pydantic models for datalens-ai API.
+Pydantic models for datalens-ai.
+
+Only models actively used by the current pipeline are kept here.
+Legacy Day-1 models (DatabaseType, ChatRequest, CreateDashboardRequest, etc.)
+have been removed — they were never called from main.py or dashboard_service.py.
 """
 
 from __future__ import annotations
@@ -13,12 +17,6 @@ from pydantic import BaseModel, Field
 # ============================================================
 # Database & Schema
 # ============================================================
-
-
-class DatabaseType(str, Enum):
-    POSTGRESQL = "postgresql"
-    MYSQL = "mysql"
-    CLICKHOUSE = "clickhouse"
 
 
 class ColumnInfo(BaseModel):
@@ -38,6 +36,9 @@ class TableInfo(BaseModel):
     db_schema: str = Field(default="public", alias="schema")
     row_count: int = 0
     columns: list[ColumnInfo] = Field(default_factory=list)
+    # 2 sample rows fetched during schema analysis (sensitive columns excluded).
+    # Used to show LLM real data values so it can write accurate SQL.
+    sample_rows: list[dict[str, Any]] = Field(default_factory=list)
 
     @property
     def has_timestamp(self) -> bool:
@@ -63,7 +64,7 @@ class SchemaAnalysis(BaseModel):
 
 
 # ============================================================
-# SQL Generation
+# Chart & Dashboard Planning
 # ============================================================
 
 
@@ -74,7 +75,7 @@ class ChartType(str, Enum):
     BAR = "bar"
     PIE = "pie"
     TABLE = "table"
-    INDICATOR = "indicator"
+    METRIC = "metric"
 
 
 class SQLQuery(BaseModel):
@@ -86,11 +87,6 @@ class SQLQuery(BaseModel):
     x_field: str | None = None
     y_field: str | None = None
     business_question: str | None = None
-
-
-# ============================================================
-# Dashboard Planning
-# ============================================================
 
 
 class ChartPlan(BaseModel):
@@ -109,74 +105,3 @@ class DashboardPlan(BaseModel):
     dashboard_title: str
     charts: list[ChartPlan] = Field(default_factory=list)
     layout: dict[str, Any] | None = None
-
-
-# ============================================================
-# API Request/Response Models
-# ============================================================
-
-
-class HealthResponse(BaseModel):
-    status: str = "ok"
-    llm_server: bool = False
-    version: str = "0.1.0"
-
-
-class AnalyzeRequest(BaseModel):
-    """Request to analyze database schema."""
-    db_url: str = Field(..., description="Database connection URL")
-
-
-class AnalyzeResponse(BaseModel):
-    """Response with schema analysis."""
-    tables_count: int
-    key_tables: list[str]
-    db_schema: SchemaAnalysis = Field(alias="schema")
-
-
-class GenerateSQLRequest(BaseModel):
-    """Request to generate SQL for visualization."""
-    db_url: str
-    table: str
-    goal: str
-    chart_type: ChartType | None = None
-
-
-class GenerateSQLResponse(BaseModel):
-    """Response with generated SQL."""
-    sql: str
-    chart_type: ChartType
-    explanation: str | None = None
-
-
-class CreateDashboardRequest(BaseModel):
-    """Request to create dashboard via AI."""
-    db_url: str
-    datalens_url: str = Field(default="http://localhost:8085")
-    connection_id: str | None = None
-    message: str = Field(default="Визуализируй эту БД")
-
-
-class CreateDashboardResponse(BaseModel):
-    """Response with created dashboard info."""
-    dashboard_id: str | None = None
-    dashboard_url: str | None = None
-    charts_created: int = 0
-    plan: DashboardPlan | None = None
-    error: str | None = None
-
-
-class ChatRequest(BaseModel):
-    """Chat message request."""
-    message: str
-    db_url: str | None = None
-    connection_id: str | None = None
-    history: list[dict[str, str]] = Field(default_factory=list)
-
-
-class ChatResponse(BaseModel):
-    """Chat response."""
-    response: str
-    dashboard_id: str | None = None
-    charts: list[dict[str, Any]] = Field(default_factory=list)
-
