@@ -16,11 +16,14 @@ class DataLensAiService
 
     private int $timeout;
 
+    private string $apiKey;
+
     public function __construct()
     {
         $this->baseUrl = rtrim((string) config('datalens_ai.base_url'), '/');
-        $this->uiUrl = rtrim((string) config('datalens_ai.ui_url'), '/');
+        $this->uiUrl   = rtrim((string) config('datalens_ai.ui_url'), '/');
         $this->timeout = max(1, (int) config('datalens_ai.timeout', 120));
+        $this->apiKey  = (string) config('datalens_ai.api_key', '');
     }
 
     /**
@@ -109,10 +112,16 @@ class DataLensAiService
 
     private function client(): PendingRequest
     {
-        return Http::baseUrl($this->baseUrl)
+        $client = Http::baseUrl($this->baseUrl)
             ->acceptJson()
             ->asJson()
             ->timeout($this->timeout);
+
+        if ($this->apiKey !== '') {
+            $client = $client->withHeader('X-API-Key', $this->apiKey);
+        }
+
+        return $client;
     }
 
     /**
