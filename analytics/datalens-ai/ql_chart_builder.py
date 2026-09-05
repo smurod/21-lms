@@ -29,6 +29,12 @@ _D3_EXTRA_SETTINGS = {
     "labelsPosition": "outside",
 }
 
+# Vivid palette slots (slot 0 is the default blue — skipped so multi-series
+# charts never look "all the same standard blue"). mountedColors values are
+# palette slot indices; WITHOUT a "palette" key they resolve through the
+# default vivid palette.
+_PALETTE_SLOTS = (6, 3, 14, 2, 15, 10, 19, 4, 12, 8, 1, 5, 7, 9, 11, 13, 16, 17, 18)
+
 # extraSettings for table charts.
 _TABLE_EXTRA_SETTINGS = {
     "pagination": "on",
@@ -161,6 +167,16 @@ def build_ql_chart(
             p for p in shared["visualization"]["placeholders"] if p["id"] == "x"
         )
         x_settings["settings"]["axisModeMap"] = {x_name: "discrete"}
+        # Multi-measure lines: one palette colour per series (keyed by the
+        # series title). Without this every series renders the same default
+        # blue. A single-measure line keeps the template's default colour.
+        if len(y_names) > 1:
+            shared["colorsConfig"] = {
+                "mountedColors": {
+                    name: str(_PALETTE_SLOTS[i % len(_PALETTE_SLOTS)])
+                    for i, name in enumerate(y_names)
+                },
+            }
 
     # ------------------------------------------------------------------ column / bar
     elif chart_type in {"column", "bar"}:
@@ -169,21 +185,51 @@ def build_ql_chart(
         # Production format: viz.id="bar" for bar charts, "column" for column.
         shared["visualization"]["id"] = chart_type
         numeric_types = {"integer", "float"}
-        y_index = next(
-            (
-                i for i in range(len(columns) - 1, -1, -1)
-                if columns[i][1] in numeric_types
-            ),
-            len(columns) - 1,
-        )
-        y_name = columns[y_index][0]
-        x_names = [name for i, (name, _) in enumerate(columns) if i != y_index]
-        _set_placeholder_items(shared, "x", [field_by_name[name] for name in x_names])
-        _set_placeholder_items(shared, "y", [field_by_name[y_name]])
-        x_settings = next(
-            p for p in shared["visualization"]["placeholders"] if p["id"] == "x"
-        )
-        x_settings["settings"]["axisModeMap"] = {name: "discrete" for name in x_names}
+        numeric_names = [name for name, t in columns if t in numeric_types]
+        category_names = [name for name, _ in columns if name not in numeric_names]
+
+        if len(numeric_names) > 1:
+            # Multi-measure comparison: every measure is a series with its own
+            # palette colour (mountedColors keyed by the series title).
+            x_name = category_names[0] if category_names else columns[0][0]
+            _set_placeholder_items(shared, "x", [field_by_name[x_name]])
+            _set_placeholder_items(shared, "y", [field_by_name[name] for name in numeric_names])
+            x_settings = next(
+                p for p in shared["visualization"]["placeholders"] if p["id"] == "x"
+            )
+            x_settings["settings"]["axisModeMap"] = {x_name: "discrete"}
+            shared["colors"] = []
+            shared["colorsConfig"] = {
+                "mountedColors": {
+                    name: str(_PALETTE_SLOTS[i % len(_PALETTE_SLOTS)])
+                    for i, name in enumerate(numeric_names)
+                },
+            }
+        else:
+            # Single-measure comparison: the category dimension goes into
+            # colors[] + colorsConfig — DataLens splits it into one series per
+            # category and paints every bar with its own palette colour (the
+            # correctly rendering QL reference look).
+            y_name = numeric_names[0] if numeric_names else columns[-1][0]
+            dimension_name = category_names[0] if category_names else columns[0][0]
+            _set_placeholder_items(shared, "x", [field_by_name[dimension_name]])
+            _set_placeholder_items(shared, "y", [field_by_name[y_name]])
+            x_settings = next(
+                p for p in shared["visualization"]["placeholders"] if p["id"] == "x"
+            )
+            x_settings["settings"]["axisModeMap"] = {dimension_name: "discrete"}
+            shared["colors"] = [field_by_name[dimension_name]]
+            mounted_colors = {
+                str(value): str(_PALETTE_SLOTS[index % len(_PALETTE_SLOTS)])
+                for index, value in enumerate(dict.fromkeys(category_values or []))
+                if value is not None
+            }
+            shared["colorsConfig"] = {
+                "fieldGuid": dimension_name,
+                "coloredByMeasure": False,
+                "polygonBorders": "show",
+                "mountedColors": mounted_colors,
+            }
 
     # ------------------------------------------------------------------ pie
     elif chart_type == "pie":
@@ -204,27 +250,22 @@ def build_ql_chart(
         _set_placeholder_items(shared, "dimensions", [field_by_name[name] for name in dimension_names])
         _set_placeholder_items(shared, "measures", [field_by_name[measure_name]])
 
-        # Colour binding — field in colors[] + colorsConfig with mountedColors.
+        # Per-sector colours: the server-side pie preparer (prepare-pie-data.js)
+        # reads the colour field ONLY from the "colors" placeholder — without it
+        # every sector falls back to a single default colour. With the field
+        # bound, each distinct value gets its own palette colour automatically.
         category_name = dimension_names[0]
-        shared["colors"] = [field_by_name[category_name]]
-        palette_slots = (6, 3, 14, 2, 15, 10, 19, 4, 12, 8)
-        mounted_colors = {
-            str(value): str(palette_slots[index % len(palette_slots)])
-            for index, value in enumerate(dict.fromkeys(category_values or []))
-            if value is not None
-        }
-        shared["colorsConfig"] = {
-            "palette": "datalens-neo-20-palette",
-            "fieldGuid": category_name,
-            "coloredByMeasure": False,
-            "polygonBorders": "show",
-            "mountedColors": mounted_colors,
-        }
+        shared["visualization"]["placeholders"].append({
+            "id": "colors",
+            "type": "colors",
+            "items": [field_by_name[category_name]],
+        })
 
     # ------------------------------------------------------------------ table
     elif chart_type == "table":
-        # table_ql_node uses visualization.id="table", viz.type="table".
-        shared["visualization"]["id"] = "table"
+        # This build's server preparer is keyed by WizardVisualizationId.FlatTable;
+        # viz.id "table" matches no case → "prepare is not a function" → HTTP 500.
+        shared["visualization"]["id"] = "flatTable"
         _set_placeholder_items(
             shared,
             "flat-table-columns",

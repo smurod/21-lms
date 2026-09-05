@@ -65,6 +65,35 @@ def _layout(item_id: str, *, x: int, y: int, w: int, h: int) -> dict[str, Any]:
     return {"i": item_id, "x": x, "y": y, "w": w, "h": h}
 
 
+def _kpi_row(
+    metrics: list[Chart],
+    *,
+    items: list[dict[str, Any]],
+    layout: list[dict[str, Any]],
+    y: int,
+    outer_gutter: int,
+    gutter: int,
+) -> int:
+    """Place metric (KPI) cards in a compact row; return the next free y.
+
+    Demo dashboards open with a band of KPI cards. Three 10-column cards fit
+    the 36-column grid exactly (1 + 3*(10+2) = 37 -> the last gutter absorbs
+    the edge) while leaving room for an untruncated title and a large number.
+    """
+    card_w = 10
+    card_h = 6
+    x = outer_gutter
+    for metric in metrics:
+        widget = _chart_widget(metric["id"], metric["title"])
+        items.append(widget)
+        layout.append(_layout(widget["id"], x=x, y=y, w=card_w, h=card_h))
+        x += card_w + gutter
+        if x + card_w > 36 - outer_gutter:
+            x = outer_gutter
+            y += card_h + 1
+    return y + card_h + 1
+
+
 def build_dashboard_data(*, title: str, sections: list[Section], tab_title: str = "Overview") -> dict[str, Any]:
     items: list[dict[str, Any]] = []
     layout: list[dict[str, Any]] = []
@@ -101,10 +130,24 @@ def build_dashboard_data(*, title: str, sections: list[Section], tab_title: str 
                 layout.append(_layout(note_widget["id"], x=13, y=y, w=22, h=2))
 
             y += 2 + vertical_gap
+
+        # Demo-like KPI band: metric cards first, compact and colourful.
+        metrics = [chart for chart in charts if chart.get("kind") == "metric"]
+        regular_charts = [chart for chart in charts if chart.get("kind") != "metric"]
+        if metrics:
+            y = _kpi_row(
+                metrics,
+                items=items,
+                layout=layout,
+                y=y,
+                outer_gutter=outer_gutter,
+                gutter=horizontal_gutter,
+            )
+
         left_pending = None
         paired_compact_indices: set[int] = set()
         pending_compact_index: int | None = None
-        for index, chart in enumerate(charts):
+        for index, chart in enumerate(regular_charts):
             if chart.get("kind", "table") not in {"column", "bar", "pie"}:
                 pending_compact_index = None
                 continue
@@ -116,7 +159,7 @@ def build_dashboard_data(*, title: str, sections: list[Section], tab_title: str 
         # Only adjacent complete pairs get the half-width layout. A lone or
         # third compact chart becomes full-width instead of leaving an empty row.
 
-        for chart_index, chart in enumerate(charts):
+        for chart_index, chart in enumerate(regular_charts):
             kind = chart.get("kind", "table")
             widget = _chart_widget(chart["id"], chart["title"])
             items.append(widget)

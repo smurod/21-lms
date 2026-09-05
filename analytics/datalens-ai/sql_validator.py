@@ -92,6 +92,27 @@ def _count_rows_sync(db_url: str, sql: str) -> tuple[int | None, str | None]:
             conn.close()
 
 
+def _count_nonzero_rows_sync(db_url: str, sql: str, column: str) -> tuple[int | None, str | None]:
+    """Synchronous non-zero measure count — runs via asyncio.to_thread."""
+    conn = None
+    try:
+        conn = psycopg.connect(db_url, autocommit=True)
+        quoted = '"' + column.replace('"', '""') + '"'
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT COUNT(*) FROM ("
+                + sql.rstrip(";")
+                + f") AS ai_chart_rows WHERE {quoted} <> 0"
+            )
+            return int(cur.fetchone()[0]), None
+    except Exception as exc:
+        logger.warning("Non-zero cardinality check failed: %s", exc)
+        return None, str(exc)
+    finally:
+        if conn:
+            conn.close()
+
+
 class SQLValidator:
     """Validates SQL syntax and safety before execution."""
 
@@ -128,6 +149,15 @@ class SQLValidator:
 async def count_query_rows(db_url: str, sql: str) -> tuple[int | None, str | None]:
     """Count chart result rows without blocking the event loop."""
     return await asyncio.to_thread(_count_rows_sync, db_url, sql)
+
+
+async def count_nonzero_rows(db_url: str, sql: str, column: str) -> tuple[int | None, str | None]:
+    """Count rows whose measure column is not zero/null (non-blocking).
+
+    Used to reject degenerate pie charts: two result rows where one measure
+    equals zero still render as a single gray sector.
+    """
+    return await asyncio.to_thread(_count_nonzero_rows_sync, db_url, sql, column)
 
 
 async def validate_sql(

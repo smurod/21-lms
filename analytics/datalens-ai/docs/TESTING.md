@@ -37,7 +37,7 @@ python -m pytest tests/unit/ -v
 ## 2. Диагностика стека
 
 ```bash
-python check_and_run.py
+python check.py
 ```
 
 Проверяет DataLens UI, datalens-ai FastAPI, OpenAI API key.

@@ -9,6 +9,7 @@ The client does three important things:
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import re
@@ -352,79 +353,37 @@ class DataLensClient:
             except DataLensError:
                 continue
 
-    def acquire_entry_lock(self, entry_id: str, *, duration: int = 30) -> str:
-        """Force-release an old UI lock, then acquire a short update lock.
+    def update_dashboard(self, dashboard_id: str, data: dict[str, Any]) -> None:
+        """Replace dashboard data and publish.
 
-        A short TTL limits the impact if a local US version does not expose a
-        compatible release route. Dashboard publication itself is immediate.
+        mix.updateDashboardV1 refuses to write (HTTP 423) while ANY US entry
+        lock exists, so callers must force-release stale locks beforehand and
+        must NOT hold their own lock across this call.
         """
-        self.force_release_entry_lock(entry_id)
-
-        try:
-            response = self._client.post(
-                self._us_url(entry_id),
-                json={"duration": duration, "force": True},
-            )
-            if response.status_code < 400:
-                token = (response.json() or {}).get("lockToken")
-                if token:
-                    return str(token)
-            direct_error = f"HTTP {response.status_code}, {response.text[:500]}"
-        except httpx.HTTPError as exc:
-            direct_error = str(exc)
-
-        last_error: Exception | str = direct_error
-        for action in ("lockEntry", "createLock"):
-            try:
-                result = self.gateway(
-                    "us",
-                    action,
-                    {"entryId": entry_id, "duration": duration, "force": True},
-                )
-                token = (result or {}).get("lockToken")
-                if token:
-                    return str(token)
-            except DataLensError as exc:
-                last_error = exc
-
-        raise DataLensError(f"Could not acquire dashboard lock for {entry_id}: {last_error}")
-
-    def release_entry_lock(self, entry_id: str, lock_token: str) -> None:
-        """Release the short lock acquired for an AI dashboard update."""
-        try:
-            response = self._client.delete(
-                self._us_url(entry_id),
-                params={"lockToken": lock_token},
-            )
-            if response.status_code in (200, 204):
-                return
-        except httpx.HTTPError:
-            pass
-
-        for action in ("unlockEntry", "deleteLock"):
-            try:
-                self.gateway("us", action, {"entryId": entry_id, "lockToken": lock_token})
-                return
-            except DataLensError:
-                continue
-
-        logger.warning("Could not release dashboard lock: %s", entry_id)
-
-    def update_dashboard(self, dashboard_id: str, data: dict[str, Any], lock_token: str | None = None) -> None:
-        """Replace dashboard data, optionally holding a US entry lock."""
         entry = {
             "entryId": dashboard_id,
             "data": data,
             "meta": {},
         }
-        if lock_token:
-            entry["lockToken"] = lock_token
 
         payload = {
             "entry": entry,
             "mode": "publish",
         }
         self.gateway("mix", "updateDashboardV1", payload)
+
+    def render_chart(self, entry_id: str) -> dict[str, Any]:
+        """Render one chart server-side via POST /api/run.
+
+        Used for the pre-publication render validation: the returned payload
+        contains the fully built chart config (series/rows) or an error.
+        """
+        response = self._client.post("/api/run", json={"id": entry_id})
+        if response.status_code >= 400:
+            raise DataLensError(
+                f"render /api/run -> HTTP {response.status_code}, {response.text[:300]}"
+            )
+        return response.json()
 
     def dashboard_embed_url(self, dashboard_id: str, workbook_id: str) -> str:
         """Return the direct DataLens URL for one dashboard.
@@ -547,17 +506,18 @@ class DataLensClient:
         node_type = node_type_map.get(chart_type, "graph_wizard_node")
 
         unique_name = f"{name} {int(time.time() * 1000) % 100000:05d}"
+        # The UI of this DataLens build creates editor charts through
+        # mix.createEditorChart with {name, workbookId, type, data, annotation};
+        # mix.createChartV1 does not exist here (HTTP 404 UNKNOWN_SERVICE_ACTION).
+        # shared must be a serialized JSON string, exactly like the UI sends it.
         payload = {
-            "entry": {
-                "workbookId": workbook_id,
-                "name": unique_name,
-                "type": node_type,
-                "data": {"shared": shared},
-                "meta": {},
-            },
-            "mode": "publish",
+            "name": unique_name,
+            "workbookId": workbook_id,
+            "type": node_type,
+            "data": {"shared": json.dumps(shared) if not isinstance(shared, str) else shared},
+            "annotation": None,
         }
-        result = self.gateway("mix", "createChartV1", payload)
+        result = self.gateway("mix", "createEditorChart", payload)
         entry = result.get("entry", result)
         entry_id = entry.get("entryId") or entry.get("id")
         if not entry_id:
@@ -568,10 +528,52 @@ class DataLensClient:
     def delete_wizard_chart(self, entry_id: str) -> None:
         """Delete a wizard chart entry."""
         try:
-            self.gateway("us", "_deleteUSEntry", {"entryId": entry_id, "scope": "widget"})
+            self._delete_us_entry(entry_id)
             logger.info("Deleted wizard chart %s", entry_id)
         except DataLensError as exc:
             logger.warning("Could not delete wizard chart %s: %s", entry_id, exc)
+
+    def update_wizard_chart(self, entry_id: str, shared: dict[str, Any]) -> None:
+        """Update a wizard chart entry via the US REST API.
+
+        The QL charts endpoint (POST /api/charts/v1/charts/{id}) only serves
+        QL entries; a wizard chart updates through POST /v1/entries/{id}.
+        """
+        payload = {
+            "data": {"shared": json.dumps(shared) if not isinstance(shared, str) else shared},
+            "mode": "publish",
+        }
+        response = httpx.post(
+            f"{self.settings.datalens_us_url.rstrip('/')}/v1/entries/{entry_id}",
+            json=payload,
+            cookies=self._client.cookies,
+            timeout=self.settings.datalens_timeout,
+        )
+        if response.status_code >= 400:
+            raise DataLensError(
+                f"Update wizard chart {entry_id} failed: "
+                f"HTTP {response.status_code}, {response.text[:300]}"
+            )
+
+    def _delete_us_entry(self, entry_id: str) -> Any:
+        """DELETE {US_URL}/v1/entries/{entryId} — the US REST route in this build.
+
+        The gateway action us._deleteUSEntry does not exist here (HTTP 404
+        UNKNOWN_SERVICE_ACTION), and the UI server (:8085) has no DELETE
+        /v1/entries route — the US service (:3030) does, so the call goes
+        there directly with the session cookies.
+        """
+        response = httpx.delete(
+            f"{self.settings.datalens_us_url.rstrip('/')}/v1/entries/{entry_id}",
+            cookies=self._client.cookies,
+            timeout=self.settings.datalens_timeout,
+        )
+        if response.status_code >= 400:
+            raise DataLensError(
+                f"Delete entry {entry_id} failed: "
+                f"HTTP {response.status_code}, {response.text[:300]}"
+            )
+        return response.json() if response.content else None
 
     # ------------------------------------------------------------
     # Generic entries
@@ -579,8 +581,29 @@ class DataLensClient:
 
     def delete_entry(self, entry_id: str, scope: str) -> Any:
         """Delete a US entry by ID and scope."""
-        return self.gateway(
-            "us",
-            "_deleteUSEntry",
-            {"entryId": entry_id, "scope": scope},
-        )
+        return self._delete_us_entry(entry_id)
+
+
+class AsyncDataLensClient:
+    """Async bridge over the sync DataLensClient.
+
+    Every method call runs in a worker thread via ``asyncio.to_thread``, so
+    the event loop keeps serving SSE progress and parallel jobs while DataLens
+    gateway requests are in flight (dozens of 50–500 ms calls per job).
+
+    Usage: keep the sync client for lifecycle (login/context manager), wrap it
+    once, and ``await`` every call from async pipeline code.
+    """
+
+    def __init__(self, client: DataLensClient):
+        self._sync = client
+
+    def __getattr__(self, name: str):
+        attr = getattr(self._sync, name)
+        if not callable(attr):
+            return attr
+
+        async def call(*args: Any, **kwargs: Any):
+            return await asyncio.to_thread(attr, *args, **kwargs)
+
+        return call

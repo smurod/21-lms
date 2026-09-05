@@ -148,21 +148,12 @@ def build_pie_shared(
 
     shared = _base_shared(spec)
 
-    # Bind category to palette
-    mounted_colors: dict[str, str] = {}
-    if category_values:
-        seen = list(dict.fromkeys(str(v) for v in category_values if v is not None))
-        for i, val in enumerate(seen):
-            mounted_colors[val] = str(_PALETTE_SLOTS[i % len(_PALETTE_SLOTS)])
-
     shared["colors"] = [_placeholder_item(dim_field)]
-    shared["colorsConfig"] = {
-        "palette": "datalens-neo-20-palette",
-        "fieldGuid": dim_field["guid"],
-        "coloredByMeasure": False,
-        "polygonBorders": "show",
-        "mountedColors": mounted_colors,
-    }
+    # Empty colorsConfig: sector colours are assigned automatically from the
+    # default palette. Palette-slot mountedColors rendered the whole pie GRAY
+    # (#EAEAEA) in this build — the same chart colourises fine with an empty
+    # config (identical to the working QL pie).
+    shared["colorsConfig"] = {}
 
     shared["visualization"] = {
         "id": "pie",
@@ -171,11 +162,6 @@ def build_pie_shared(
             {
                 "id": "dimensions",
                 "type": "dimensions",
-                "items": [],              # wizard pie: dimensions = empty
-            },
-            {
-                "id": "colors",
-                "type": "colors",
                 "items": [_placeholder_item(dim_field)],
             },
             {
@@ -246,15 +232,12 @@ def build_column_shared(
     spec: DatasetSpec,
     x_names: list[str],
     y_names: list[str],
-    color_name: str | None = None,
     chart_type: str = "column",
-    category_values: list[str] | None = None,
 ) -> dict[str, Any]:
     """Build shared config for a column/bar graph_wizard_node.
 
     x_names: dimension columns for X axis.
     y_names: measure columns for Y axis.
-    color_name: optional dimension column for series colouring.
     chart_type: 'column' | 'bar'.
     """
     shared = _base_shared(spec)
@@ -280,23 +263,19 @@ def build_column_shared(
         {"id": "y2", "type": "y2", "items": []},
     ]
 
-    # Colour series by dimension if requested
-    if color_name:
-        cf = spec.field_by_name(color_name)
-        if cf:
-            mounted_colors: dict[str, str] = {}
-            if category_values:
-                seen = list(dict.fromkeys(str(v) for v in category_values if v is not None))
-                for i, val in enumerate(seen):
-                    mounted_colors[val] = str(_PALETTE_SLOTS[i % len(_PALETTE_SLOTS)])
-            shared["colors"] = [_placeholder_item(cf)]
-            shared["colorsConfig"] = {
-                "palette": "datalens-neo-20-palette",
-                "fieldGuid": cf["guid"],
-                "coloredByMeasure": False,
-                "polygonBorders": "show",
-                "mountedColors": mounted_colors,
-            }
+    # Reference look (correctly rendering QL top-charts): the category
+    # dimension goes into colors[] + colorsConfig.fieldGuid — DataLens then
+    # splits the chart into one series per category and paints EVERY bar with
+    # its own default-palette colour. NOTE: specifying the "palette" key
+    # (neutral20-palette) resolves to GRAYSCALE colours, and the
+    # gradient-by-value variant renders a single monotonous blue series.
+    color_field = spec.field_by_name(x_names[0]) if x_names else None
+    shared["colors"] = [_placeholder_item(color_field)] if color_field else []
+    shared["colorsConfig"] = {
+        "fieldGuid": color_field["guid"] if color_field else "",
+        "coloredByMeasure": False,
+        "polygonBorders": "show",
+    }
 
     shared["visualization"] = {
         "id": chart_type,
