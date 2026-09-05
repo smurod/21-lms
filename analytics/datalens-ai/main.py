@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 import httpx
@@ -19,7 +20,7 @@ from pydantic import BaseModel, Field
 
 from ai_editor import edit_dashboard
 from config import get_settings
-from dashboard_service import create_ai_dashboard
+from dashboard_service import JobCancelled, create_ai_dashboard
 from datalens_client import DataLensClient, DataLensError
 from entity_resolver import EntityDataUnavailableError, EntityNotFoundError
 from llm_client import ChatMessage, get_llm_client
@@ -98,10 +99,25 @@ class DashboardJobRequest(BaseModel):
     chart_count: int | None = Field(default=None, ge=1, le=8)
 
 
+class HistoryMessage(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str = Field(min_length=1, max_length=1500)
+    time: str = Field(default="", max_length=32)
+
+
+class KnownDashboard(BaseModel):
+    dashboard_id: str = Field(min_length=1, max_length=64)
+    title: str = Field(max_length=200)
+    prompt: str = Field(default="", max_length=300)
+    charts: list[str] = Field(default_factory=list, max_length=10)
+
+
 class AgentMessageRequest(BaseModel):
     message: str = Field(min_length=1, max_length=2000)
-    dashboard_context: str | None = Field(default=None, max_length=4000)
+    dashboard_context: str | None = Field(default=None, max_length=12000)
     has_dashboard: bool = False
+    history: list[HistoryMessage] = Field(default_factory=list, max_length=10)
+    known_dashboards: list[KnownDashboard] = Field(default_factory=list, max_length=10)
 
 
 class AgentToolDecision(BaseModel):
@@ -139,14 +155,22 @@ async def lifespan(app: FastAPI):
         )
 
     settings = get_settings()
-    if not settings.openai_api_key:
-        raise RuntimeError("OPENAI_API_KEY is required in the local datalens-ai .env file.")
+    if settings.llm_key_required and not settings.llm_api_key:
+        raise RuntimeError(
+            f"LLM_API_KEY is required for provider '{settings.llm_provider}' "
+            "in the local datalens-ai .env file."
+        )
 
     _load_jobs()
 
     client = get_llm_client()
     llm_ok = await client.health_check()
-    logger.info("%s OpenAI model %s", "connected to" if llm_ok else "cannot reach", settings.openai_model)
+    logger.info(
+        "%s %s model %s",
+        "connected to" if llm_ok else "cannot reach",
+        settings.llm_provider,
+        settings.llm_model_effective,
+    )
     yield
     _save_jobs()
     await client.close()
@@ -253,10 +277,88 @@ def _report_progress(job_id: str, stage: str, message: str, step: int) -> None:
     logger.info("job=%s step=%s stage=%s message=%s", job_id, step, stage, message)
 
 
+def _fallback_job_reply(result: dict[str, Any], operation: str) -> str:
+    """Deterministic report built from the real outcome; no canned greetings."""
+    charts = result.get("charts") or []
+    title = result.get("title") or "без названия"
+    listing = ", ".join(f"«{chart.get('title', 'график')}»" for chart in charts[:4])
+    hidden = len(charts) - min(len(charts), 4)
+    if hidden > 0:
+        listing += f" и ещё {hidden}"
+    if operation == "edit" or "added" in result or "updated" in result:
+        changed = len(result.get("added") or []) + len(result.get("updated") or [])
+        removed = len(result.get("deleted") or []) + int(result.get("cleared") or 0)
+        if not changed and not removed:
+            return f"Обновил dashboard «{title}», состав графиков не изменился."
+        parts: list[str] = []
+        if changed:
+            parts.append(f"изменений: {changed}")
+        if removed:
+            parts.append(f"убрано старых виджетов: {removed}")
+        tail = f" Графики теперь: {listing}." if listing else ""
+        return f"Обновил dashboard «{title}» ({', '.join(parts)}).{tail}"
+    if not charts:
+        return "Готово, но построить графики не удалось."
+    return f"Построил dashboard «{title}» из {len(charts)} графиков: {listing}."
+
+
+async def _summarize_job_result(result: dict[str, Any], operation: str) -> str:
+    """Short AI-written reply describing what was actually built or changed."""
+    fallback = _fallback_job_reply(result, operation)
+    charts = result.get("charts") or []
+    chart_lines = "\n".join(
+        f"- {chart.get('title', 'график')} — тип {chart.get('type', '?')}"
+        for chart in charts[:8]
+    )
+    actions = "; ".join(
+        f"{label}: {len(result.get(key) or [])}"
+        for key, label in (
+            ("added", "добавлено"), ("updated", "изменено"), ("deleted", "удалено"),
+        )
+        if result.get(key)
+    )
+    cleared = int(result.get("cleared") or 0)
+    if cleared:
+        actions = (actions + "; " if actions else "") + f"убрано при замене: {cleared}"
+    if not charts and not actions:
+        return fallback
+
+    system = ChatMessage(
+        role="system",
+        content=(
+            "Ты AI-агент аналитической LMS. Напиши 2–3 коротких предложения по-русски "
+            "о том, что именно ты сделал с dashboard. Перечисли графики строго по списку "
+            "ниже: не выдумывай названия, типы и количество карточек, которых нет в "
+            "списке. Без markdown, без приветствий и без вопросов."
+        ),
+    )
+    user = ChatMessage(
+        role="user",
+        content=(
+            f"Операция: {operation}.\n"
+            f"Dashboard: {str(result.get('title') or 'без названия')[:80]}.\n"
+            "ВНИМАНИЕ: название может содержать исходный запрос пользователя — "
+            "факты бери ТОЛЬКО из списка графиков и действий ниже.\n"
+            + (f"Действия: {actions}.\n" if actions else "")
+            + (f"Графики:\n{chart_lines}" if chart_lines else "")
+        ),
+    )
+    try:
+        response = await get_llm_client().chat([system, user], max_tokens=1024)
+        reply = response.content.strip()
+        return reply or fallback
+    except Exception as exc:
+        logger.warning("job summary LLM call failed: %s", exc)
+        return fallback
+
+
 async def _run_dashboard_job(job_id: str, request: DashboardJobRequest) -> None:
     job = DASHBOARD_JOBS[job_id]
     settings = get_settings()
     db_url = request.db_url or settings.db_url
+
+    def _cancel_check() -> bool:
+        return bool(DASHBOARD_JOBS.get(job_id, {}).get("cancel_requested"))
 
     try:
         if request.operation == "generate":
@@ -266,6 +368,7 @@ async def _run_dashboard_job(job_id: str, request: DashboardJobRequest) -> None:
                 workbook_id=request.workbook_id,
                 chart_count=request.chart_count,
                 progress_callback=lambda stage, message, step: _report_progress(job_id, stage, message, step),
+                cancel_check=_cancel_check,
             )
         else:
             if not request.dashboard_id:
@@ -278,7 +381,10 @@ async def _run_dashboard_job(job_id: str, request: DashboardJobRequest) -> None:
                 db_url=db_url,
                 connection_id=request.connection_id,
                 progress_callback=lambda stage, message, step: _report_progress(job_id, stage, message, step),
+                cancel_check=_cancel_check,
             )
+
+        result["reply"] = await _summarize_job_result(result, request.operation)
 
         job.update({
             "status": "completed",
@@ -286,6 +392,15 @@ async def _run_dashboard_job(job_id: str, request: DashboardJobRequest) -> None:
             "message": "Dashboard готов.",
             "step": 9,
             "result": result,
+        })
+    except JobCancelled:
+        logger.info("job=%s canceled by user", job_id)
+        job.update({
+            "status": "failed",
+            "stage": "failed",
+            "message": "Остановлено пользователем.",
+            "step": 0,
+            "error": "CANCELED",
         })
     except Exception as exc:
         status_code, detail = _safe_error_detail(exc)
@@ -298,21 +413,33 @@ async def _run_dashboard_job(job_id: str, request: DashboardJobRequest) -> None:
         })
 
 
+def _with_datalens(fn):
+    """Run fn(fresh logged-in sync client) — designed for asyncio.to_thread."""
+    settings = get_settings()
+    with DataLensClient(settings) as client:
+        client.login()
+        return fn(client)
+
+
 @app.get("/health")
 async def health() -> dict[str, Any]:
     llm = get_llm_client()
     llm_ok = await llm.health_check()
-    settings = get_settings()
 
-    datalens_ok = False
+    # The DataLens login probe is blocking HTTP — keep it off the event loop.
     try:
-        with DataLensClient(settings) as client:
-            client.login()
-            datalens_ok = True
+        await asyncio.to_thread(_with_datalens, lambda client: True)
+        datalens_ok = True
     except Exception as exc:
         logger.warning("DataLens health check failed: %s", exc)
+        datalens_ok = False
 
-    return {"status": "ok", "llm_server": llm_ok, "datalens": datalens_ok}
+    return {
+        "status": "ok",
+        "llm_server": llm_ok,
+        "llm_provider": get_settings().llm_provider,
+        "datalens": datalens_ok,
+    }
 
 
 @app.get("/")
@@ -320,15 +447,14 @@ async def root() -> dict[str, str]:
     return {"service": "DataLens AI", "version": "0.2.0", "docs": "/docs", "health": "/health"}
 
 
-@app.post("/api/agent/respond")
-async def agent_respond(request: AgentMessageRequest) -> dict[str, str]:
-    """Route a chat turn either to a conversational reply or a dashboard tool."""
+def _build_agent_messages(request: AgentMessageRequest) -> list[ChatMessage]:
+    """System + user prompt for the router, including history and known dashboards."""
     system = ChatMessage(
         role="system",
         content=(
             "Ты AI-агент аналитической LMS. Верни только JSON: "
             "{\"tool\":\"chat|generate_dashboard|edit_dashboard|inspect_dashboard|clear_dashboard|replace_dashboard\",\"reply\":\"...\"}. "
-            "tool=chat для приветствий, объяснений и обычного разговора. "
+            "tool=chat ТОЛЬКО для приветствий, объяснений и обычного разговора. "
             "tool=inspect_dashboard когда пользователь просит объяснить текущие charts, метрики или структуру dashboard без изменений. "
             "tool=clear_dashboard когда пользователь явно просит только очистить текущий dashboard. "
             "tool=replace_dashboard когда пользователь просит очистить/заменить dashboard и затем построить новый анализ в одном сообщении. "
@@ -337,20 +463,73 @@ async def agent_respond(request: AgentMessageRequest) -> dict[str, str]:
             "просит визуализировать, построить или проанализировать данные. "
             "tool=edit_dashboard только когда dashboard уже есть и пользователь просит "
             "создать, добавить, удалить, изменить, перестроить или проанализировать визуализации. "
+            "Запросы вида «Визуализируй БД», «построй/покажи/проанализируй данные» — это "
+            "generate_dashboard (когда dashboard нет) или edit_dashboard (когда есть), но никогда не chat. "
+            "Запросы-делегирования вида «Визуализируй БД», «построй всё», «на твоё усмотрение», "
+            "«сделай красиво/интересное» в контексте аналитики — это немедленный generate_dashboard "
+            "(полный анализ БД: агент сам выбирает топ-таблицы по профилю данных, число и вид чартов). "
+            "НЕ задавай уточняющих вопросов на такие запросы — это делегирование. "
+            "Уточняющие вопросы уместны только когда непонятно, о чём вообще речь "
+            "(например, бессвязный текст без запроса на аналитику). "
+            "Повторный запрос: известные дашборды — это дашборды ТОЛЬКО текущего чата. "
+            "Если сообщение по смыслу повторяет один из них, "
+            "НЕ запускай новую генерацию — верни tool=chat: в reply опиши, что в этом дашборде "
+            "уже построено (название и графики), предложи переделать и спроси, что именно "
+            "не устраивает. "
+            "История диалога: короткий ответ пользователя («да», «давай», «переделай», "
+            "«построй заново», «заново с нуля», «пересоздай», «не нравится X») относится "
+            "к последнему предложению ассистента. Если ты только что предложил переделать "
+            "и пользователь отвечает согласием в любой формулировке — выполняй сразу "
+            "(replace_dashboard, если есть текущий dashboard; иначе generate_dashboard) "
+            "и НЕ задавай уточняющие вопросы повторно; конкретные пожелания — edit_dashboard. "
             "Для chat ответь кратко и дружелюбно по-русски. Для tool вызова кратко "
             "подтверди, что начинаешь работу. Поддерживаемые визуализации: "
-            "line, area, column, bar, pie, table (с пагинацией). "
-            "Не заявляй поддержку KPI, funnel, radar, heatmap, pivot, selectors или dataset charts."
+            "line, area, column, bar, pie, table (с пагинацией), metric (KPI-карточка). "
+            "Приветствие («Привет», «Здравствуйте») допустимо ТОЛЬКО если это первое "
+            "сообщение чата или прошло больше суток с последнего сообщения в истории "
+            "(время указано в квадратных скобках у каждой записи). В остальных случаях "
+            "отвечай сразу по делу, без приветствий и без «Чем помочь». "
+            "Не заявляй поддержку funnel, radar, heatmap, pivot, selectors или dataset charts."
         ),
+    )
+
+    known_lines = "\n".join(
+        f"- «{d.title}» (запрос: {d.prompt or '—'}; графики: {', '.join(d.charts) if d.charts else 'нет'})"
+        for d in request.known_dashboards
+    )
+    history_lines = "\n".join(
+        (f"[{m.time}] " if m.time else "")
+        + f"{'Пользователь' if m.role == 'user' else 'Ассистент'}: {m.content}"
+        for m in request.history
     )
     context = request.dashboard_context or ""
     user = ChatMessage(
         role="user",
         content=(
-            f"Есть текущий dashboard: {'да' if request.has_dashboard else 'нет'}\n"
-            f"Контекст dashboard:\n{context}\n\nСообщение: {request.message}"
+            (f"Известные дашборды пользователя:\n{known_lines}\n\n" if known_lines else "")
+            + (f"История диалога:\n{history_lines}\n\n" if history_lines else "")
+            + f"Есть текущий dashboard: {'да' if request.has_dashboard else 'нет'}\n"
+            + f"Контекст dashboard:\n{context}\n\nСообщение: {request.message}"
         ),
     )
+    return [system, user]
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Log validation failures with the offending body — a bare 422 in the
+    access log made chat failures undiagnosable."""
+    logger.warning(
+        "422 validation failed path=%s errors=%s body=%.600s",
+        request.url.path, exc.errors(), str(exc.body)[:600],
+    )
+    return JSONResponse(status_code=422, content={"detail": exc.errors()})
+
+
+@app.post("/api/agent/respond")
+async def agent_respond(request: AgentMessageRequest) -> dict[str, str]:
+    """Route a chat turn either to a conversational reply or a dashboard tool."""
+    system, user = _build_agent_messages(request)
     try:
         payload = await get_llm_client().chat_json(
             [system, user],
@@ -366,15 +545,128 @@ async def agent_respond(request: AgentMessageRequest) -> dict[str, str]:
             },
             max_tokens=512,
         )
-    except Exception:
-        # A simple greeting must not fail because an API response is unavailable.
-        return {"tool": "chat", "reply": "Я на связи. Чем помочь с dashboard или данными LMS?"}
+    except Exception as exc:
+        # Never fake a friendly reply when routing fails — surface the outage.
+        logger.exception("agent routing failed: %s", exc)
+        raise HTTPException(
+            status_code=502,
+            detail="AI router is temporarily unavailable. Try again shortly.",
+        )
 
     try:
         decision = AgentToolDecision.model_validate(payload)
-    except Exception:
-        return {"tool": "chat", "reply": "Я на связи. Чем помочь с dashboard или данными LMS?"}
+    except Exception as exc:
+        logger.error("agent routing returned an invalid decision: %s", exc)
+        raise HTTPException(
+            status_code=502,
+            detail="AI router returned an invalid decision.",
+        )
     return decision.model_dump()
+
+
+_ROUTER_TOOL_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {
+        "tool": {
+            "type": "string",
+            "enum": ["chat", "generate_dashboard", "edit_dashboard", "inspect_dashboard", "clear_dashboard", "replace_dashboard"],
+        },
+    },
+    "required": ["tool"],
+}
+
+_ALLOWED_TOOLS = {"chat", "generate_dashboard", "edit_dashboard", "inspect_dashboard", "clear_dashboard", "replace_dashboard"}
+
+
+def _reply_system_prompt(tool: str) -> str:
+    if tool == "chat":
+        return (
+            "Ты AI-агент аналитической LMS. Ответь пользователю кратко (1–4 предложения) "
+            "по-русски: ответь на вопрос, объясни или задай уточняющий вопрос. "
+            "Без приветствий, если в истории уже было общение. Без markdown."
+        )
+    return (
+        f"Ты AI-агент аналитической LMS. Пользователь попросил действие: {tool}. "
+        "Напиши ОДНО короткое предложение-подтверждение, что начинаешь работу, по-русски, "
+        "без markdown и без перечисления шагов."
+    )
+
+
+def _sse(payload: dict[str, Any]) -> str:
+    return f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
+
+
+@app.post("/api/agent/respond/stream")
+async def agent_respond_stream(request: AgentMessageRequest) -> StreamingResponse:
+    """SSE streaming router: meta (tool) → token* → done.
+
+    Two phases keep the UX responsive: the routing decision (fast, structured)
+    is emitted first, then the user-facing reply streams token by token. If the
+    client disconnects mid-stream the handler task is cancelled and the LLM
+    request aborts with it.
+    """
+    system, user = _build_agent_messages(request)
+
+    async def event_stream():
+        try:
+            decision = await get_llm_client().chat_json(
+                [system, user],
+                schema_name="agent_tool",
+                schema=_ROUTER_TOOL_SCHEMA,
+                max_tokens=256,
+            )
+        except Exception as exc:
+            logger.exception("stream routing failed: %s", exc)
+            yield _sse({"type": "error", "detail": "AI router is temporarily unavailable. Try again shortly."})
+            return
+        tool = decision.get("tool", "chat")
+        if tool not in _ALLOWED_TOOLS:
+            tool = "chat"
+        yield _sse({"type": "meta", "tool": tool})
+
+        reply_system = ChatMessage(role="system", content=_reply_system_prompt(tool))
+        prior_turns = [ChatMessage(role=m.role, content=m.content) for m in request.history]
+        client = get_llm_client()
+        try:
+            if client.config.provider == "openai":
+                async for chunk in client.chat_stream(
+                    [reply_system] + prior_turns + [user], max_tokens=700
+                ):
+                    if chunk:
+                        yield _sse({"type": "token", "text": chunk})
+            else:
+                response = await client.chat([reply_system] + prior_turns + [user], max_tokens=700)
+                if response.content:
+                    yield _sse({"type": "token", "text": response.content})
+        except Exception as exc:
+            logger.warning("stream reply failed: %s", exc)
+            yield _sse({"type": "error", "detail": "Генерация ответа прервана."})
+            return
+        yield _sse({"type": "done"})
+
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
+
+class JobCancelled(RuntimeError):
+    """Raised inside the pipeline when the user stops the job."""
+
+
+@app.post("/api/dashboard-jobs/{job_id}/cancel")
+async def cancel_dashboard_job(job_id: str) -> dict[str, Any]:
+    """Request cooperative cancellation of a running job."""
+    job = DASHBOARD_JOBS.get(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Not Found")
+    if job.get("status") == "running":
+        job["cancel_requested"] = True
+        logger.info("job=%s cancel requested by client", job_id)
+        return {"canceled": True}
+    return {"canceled": False}
 
 
 @app.post("/api/dashboards/generate", response_model=DashboardSummary)
@@ -485,11 +777,10 @@ async def stream_dashboard_job(job_id: str) -> StreamingResponse:
 
 @app.get("/api/dashboards/{dashboard_id}")
 async def get_dashboard(dashboard_id: str) -> dict[str, Any]:
-    settings = get_settings()
     try:
-        with DataLensClient(settings) as client:
-            client.login()
-            return client.get_dashboard(dashboard_id)
+        return await asyncio.to_thread(
+            _with_datalens, lambda client: client.get_dashboard(dashboard_id)
+        )
     except Exception as exc:
         status_code, detail = _safe_error_detail(exc)
         logger.exception("Failed to fetch dashboard %s status=%s", dashboard_id, status_code)
@@ -504,8 +795,7 @@ async def edit_dashboard_endpoint(dashboard_id: str, request: EditDashboardReque
 
     if not connection_id:
         try:
-            with DataLensClient(settings) as client:
-                client.login()
+            def _detect_connection(client) -> str | None:
                 dashboard = client.get_dashboard(dashboard_id)
                 refs = [
                     chart_tab["chartId"]
@@ -515,9 +805,12 @@ async def edit_dashboard_endpoint(dashboard_id: str, request: EditDashboardReque
                     for chart_tab in item.get("data", {}).get("tabs", [])
                     if chart_tab.get("chartId")
                 ]
-                if refs:
-                    chart = client.get_ql_chart(refs[0])
-                    connection_id = (chart.get("_shared") or {}).get("connection", {}).get("entryId")
+                if not refs:
+                    return None
+                chart = client.get_ql_chart(refs[0])
+                return (chart.get("_shared") or {}).get("connection", {}).get("entryId")
+
+            connection_id = await asyncio.to_thread(_with_datalens, _detect_connection)
         except Exception as exc:
             logger.warning("Could not auto-detect connection_id: %s", exc)
 
@@ -539,11 +832,10 @@ async def edit_dashboard_endpoint(dashboard_id: str, request: EditDashboardReque
 
 @app.get("/api/charts/{chart_id}")
 async def get_chart(chart_id: str) -> dict[str, Any]:
-    settings = get_settings()
     try:
-        with DataLensClient(settings) as client:
-            client.login()
-            return client.get_ql_chart(chart_id)
+        return await asyncio.to_thread(
+            _with_datalens, lambda client: client.get_ql_chart(chart_id)
+        )
     except Exception as exc:
         status_code, detail = _safe_error_detail(exc)
         logger.exception("Failed to fetch chart %s status=%s", chart_id, status_code)

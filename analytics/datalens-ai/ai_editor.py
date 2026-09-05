@@ -2,14 +2,15 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
-import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
 from chart_dedup import sql_fingerprint, title_fingerprint
 from chart_sanity import chart_shape_error
+from datalens_client import AsyncDataLensClient
 from llm_client import ChatMessage, get_llm_client
 from ql_chart_builder import build_ql_chart, normalize_chart_type
 from schema_analyzer import analyze_schema
@@ -72,10 +73,10 @@ def _dashboard_charts(dashboard_entry: dict) -> list[dict]:
     return refs
 
 
-def _enrich_charts(client, refs: list[dict]) -> list[ChartState]:
+async def _enrich_charts(client, refs: list[dict]) -> list[ChartState]:
     states: list[ChartState] = []
     for ref in refs:
-        entry = client.get_ql_chart(ref["entry_id"])
+        entry = await client.get_ql_chart(ref["entry_id"])
         shared = entry.get("_shared") or {}
         viz = shared.get("visualization") or {}
         columns = []
@@ -105,6 +106,64 @@ def _describe_state(charts: list[ChartState]) -> str:
             f"   SQL: {chart.sql}\n   columns: {chart.columns}"
         )
     return "\n".join(lines)
+
+
+# Wizard chart types as stored in ChartState.chart_type (from DataLens viz id).
+WIZARD_STATE_TYPES = {"metric", "flattable", "flat_table", "flat-table"}
+
+
+def _charts_payload(charts: list[ChartState]) -> list[dict]:
+    """Final dashboard charts in the same shape the generate pipeline returns.
+
+    Callers (Laravel + the job summary) rely on real titles instead of opaque
+    entry ids, otherwise the AI reply invents chart descriptions.
+    """
+    return [
+        {
+            "id": chart.entry_id,
+            "title": chart.title,
+            "kind": str(chart.chart_type).lower(),
+            "section": chart.section,
+            "note": chart.note,
+            "sql": chart.sql,
+        }
+        for chart in charts
+    ]
+
+
+async def _delete_orphan_charts(client, orphans: list[dict], *, keep_ids: set[str]) -> int:
+    """Remove workbook chart entries that are no longer placed on any dashboard.
+
+    Wizard charts are deleted together with their datasets. Cleanup failures
+    are logged but never fail the job: the dashboard is already updated.
+    """
+    removed = 0
+    for ref in orphans:
+        entry_id = ref.get("entry_id")
+        if not entry_id or entry_id in keep_ids:
+            continue
+        try:
+            entry = await client.get_ql_chart(entry_id)
+        except Exception as exc:
+            print(f"   orphan cleanup: skip unreadable chart {entry_id}: {exc}")
+            continue
+        shared = entry.get("_shared") or {}
+        dataset_ids = shared.get("datasetsIds") or []
+        try:
+            if dataset_ids:
+                await client.delete_wizard_chart(entry_id)
+                for dataset_id in dataset_ids:
+                    try:
+                        await client.delete_dataset(dataset_id)
+                    except Exception:
+                        continue
+            else:
+                await client.delete_ql_chart(entry_id)
+            removed += 1
+            print("   orphan cleanup: deleted", entry_id, ref.get("title") or "")
+        except Exception as exc:
+            print(f"   orphan cleanup: failed for {entry_id}: {exc}")
+    return removed
 
 
 def _discard_duplicate_sql_actions(charts: list[ChartState], actions: list[dict]) -> list[dict]:
@@ -171,12 +230,21 @@ def _apply_actions(charts, actions):
     by_id = {c.entry_id: c for c in charts}
     new_charts: list[ChartState] = []
     deleted_ids: list[str] = []
+    # Wizard chart types cannot be added by the editor: they need their own
+    # dataset, which only the generate pipeline provisions.
+    unsupported_add_types = {"metric", "flattable", "flat_table", "flat-table"}
 
     for action in actions:
         kind = action.get("action")
         if kind == "update":
             chart = by_id.get(action.get("chart_id"))
             if not chart:
+                continue
+            if chart.chart_type.lower() in WIZARD_STATE_TYPES:
+                # Wizard charts (KPI metric / flatTable) have no queryValue;
+                # rebuilding them through build_ql_chart would silently turn
+                # a metric card into a bar chart.
+                print("   skip update of wizard chart:", chart.title)
                 continue
             if action.get("title"):
                 chart.title = action["title"]
@@ -197,6 +265,9 @@ def _apply_actions(charts, actions):
                 chart.category_values = list(action["_category_values"])
             chart.changed = True
         elif kind == "add":
+            if str(action.get("chart_type", "")).strip().lower() in unsupported_add_types:
+                print("   skipped unsupported wizard-type addition:", action.get("title") or "metric")
+                continue
             chart = ChartState(
                 entry_id=f"new_{len(new_charts)}",
                 title=action.get("title", "AI Chart"),
@@ -284,6 +355,7 @@ async def edit_dashboard(
     db_url: str,
     connection_id: str,
     progress_callback=None,
+    cancel_check=None,
 ) -> dict[str, Any]:
     from datalens_client import DataLensClient
     from config import get_settings
@@ -307,44 +379,54 @@ async def edit_dashboard(
         schema_text = _format_schema(schema)
         resolved_entities = await resolve_entities_async(db_url=db_url, schema=schema, message=instruction)
 
-    with DataLensClient(settings) as client:
+    with DataLensClient(settings) as sync_client:
+        client = AsyncDataLensClient(sync_client)
         if progress_callback:
             progress_callback("load", "Загружаем текущий dashboard и его графики…", 1)
         print("1. Load dashboard…")
-        dashboard = client.get_dashboard(dashboard_id)
+        dashboard = await client.get_dashboard(dashboard_id)
         if clear_only:
             from dashboard_builder import build_dashboard_data
 
             if progress_callback:
                 progress_callback("layout", "Очищаем виджеты текущего dashboard…", 7)
+            old_refs = _dashboard_charts(dashboard)
             data = build_dashboard_data(
                 title=dashboard["entry"].get("name", "AI Analytics Dashboard"),
                 sections=[],
                 tab_title=dashboard["entry"]["data"]["tabs"][0].get("title", "Overview"),
             )
-            lock_token = client.acquire_entry_lock(dashboard_id)
-            try:
-                client.update_dashboard(dashboard_id, data, lock_token)
-            finally:
-                client.release_entry_lock(dashboard_id, lock_token)
+            # mix.updateDashboardV1 refuses to write while ANY US lock exists
+            # (HTTP 423), so only stale UI locks are force-released here — no
+            # external lock is held during publication.
+            await client.force_release_entry_lock(dashboard_id)
+            await client.update_dashboard(dashboard_id, data)
+            await _delete_orphan_charts(client, old_refs, keep_ids=set())
             if progress_callback:
-                progress_callback("completed", "Dashboard очищен. Сохранённые QL-чарты не удалены.", 9)
+                progress_callback("completed", "Dashboard очищен.", 9)
             return {
                 "dashboard_id": dashboard_id,
                 "added": [],
                 "updated": [],
                 "deleted": [],
+                "cleared": len(old_refs),
+                "charts": [],
                 "sections": [],
             }
 
-        refs = [] if replace_mode else _dashboard_charts(dashboard)
+        old_refs = _dashboard_charts(dashboard)
+        refs = [] if replace_mode else old_refs
         print("   charts found:", len(refs), "(replacement mode)" if replace_mode else "")
-        charts = _enrich_charts(client, refs)
+        charts = await _enrich_charts(client, refs)
 
         # table_ql_node is now supported natively — no backward-compat conversion needed.
 
         if progress_callback:
             progress_callback("plan", "AI составляет план изменений dashboard…", 5)
+        if cancel_check and cancel_check():
+            from dashboard_service import JobCancelled
+
+            raise JobCancelled("CANCELED")
         print("2. Ask LLM for changes…")
         prompt = _load_prompt(
             "editor_plan.md",
@@ -478,7 +560,7 @@ async def edit_dashboard(
                 connection_type=settings.datalens_db_type,
                 category_values=chart.category_values,
             )
-            chart.entry_id = client.create_ql_chart(
+            chart.entry_id = await client.create_ql_chart(
                 name=chart.title,
                 workbook_id=dashboard["entry"]["workbookId"],
                 data=shared,
@@ -494,11 +576,11 @@ async def edit_dashboard(
                 connection_type=settings.datalens_db_type,
                 category_values=chart.category_values,
             )
-            client.update_ql_chart(chart.entry_id, shared)
+            await client.update_ql_chart(chart.entry_id, shared)
             print("   updated:", chart.entry_id, chart.title)
 
         for chart_id in deleted_ids:
-            client.delete_ql_chart(chart_id)
+            await client.delete_ql_chart(chart_id)
             print("   deleted:", chart_id)
 
         if progress_callback:
@@ -512,15 +594,20 @@ async def edit_dashboard(
             sections=sections,
             tab_title=dashboard["entry"]["data"]["tabs"][0].get("title", "Overview"),
         )
-        # A DataLens UI tab can hold an entry lock for a brief moment. Retry the
-        # acquisition/publication pair a small fixed number of times instead of
-        # failing an otherwise valid AI edit immediately.
+        # mix.updateDashboardV1 refuses to write while ANY US lock exists
+        # (HTTP 423 "The entry is locked"). Holding our own lock therefore
+        # breaks the update — only stale UI locks are force-released, and the
+        # publish is retried a small fixed number of times against a live UI
+        # session instead of failing an otherwise valid AI edit immediately.
         lock_error: Exception | None = None
         for attempt in range(1, 4):
-            lock_token: str | None = None
             try:
-                lock_token = client.acquire_entry_lock(dashboard_id)
-                client.update_dashboard(dashboard_id, data, lock_token)
+                if cancel_check and cancel_check():
+                    from dashboard_service import JobCancelled
+
+                    raise JobCancelled("CANCELED")
+                await client.force_release_entry_lock(dashboard_id)
+                await client.update_dashboard(dashboard_id, data)
                 lock_error = None
                 break
             except Exception as exc:
@@ -529,13 +616,22 @@ async def edit_dashboard(
                     raise
                 wait_seconds = attempt * 2
                 print(f"   dashboard locked; retry {attempt}/3 in {wait_seconds}s…")
-                time.sleep(wait_seconds)
-            finally:
-                if lock_token:
-                    client.release_entry_lock(dashboard_id, lock_token)
+                await asyncio.sleep(wait_seconds)
 
         if lock_error is not None:
             raise lock_error
+
+        # In replacement mode the old charts are no longer placed anywhere —
+        # remove them (and their datasets) so the workbook stays clean.
+        if replace_mode:
+            if progress_callback:
+                progress_callback("layout", "Удаляем неиспользуемые чарты…", 8)
+            removed = await _delete_orphan_charts(
+                client,
+                old_refs,
+                keep_ids={c.entry_id for c in charts},
+            )
+            print("   orphan cleanup removed:", removed)
 
         # Final sanity check: ensure there is at least one chart.
         if not charts:
@@ -549,5 +645,7 @@ async def edit_dashboard(
             "added": [c.entry_id for c in new_charts],
             "updated": [c.entry_id for c in updated_charts],
             "deleted": deleted_ids,
+            "cleared": len(old_refs) if replace_mode else 0,
+            "charts": _charts_payload(charts),
             "sections": sections,
         }

@@ -13,9 +13,10 @@ from pathlib import Path
 
 from chart_dedup import sql_fingerprint, title_fingerprint
 from chart_sanity import chart_shape_error
+from data_profile import build_data_profile, format_data_profile
 from llm_client import ChatMessage, get_llm_client
 from models.schema import ChartPlan, ChartType, DashboardPlan
-from sql_validator import count_query_rows, validate_sql as validate_sql_request
+from sql_validator import count_nonzero_rows, count_query_rows, validate_sql as validate_sql_request
 
 logger = logging.getLogger(__name__)
 
@@ -66,16 +67,30 @@ MAX_TIME_ROWS = 60
 
 
 def chart_density_error(chart_type: str, result_rows: int) -> str | None:
-    """Reject dense output that becomes an unreadable chart in DataLens."""
+    """Reject charts whose data makes them unreadable or meaningless.
+
+    Both extremes are rejected: a comparison chart with a single category has
+    nothing to compare (a lone bar/sector — such data belongs in a KPI metric),
+    and a dynamics chart with a single point has no dynamics.
+    """
     kind = chart_type.lower()
     if kind in {"metric", "table", "flattable"}:
         return None  # no density limit for single-value or detail charts
     if kind == "pie" and not 2 <= result_rows <= MAX_PIE_ROWS:
         return f"Pie требует от 2 до {MAX_PIE_ROWS} категорий, получено {result_rows}."
-    if kind in {"column", "bar"} and result_rows > MAX_CATEGORY_ROWS:
-        return f"Bar/column содержит слишком много категорий ({result_rows}). Нужен TOP-N, bins или агрегация."
-    if kind in {"line", "area"} and result_rows > MAX_TIME_ROWS:
-        return f"Line/area содержит слишком много точек ({result_rows}). Нужна агрегация по неделям или месяцам."
+    if kind in {"column", "bar"}:
+        if result_rows < 2:
+            return (
+                "Для сравнения нужно минимум 2 категории, получена 1. "
+                "Одиночное значение лучше показать KPI-метрикой (metric)."
+            )
+        if result_rows > MAX_CATEGORY_ROWS:
+            return f"Bar/column содержит слишком много категорий ({result_rows}). Нужен TOP-N, bins или агрегация."
+    if kind in {"line", "area"}:
+        if result_rows < 2:
+            return "Для динамики нужно минимум 2 точки по времени, получена 1. Покажите итог KPI-метрикой (metric)."
+        if result_rows > MAX_TIME_ROWS:
+            return f"Line/area содержит слишком много точек ({result_rows}). Нужна агрегация по неделям или месяцам."
     return None
 
 
@@ -86,10 +101,12 @@ def _load_prompt(file_name: str, **kwargs: str) -> str:
     return text
 
 
-# Chart types that must use wizard pipeline (dataset + wizard_chart_builder).
-# QL pipeline is used for line/area/column/bar (fast, no dataset needed).
-WIZARD_CHART_TYPES = {"pie", "metric", "flatTable", "table"}
-QL_CHART_TYPES = {"line", "area", "column", "bar", "table"}
+# Chart types that must use the wizard pipeline (dataset + wizard_chart_builder).
+# Only metric/flatTable truly require a dataset: pie and table have working QL
+# templates, and this DataLens build rejects the old mix.createChartV1 action
+# that previously broke every wizard chart.
+WIZARD_CHART_TYPES = {"metric", "flattable"}
+QL_CHART_TYPES = {"line", "area", "column", "bar", "table", "pie"}
 
 
 def is_wizard_chart(chart_type: str) -> bool:
@@ -111,16 +128,18 @@ class PlannedChart:
 
 
 def _format_schema(schema_analysis, max_tables: int = 8) -> str:
-    lines: list[str] = []
-    # Always expose core LMS entities even when heuristics rank a technical
-    # table higher. Otherwise the LLM can see submissions but not the real
-    # projects.title field needed for project-specific analytics.
-    selected_tables = set(schema_analysis.key_tables[:max_tables]) | {
-        "projects", "submissions", "users", "reviews", "user_activities",
-    }
-    for table in schema_analysis.tables:
-        if table.name not in selected_tables:
+    """Ranked schema text: tables ordered by the composite data profile."""
+    profile = build_data_profile(schema_analysis)
+    selected = profile.top_tables[:max_tables]
+    score_by_table = {item.table: item for item in profile.ranked}
+    table_by_name = {table.name: table for table in schema_analysis.tables}
+
+    lines: list[str] = [format_data_profile(profile, top_n=max_tables)]
+    for name in selected:
+        table = table_by_name.get(name)
+        if table is None:
             continue
+        stats = score_by_table.get(name)
         cols = []
         for col in table.columns[:12]:
             flags = []
@@ -130,7 +149,10 @@ def _format_schema(schema_analysis, max_tables: int = 8) -> str:
                 flags.append(f"FK->{col.foreign_table}.{col.foreign_column}")
             flag_text = f" [{', '.join(flags)}]" if flags else ""
             cols.append(f"{col.name} {col.data_type}{flag_text}")
-        block = f"Таблица {table.name} ({table.row_count} строк):\n  " + "\n  ".join(cols)
+        block = (
+            f"Таблица {table.name} (строк: {table.row_count}, связей: {stats.links if stats else 0}):\n  "
+            + "\n  ".join(cols)
+        )
         # Append 2 sample rows so LLM sees real values and writes accurate SQL.
         if table.sample_rows:
             samples = "; ".join(str(row) for row in table.sample_rows[:2])
@@ -138,8 +160,8 @@ def _format_schema(schema_analysis, max_tables: int = 8) -> str:
         lines.append(block)
     rels = [
         r for r in schema_analysis.relationships
-        if r["from_table"] in selected_tables
-        or r["to_table"] in selected_tables
+        if r["from_table"] in selected
+        or r["to_table"] in selected
     ]
     if rels:
         lines.append("Связи:")
@@ -223,22 +245,22 @@ async def decide_chart_count(client, schema_text: str, message: str, entity_cont
         try:
             data = await client.chat_json(
                 [
-                    ChatMessage(role="system", content="Определи масштаб dashboard по схеме и запросу."),
-                    ChatMessage(role="user", content=prompt if attempt == 0 else "Выбери число charts строго от 1 до 8."),
+                    ChatMessage(role="system", content="Определи масштаб dashboard по профилю данных и запросу."),
+                    ChatMessage(role="user", content=prompt if attempt == 0 else "Выбери число charts от 1 до 12, стремись к 8."),
                 ],
                 schema_name="dashboard_chart_count",
                 schema={
                     "type": "object",
                     "additionalProperties": False,
-                    "properties": {"chart_count": {"type": "integer", "minimum": 1, "maximum": 8}},
+                    "properties": {"chart_count": {"type": "integer", "minimum": 1, "maximum": 12}},
                     "required": ["chart_count"],
                 },
-                max_tokens=256,
+                max_tokens=1024,
             )
             return int(data["chart_count"])
         except (KeyError, TypeError, ValueError, json.JSONDecodeError):
             continue
-    raise RuntimeError("OpenAI did not return a valid chart_count decision.")
+    raise RuntimeError("LLM did not return a valid chart_count decision.")
 
 
 async def _generate_one_chart(
@@ -312,6 +334,20 @@ async def _validate_and_fix(client, chart, schema_text, db_url, message: str, re
                     error = f"Не удалось проверить размер результата: {count_error}"
                 else:
                     error = chart_density_error(chart.chart_type.value, result_rows or 0)
+                if error is None and chart.chart_type.value == "pie":
+                    # A pie with a single non-zero sector renders as a plain
+                    # gray circle — there is nothing to compare.
+                    measure = next(
+                        (name for name, t in chart.columns if t in {"integer", "float"}),
+                        None,
+                    )
+                    if measure:
+                        nonzero, nz_error = await count_nonzero_rows(db_url, sql, measure)
+                        if nz_error is None and nonzero < 2:
+                            error = (
+                                "У pie должен быть минимум 2 ненулевых сектора, "
+                                f"получен {nonzero}. Такие данные лучше показать KPI-метрикой."
+                            )
                 if error is None:
                     chart.sample_rows = rows
                     print("      rows:", len(rows), "result rows:", result_rows, "sample:", rows[:2])

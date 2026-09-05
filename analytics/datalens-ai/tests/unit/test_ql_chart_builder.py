@@ -186,36 +186,26 @@ class TestPieChart:
         meas = next(p for p in r["visualization"]["placeholders"] if p["id"] == "measures")
         assert meas["items"][0]["guid"] == "cnt"
 
-    def test_colors_field_set(self):
+    def test_pie_binds_color_placeholder(self):
+        """The server pie preparer reads the colour field from the "colors"
+        placeholder; without it all sectors render a single default colour."""
         r = build_ql_chart(
             connection_id=CONNECTION_ID, sql=SQL, chart_type="pie",
             columns=self.COLS, category_values=self.CATEGORIES,
         )
-        assert r["colors"][0]["guid"] == "category"
-
-    def test_mounted_colors_all_categories(self):
-        r = build_ql_chart(
-            connection_id=CONNECTION_ID, sql=SQL, chart_type="pie",
-            columns=self.COLS, category_values=self.CATEGORIES,
+        colors_placeholder = next(
+            p for p in r["visualization"]["placeholders"] if p["id"] == "colors"
         )
-        mounted = r["colorsConfig"]["mountedColors"]
-        assert set(mounted.keys()) == {"High", "Medium", "Low"}
-
-    def test_mounted_colors_distinct_slots(self):
-        r = build_ql_chart(
-            connection_id=CONNECTION_ID, sql=SQL, chart_type="pie",
-            columns=self.COLS, category_values=self.CATEGORIES,
-        )
-        slots = list(r["colorsConfig"]["mountedColors"].values())
-        assert len(slots) == len(set(slots)), "Duplicate palette slots"
+        assert colors_placeholder["items"][0]["guid"] == "category"
+        assert r["colors"] == []  # top-level binding stays empty (ignored)
 
     def test_empty_category_values_ok(self):
-        """No category_values → empty mountedColors, no crash."""
+        """No category_values → no crash."""
         r = build_ql_chart(
             connection_id=CONNECTION_ID, sql=SQL, chart_type="pie",
             columns=self.COLS, category_values=[],
         )
-        assert r["colorsConfig"]["mountedColors"] == {}
+        assert r["colorsConfig"] == {}
 
     def test_too_few_columns_raises(self):
         with pytest.raises(ValueError):

@@ -60,7 +60,7 @@ datalens-ai (FastAPI :8100)
 | `chart_dedup.py` | Дедупликация SQL и заголовков |
 | `chart_sanity.py` | Проверка формы чарта (тип vs поля) |
 | `utils.py` | `_extract_json_from_response` |
-| `check_and_run.py` | Диагностика стека + команды запуска |
+| `check.py` | Диагностика стека + команды запуска |
 | `models/schema.py` | Pydantic-модели (ColumnInfo, TableInfo, SchemaAnalysis, ChartType…) |
 
 ## Надёжность

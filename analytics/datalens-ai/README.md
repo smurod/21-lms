@@ -3,7 +3,7 @@
 FastAPI-микросервис, который превращает текстовый запрос в готовый DataLens-dashboard.
 
 **Версия:** 0.2.0  
-**Стек:** Python 3.11+, FastAPI, psycopg (PostgreSQL), OpenAI API  
+**Стек:** Python 3.11+, FastAPI, psycopg (PostgreSQL), универсальный LLM-слой (OpenAI-совместимые / Anthropic / Google Gemini)  
 **Порт:** 8100
 
 ---
@@ -12,7 +12,7 @@ FastAPI-микросервис, который превращает тексто
 
 1. Принимает текстовый запрос на русском («Покажи активность пользователей за месяц»)
 2. Анализирует схему PostgreSQL-базы (таблицы, FK, реальные данные)
-3. Генерирует SQL для каждого чарта через OpenAI API (gpt-5.6-luna)
+3. Генерирует SQL для каждого чарта через LLM (провайдер настраивается в `.env`)
 4. Валидирует SQL на реальной БД (`EXPLAIN` + `LIMIT 5`)
 5. Создаёт QL-чарты и dashboard в Yandex DataLens
 6. Возвращает прямую ссылку на dashboard
@@ -42,12 +42,39 @@ cp .env.example .env
 
 | Переменная | Описание |
 |---|---|
-| `OPENAI_API_KEY` | Ключ OpenAI API |
-| `OPENAI_MODEL` | Модель (по умолчанию `gpt-5.6-luna`) |
+| `LLM_PROVIDER` | Семейство API: `openai` / `anthropic` / `google` |
+| `LLM_API_KEY` | Ключ выбранного провайдера |
+| `LLM_BASE_URL` | Свой endpoint (OpenRouter, DeepSeek, Ollama, vLLM…). Пусто = официальный API провайдера |
+| `LLM_MODEL` | Модель. Пусто = дефолт провайдера |
 | `DB_URL` | PostgreSQL URL, который видит сам сервис (`postgresql://user:pass@127.0.0.1:5432/db`) |
 | `DATALENS_BASE_URL` | URL DataLens UI (по умолчанию `http://localhost:8085`) |
 | `DATALENS_DB_HOST` | Хост БД, который видит DataLens из Docker (обычно `172.17.0.1`) |
 | `SERVICE_API_KEY` | Общий секрет с Laravel (X-API-Key). Пусто = auth отключён |
+
+### LLM-провайдеры
+
+| Провайдер | `LLM_PROVIDER` | `LLM_BASE_URL` | Пример `LLM_MODEL` |
+|---|---|---|---|
+| OpenAI | `openai` | _(пусто)_ | `gpt-5.6-luna` |
+| GLM (Zhipu, CN) | `openai` | `https://open.bigmodel.cn/api/paas/v4` | `glm-5.3-flash` |
+| GLM (Z.ai, intl) | `openai` | `https://api.z.ai/api/paas/v4` | `glm-5.3-flash` |
+| OpenRouter | `openai` | `https://openrouter.ai/api/v1` | `anthropic/claude-sonnet-4.6` |
+| DeepSeek | `openai` | `https://api.deepseek.com/v1` | `deepseek-chat` |
+| Ollama (локально) | `openai` | `http://127.0.0.1:11434/v1` | `qwen3:14b` (ключ не нужен) |
+| vLLM / LM Studio | `openai` | `http://127.0.0.1:8000/v1` | имя модели на сервере |
+| Anthropic Claude | `anthropic` | _(пусто)_ | `claude-sonnet-4-6` |
+| Google Gemini | `google` | _(пусто)_ | `gemini-2.5-flash` |
+
+Structured JSON для каждого семейства включается автоматически: `json_schema` (OpenAI-совместимые), `tool_choice` (Anthropic), `responseSchema` (Gemini). Если endpoint не поддерживает `response_format`, сервис автоматически повторяет запрос обычным текстом и извлекает JSON из ответа.
+
+**Reasoning-модели** (GLM, DeepSeek-R1, Qwen3, o-series) тратят токены на внутренние «размышления» и могут вернуть пустой `content` при малом бюджете. Клиент автоматически делает один повтор с бюджетом ×4 — настройка не требуется. Чтобы ускорить ответы и выключить «мышление» нативно для провайдера, задайте `LLM_EXTRA_BODY`:
+
+```env
+# GLM (Zhipu / Z.ai)
+LLM_EXTRA_BODY={"thinking":{"type":"disabled"}}
+# Qwen3 (vLLM)
+LLM_EXTRA_BODY={"enable_thinking":false}
+```
 
 ### 3. Запуск
 
@@ -63,8 +90,8 @@ curl http://127.0.0.1:8100/health
 
 Диагностика всего стека:
 ```bash
-python check_and_run.py          # статус сервисов + команды запуска
-python check_and_run.py --stop   # команды остановки
+python check.py          # статус сервисов + команды запуска
+python check.py --stop   # команды остановки
 ```
 
 ### 4. Запуск через Docker
@@ -133,7 +160,7 @@ analytics/datalens-ai/
 ├── chart_dedup.py        # Дедупликация SQL и заголовков
 ├── chart_sanity.py       # Проверка формы чарта (тип vs поля)
 ├── utils.py              # Утилиты (extract_json_from_response)
-├── check_and_run.py      # Диагностика стека
+├── check.py      # Диагностика стека
 ├── models/schema.py      # Pydantic-модели
 ├── prompts/              # LLM-промпты (Markdown)
 │   ├── chart_one.md
@@ -186,4 +213,4 @@ DATALENS_DB_HOST=172.17.0.1                           # DataLens видит БД
 - Python 3.11+
 - PostgreSQL (анализ схемы и валидация SQL только для PostgreSQL)
 - Yandex DataLens (open-source, Docker) — `analytics/datalens/`
-- OpenAI API ключ (`gpt-5.6-luna` или совместимая модель)
+- LLM API ключ любого поддерживаемого провайдера (`LLM_PROVIDER` + `LLM_API_KEY` в `.env`)

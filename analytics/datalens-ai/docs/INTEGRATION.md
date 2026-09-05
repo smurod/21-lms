@@ -46,7 +46,7 @@ analytics/datalens-ai/
         ├── llm_client.py         # OpenAI API + retry 429
         ├── entity_resolver.py    # email/проект → реальные ID
         ├── utils.py              # _extract_json_from_response
-        ├── check_and_run.py      # диагностика стека
+        ├── check.py      # диагностика стека
         ├── models/schema.py      # Pydantic-модели
         ├── prompts/*.md          # LLM-промпты
         ├── samples/              # шаблоны QL-чартов
@@ -109,8 +109,8 @@ uvicorn main:app --host 0.0.0.0 --port 8100
 
 Диагностика стека:
 ```bash
-python check_and_run.py          # статус + команды запуска
-python check_and_run.py --stop   # команды остановки
+python check.py          # статус + команды запуска
+python check.py --stop   # команды остановки
 ```
 
 ---
