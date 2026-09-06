@@ -150,7 +150,7 @@
 
                         <form method="POST" action="{{ route('admin.analytics.agent') }}" target="analytics-job-launcher"
                               data-prepare-url="{{ route('admin.analytics.chat.prepare') }}"
-                              data-stream-base="{{ rtrim(config('datalens_ai.base_url'), '/') }}"
+                              data-stream-base="{{ rtrim(config('datalens_ai.public_url'), '/') }}"
                               data-store-base="{{ url('admin/analytics') }}"
                               @submit.prevent="submitChatStreaming($el)" class="flex items-center gap-2 rounded-[24px] border border-white/10 bg-zinc-950/95 px-3 py-2 shadow-2xl shadow-black/40 backdrop-blur focus-within:border-cyan-400/50 focus-within:ring-1 focus-within:ring-cyan-400/30">
                             @csrf

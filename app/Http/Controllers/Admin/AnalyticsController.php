@@ -70,7 +70,7 @@ class AnalyticsController extends Controller
             'serviceHealth' => $dataLensAi->health(),
             'activeJob' => $activeJob,
             'jobStreamUrl' => $jobId
-                ? rtrim((string) config('datalens_ai.base_url'), '/') . '/api/dashboard-jobs/' . rawurlencode($jobId) . '/events'
+                ? $this->streamUrl($jobId)
                 : null,
             'previewUrl' => $selectedDashboard
                 ? $dataLensAi->dashboardEmbedUrl(
@@ -555,7 +555,7 @@ class AnalyticsController extends Controller
 
         return response()->json([
             'job_id' => $job['job_id'],
-            'stream_url' => rtrim((string) config('datalens_ai.base_url'), '/') . '/api/dashboard-jobs/' . rawurlencode($job['job_id']) . '/events',
+            'stream_url' => $this->streamUrl($job['job_id']),
             'complete_url' => $data['tool'] === 'generate_dashboard'
                 ? route('admin.analytics.index', ['job' => $job['job_id']])
                 : route('admin.analytics.index', ['dashboard' => $dashboard->id, 'job' => $job['job_id']]),
@@ -634,7 +634,7 @@ class AnalyticsController extends Controller
 
         return view('admin.analytics.job-start', [
             'jobId' => $job['job_id'],
-            'streamUrl' => rtrim((string) config('datalens_ai.base_url'), '/') . '/api/dashboard-jobs/' . rawurlencode($job['job_id']) . '/events',
+            'streamUrl' => $this->streamUrl($job['job_id']),
             'completeUrl' => route('admin.analytics.index', ['job' => $job['job_id']]),
         ]);
     }
@@ -717,7 +717,7 @@ class AnalyticsController extends Controller
 
         return view('admin.analytics.job-start', [
             'jobId' => $job['job_id'],
-            'streamUrl' => rtrim((string) config('datalens_ai.base_url'), '/') . '/api/dashboard-jobs/' . rawurlencode($job['job_id']) . '/events',
+            'streamUrl' => $this->streamUrl($job['job_id']),
             'completeUrl' => route('admin.analytics.index', [
                 'dashboard' => $analyticsDashboard->id,
                 'job' => $job['job_id'],
@@ -739,7 +739,7 @@ class AnalyticsController extends Controller
 
         return view('admin.analytics.job-start', [
             'jobId' => $job['job_id'],
-            'streamUrl' => rtrim((string) config('datalens_ai.base_url'), '/') . '/api/dashboard-jobs/' . rawurlencode($job['job_id']) . '/events',
+            'streamUrl' => $this->streamUrl($job['job_id']),
             'completeUrl' => route('admin.analytics.index', ['job' => $job['job_id']]),
         ]);
     }
@@ -765,11 +765,24 @@ class AnalyticsController extends Controller
 
         return view('admin.analytics.job-start', [
             'jobId' => $job['job_id'],
-            'streamUrl' => rtrim((string) config('datalens_ai.base_url'), '/') . '/api/dashboard-jobs/' . rawurlencode($job['job_id']) . '/events',
+            'streamUrl' => $this->streamUrl($job['job_id']),
             'completeUrl' => route('admin.analytics.index', [
                 'dashboard' => $analyticsDashboard->id,
                 'job' => $job['job_id'],
             ]),
         ]);
+    }
+
+    /**
+     * Browser-facing SSE stream URL for a dashboard job.
+     *
+     * Uses datalens_ai.public_url because the address the browser can open
+     * (published port) may differ from the one Laravel uses server-side
+     * inside a container network (docker-compose sets them separately).
+     */
+    private function streamUrl(string $jobId): string
+    {
+        return rtrim((string) config('datalens_ai.public_url'), '/')
+            . '/api/dashboard-jobs/' . rawurlencode($jobId) . '/events';
     }
 }

@@ -40,7 +40,7 @@
     <form method="POST" action="{{ $isInitialConversation ? route('admin.analytics.agent') : route('admin.analytics.chat', $selectedDashboard) }}" target="analytics-job-launcher"
           @if (!empty($selectedDashboard)) data-dashboard-id="{{ $selectedDashboard->id }}" @endif
           data-prepare-url="{{ route('admin.analytics.chat.prepare') }}"
-          data-stream-base="{{ rtrim(config('datalens_ai.base_url'), '/') }}"
+          data-stream-base="{{ rtrim(config('datalens_ai.public_url'), '/') }}"
           data-store-base="{{ url('admin/analytics') }}"
           @submit.prevent="submitChatStreaming($el)"
           class="shrink-0 border-t border-white/10 p-4">
