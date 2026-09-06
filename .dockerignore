@@ -19,6 +19,12 @@ vendor
 node_modules
 analytics/datalens-ai/venv
 
+# Stale host-side caches: the manifest is regenerated inside the image
+# (dev manifests reference --no-dev packages like laravel/pail)
+bootstrap/cache/packages.php
+bootstrap/cache/services.php
+bootstrap/cache/config.php
+
 # Python service is built from its own context (analytics/datalens-ai)
 analytics
 

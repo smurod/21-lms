@@ -1,0 +1,18 @@
+# Secrets and local state must not reach image layers
+.env
+.env.*
+jobs.json
+*.pid
+logs/
+
+# Local environments and caches
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# Dev tooling
+.claude/
+.claudeignore
+docs/

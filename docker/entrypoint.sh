@@ -68,10 +68,18 @@ fi
 if [ "${CACHE_ON_BOOT:-true}" = "true" ]; then
     as_www_data php artisan config:cache
     as_www_data php artisan route:cache || true
-    as_www_data php artisan view:cache
+    # a single broken view must not prevent the container from serving traffic
+    as_www_data php artisan view:cache || echo "WARN: view:cache failed — views compile lazily" >&2
 fi
 
 # ----------------------------------------------------------------------------
-# 5. Exec the container command as www-data
+# 5. Exec the container command
 # ----------------------------------------------------------------------------
-exec su-exec www-data "$@"
+# php-fpm must run as root: its default error_log (/proc/self/fd/2) cannot be
+# re-opened by a non-root master (FPM initialization failed). Its workers
+# still run as www-data via the pool config. Everything else (artisan, queue,
+# scheduler) drops privileges to www-data.
+case "$1" in
+    php-fpm) exec "$@" ;;
+    *) exec su-exec www-data "$@" ;;
+esac

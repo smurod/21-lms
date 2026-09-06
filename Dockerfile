@@ -44,12 +44,17 @@ RUN composer install \
 FROM php:8.3-fpm-alpine AS app
 
 # --- PHP extensions ---------------------------------------------------------
+# phpredis is built from the GitHub tarball: pecl.php.net REST is flaky
+# ("does not have REST info xml available") and breaks image builds.
 RUN apk add --no-cache --virtual .build-deps \
         $PHPIZE_DEPS \
         icu-dev \
         libzip-dev \
         oniguruma-dev \
         postgresql-dev \
+    && mkdir -p /usr/src/php/ext/redis \
+    && curl -fsSL https://github.com/phpredis/phpredis/archive/refs/tags/6.1.0.tar.gz \
+        | tar -xz -C /usr/src/php/ext/redis --strip-components=1 \
     && docker-php-ext-install -j"$(nproc)" \
         bcmath \
         intl \
@@ -58,9 +63,8 @@ RUN apk add --no-cache --virtual .build-deps \
         pcntl \
         pdo_pgsql \
         pgsql \
+        redis \
         zip \
-    && pecl install redis \
-    && docker-php-ext-enable redis \
     && apk del .build-deps
 
 # Runtime libs for the compiled extensions + su-exec for privilege drop
@@ -82,9 +86,15 @@ COPY --from=vendor /usr/bin/composer /usr/local/bin/composer
 COPY . .
 COPY --from=assets /app/public/build ./public/build
 
-RUN rm -f .env .env.* public/hot \
-    && mkdir -p storage/framework/{cache/data,sessions,testing,views} \
-                storage/logs storage/app/public bootstrap/cache \
+RUN rm -f .env .env.backup .env.production public/hot \
+            bootstrap/cache/packages.php bootstrap/cache/services.php \
+    && mkdir -p storage/framework/cache/data \
+                storage/framework/sessions \
+                storage/framework/testing \
+                storage/framework/views \
+                storage/logs \
+                storage/app/public \
+                bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R ug+rwX storage bootstrap/cache
 
@@ -107,6 +117,8 @@ CMD ["php-fpm"]
 #    volume is mounted at runtime by docker-compose.
 # ----------------------------------------------------------------------------
 FROM nginx:1.27-alpine AS web
+
+WORKDIR /var/www/html
 
 COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
 COPY --from=app /var/www/html/public ./public

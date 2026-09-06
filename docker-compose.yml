@@ -20,6 +20,21 @@ name: lms
 include:
     - ./analytics/datalens/docker-compose.yaml
 
+# Shared env overrides for all Laravel containers: inside the compose network
+# services are reached by name, not by the 127.0.0.1 host defaults from .env.
+# Only the `app` container runs boot tasks (migrate/cache) — queue and
+# scheduler must not migrate in parallel.
+x-app-env: &app-env
+    DB_HOST: db
+    DB_PORT: "5432"
+    REDIS_HOST: redis
+    REDIS_PORT: "6379"
+    DATALENS_AI_URL: http://datalens-ai:8100
+    # browser opens SSE to the published port, not to the service name
+    DATALENS_AI_PUBLIC_URL: http://localhost:${AI_PORT:-8100}
+    MIGRATE_ON_BOOT: "false"
+    CACHE_ON_BOOT: "false"
+
 services:
     # ------------------------------------------------------------------ LMS DB
     db:
@@ -62,21 +77,17 @@ services:
         build:
             context: .
             dockerfile: Dockerfile
+            target: app
         image: lms-app
         container_name: lms-app
         restart: unless-stopped
         env_file:
             - .env
         environment:
-            # inside the compose network Laravel must reach services by name,
-            # not by the 127.0.0.1 defaults from .env
-            DB_HOST: db
-            DB_PORT: "5432"
-            REDIS_HOST: redis
-            REDIS_PORT: "6379"
-            DATALENS_AI_URL: http://datalens-ai:8100
-            # browser opens SSE to the published port, not to the service name
-            DATALENS_AI_PUBLIC_URL: http://localhost:${AI_PORT:-8100}
+            <<: *app-env
+            # boot tasks (migrate, config/route/view cache, storage:link)
+            MIGRATE_ON_BOOT: "true"
+            CACHE_ON_BOOT: "true"
         volumes:
             - lms-storage:/var/www/html/storage
         depends_on:
@@ -113,13 +124,7 @@ services:
         restart: unless-stopped
         env_file:
             - .env
-        environment:
-            DB_HOST: db
-            DB_PORT: "5432"
-            REDIS_HOST: redis
-            REDIS_PORT: "6379"
-            DATALENS_AI_URL: http://datalens-ai:8100
-            DATALENS_AI_PUBLIC_URL: http://localhost:${AI_PORT:-8100}
+        environment: *app-env
         volumes:
             - lms-storage:/var/www/html/storage
         command: ["php", "artisan", "queue:work", "--tries=3", "--timeout=300", "--max-time=3600"]
@@ -134,13 +139,7 @@ services:
         restart: unless-stopped
         env_file:
             - .env
-        environment:
-            DB_HOST: db
-            DB_PORT: "5432"
-            REDIS_HOST: redis
-            REDIS_PORT: "6379"
-            DATALENS_AI_URL: http://datalens-ai:8100
-            DATALENS_AI_PUBLIC_URL: http://localhost:${AI_PORT:-8100}
+        environment: *app-env
         volumes:
             - lms-storage:/var/www/html/storage
         command: ["php", "artisan", "schedule:work"]

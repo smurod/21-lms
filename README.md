@@ -75,7 +75,7 @@ DataLens), выполняет миграции и сиды.
    python3 -c "import secrets; print(secrets.token_hex(32))"
    ```
    Записать в root `.env` как `DATALENS_AI_API_KEY` и
-   `make restart`. (datlens-ai подхватит его автоматически из root `.env`.)
+   `make restart`. (datalens-ai подхватит его автоматически из root `.env`.)
 4. `make restart`.
 
 Проверка: `make check` — статус nginx, datalens-ai, DataLens UI, контейнеров.
