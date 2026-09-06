@@ -148,7 +148,11 @@
                             <span>AI думает…</span>
                         </div>
 
-                        <form method="POST" action="{{ route('admin.analytics.agent') }}" target="analytics-job-launcher" @submit="chatSubmittedMessage = chatDraft; chatDraft = ''; chatThinking = true" class="flex items-center gap-2 rounded-[24px] border border-white/10 bg-zinc-950/95 px-3 py-2 shadow-2xl shadow-black/40 backdrop-blur focus-within:border-cyan-400/50 focus-within:ring-1 focus-within:ring-cyan-400/30">
+                        <form method="POST" action="{{ route('admin.analytics.agent') }}" target="analytics-job-launcher"
+                              data-prepare-url="{{ route('admin.analytics.chat.prepare') }}"
+                              data-stream-base="{{ rtrim(config('datalens_ai.base_url'), '/') }}"
+                              data-store-base="{{ url('admin/analytics') }}"
+                              @submit.prevent="submitChatStreaming($el)" class="flex items-center gap-2 rounded-[24px] border border-white/10 bg-zinc-950/95 px-3 py-2 shadow-2xl shadow-black/40 backdrop-blur focus-within:border-cyan-400/50 focus-within:ring-1 focus-within:ring-cyan-400/30">
                             @csrf
                             <input type="hidden" name="message" :value="chatSubmittedMessage">
                             <input id="generate-message" type="text" x-model="chatDraft" required maxlength="2000" list="analytics-prompt-suggestions" autocomplete="off"
@@ -295,7 +299,7 @@
                 if (message && job.message) message.textContent = job.message;
             }
 
-            function startStream(streamUrl, completeUrl) {
+            function startStream(streamUrl, completeUrl, onProgress) {
                 if (window.Alpine) {
                     const appState = Alpine.$data(document.body);
                     if (appState.chatPendingMessage) {
@@ -309,7 +313,9 @@
                 if (stream) stream.close();
                 stream = new EventSource(streamUrl);
                 stream.addEventListener('progress', function (event) {
-                    updateProgress(JSON.parse(event.data));
+                    const job = JSON.parse(event.data);
+                    updateProgress(job);
+                    if (onProgress) onProgress(job);
                 });
                 stream.addEventListener('complete', function (event) {
                     updateProgress(JSON.parse(event.data));
@@ -322,6 +328,262 @@
                     stream.close();
                     window.location.assign(completeUrl);
                 });
+            }
+
+            // --------------------------------------------------------------
+            // Streaming chat: tokens appear as the AI generates them, and the
+            // send button turns into a stop button while the answer runs.
+            // --------------------------------------------------------------
+            let chatAbort = null;
+            let streamingBubbleText = null;
+            let streamingTextNode = null;
+            let streamingDots = null;
+            let streamingStatus = null;
+            let jobCancelUrl = null;
+
+            function fillStreamingBubble(text) {
+                // Текст растёт, анимация точек остаётся в конце, пока агент пишет.
+                if (streamingTextNode) streamingTextNode.textContent = text;
+            }
+
+            function finishStreamingBubble() {
+                if (streamingDots) streamingDots.remove();
+            }
+
+            async function submitChatStreaming(form) {
+                if (chatAbort) return; // a reply is already streaming
+                const appState = window.Alpine ? Alpine.$data(document.body) : null;
+                const draft = (appState?.chatDraft || form.querySelector('input[name="message"]')?.value || '').trim();
+                if (!draft) return;
+
+                const csrf = form.querySelector('input[name="_token"]')?.value || '';
+                const prepareUrl = form.dataset.prepareUrl;
+                const streamBase = form.dataset.streamBase;
+                const storeBase = form.dataset.storeBase;
+
+                chatAbort = new AbortController();
+                if (appState) {
+                    // Первый чат открывает панель справа немедленно — весь
+                    // дальнейший диалог (и «AI думает», и токены) идёт в ней.
+                    appState.analyticsChatOpen = true;
+                    appState.chatSubmittedMessage = draft;
+                    appState.chatPendingMessage = draft;
+                    appState.chatDraft = '';
+                    appState.chatThinking = true;
+                    appState.chatStreaming = true;
+                }
+                streamingBubbleText = null;
+                jobCancelUrl = null;
+
+                const jsonFetch = (url, body) => fetch(url, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf},
+                    body: JSON.stringify(body || {}),
+                    signal: chatAbort?.signal,
+                });
+
+                try {
+                    // 1) Laravel: store the user message, build the AI payload.
+                    const prepare = await jsonFetch(prepareUrl, {
+                        message: draft,
+                        dashboard_id: form.dataset.dashboardId ? Number(form.dataset.dashboardId) : null,
+                    });
+                    if (!prepare.ok) throw new Error('prepare ' + prepare.status);
+                    const prepared = await prepare.json();
+
+                    // Новый чат: панели ещё нет в DOM. Один разрешённый reload
+                    // на страницу беседы — стриминг продолжается уже в ней.
+                    if (!document.getElementById('analytics-conversation-history')) {
+                        sessionStorage.setItem('analyticsPendingTurn', JSON.stringify({
+                            prepared: prepared, draft: draft, csrf: csrf,
+                            streamBase: streamBase, storeBase: storeBase,
+                            appendUser: false,
+                        }));
+                        window.location.assign('/admin/analytics?dashboard=' + prepared.dashboard_id);
+                        return;
+                    }
+
+                    runStreamingTurn(prepared, draft, {streamBase: streamBase, storeBase: storeBase, csrf: csrf, appendUser: true});
+                } catch (error) {
+                    const aborted = error.name === 'AbortError';
+                    fillStreamingBubble(aborted ? '⏹ Остановлено пользователем.' : '⚠ ' + (error.message || 'Ошибка запроса к AI.'));
+                    if (!aborted) console.warn('chat streaming failed:', error);
+                    if (appState) { appState.chatStreaming = false; appState.chatThinking = false; }
+                }
+            }
+
+            async function runStreamingTurn(prepared, draft, urls) {
+                const appState = window.Alpine ? Alpine.$data(document.body) : null;
+                const streamBase = urls.streamBase;
+                const storeBase = urls.storeBase;
+                const csrf = urls.csrf || '';
+                const dashboardId = prepared.dashboard_id;
+
+                chatAbort = new AbortController();
+                if (appState) {
+                    appState.chatThinking = true;
+                    appState.chatStreaming = true;
+                }
+                streamingBubbleText = null;
+                const jsonFetch = (url, body) => fetch(url, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf},
+                    body: JSON.stringify(body || {}),
+                    signal: chatAbort?.signal,
+                });
+
+                try {
+                    // После reload-перехода сообщение уже отрисовано сервером.
+                    if (urls.appendUser !== false) {
+                        appendConversationMessage('user', draft);
+                    }
+                    if (appState) { appState.chatPendingMessage = ''; }
+
+                    // Python: stream the routing decision and reply tokens.
+                    let tool = 'chat';
+                    let reply = '';
+                    const assistantRow = document.createElement('div');
+                    assistantRow.className = 'flex justify-start';
+                    const assistantBubble = document.createElement('div');
+                    assistantBubble.className = 'max-w-[92%] rounded-2xl rounded-bl-md border border-white/10 bg-white/5 px-4 py-3 text-sm leading-6 text-zinc-200';
+                    const assistantLabel = document.createElement('p');
+                    assistantLabel.className = 'mb-1 text-[10px] font-mono font-semibold uppercase tracking-wide text-cyan-300';
+                    assistantLabel.textContent = 'AI агент';
+                    // Текст ответа + анимация точек в конце, пока агент пишет.
+                    streamingBubbleText = document.createElement('p');
+                    streamingBubbleText.className = 'whitespace-pre-wrap break-words';
+                    const streamingTextNode = document.createTextNode('');
+                    const streamingDots = document.createElement('span');
+                    streamingDots.className = 'ai-dots';
+                    streamingDots.innerHTML = '<span></span><span></span><span></span>';
+                    streamingBubbleText.append(streamingTextNode, streamingDots);
+                    // Статус-строка для tool-call'ов (обновляется из job-SSE).
+                    const streamingStatus = document.createElement('p');
+                    streamingStatus.className = 'mt-2 hidden items-center gap-2 text-xs text-cyan-200';
+                    assistantBubble.append(assistantLabel, streamingBubbleText, streamingStatus);
+                    assistantRow.appendChild(assistantBubble);
+                    const historyEl = document.getElementById('analytics-conversation-history');
+                    if (historyEl) historyEl.appendChild(assistantRow);
+                    requestAnimationFrame(scrollConversationToBottom);
+
+                    const streamResponse = await fetch(streamBase + '/api/agent/respond/stream', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(prepared.payload),
+                        signal: chatAbort?.signal,
+                    });
+                    if (!streamResponse.ok || !streamResponse.body) {
+                        let detail = 'HTTP ' + streamResponse.status;
+                        try {
+                            const err = await streamResponse.json();
+                            detail = Array.isArray(err.detail)
+                                ? err.detail.map(e => e.msg).join('; ')
+                                : (err.detail || detail);
+                        } catch (_) {}
+                        throw new Error(detail);
+                    }
+                    if (appState) { appState.chatThinking = false; }
+
+                    const reader = streamResponse.body.getReader();
+                    const decoder = new TextDecoder();
+                    let buffer = '';
+                    let streamError = null;
+                    while (true) {
+                        const {done, value} = await reader.read();
+                        if (done) break;
+                        buffer += decoder.decode(value, {stream: true});
+                        let sep;
+                        while ((sep = buffer.indexOf('\n\n')) !== -1) {
+                            const chunk = buffer.slice(0, sep);
+                            buffer = buffer.slice(sep + 2);
+                            const line = chunk.split('\n').find(l => l.startsWith('data: '));
+                            if (!line) continue;
+                            const evt = JSON.parse(line.slice(6));
+                            if (evt.type === 'meta') tool = evt.tool;
+                            else if (evt.type === 'token') { reply += evt.text; fillStreamingBubble(reply); requestAnimationFrame(scrollConversationToBottom); }
+                            else if (evt.type === 'error') { streamError = evt.detail || 'Ошибка ИИ.'; }
+                            else if (evt.type === 'done') { buffer = ''; break; }
+                        }
+                    }
+                    if (streamError) throw new Error(streamError);
+                    reply = reply.trim() || '(пустой ответ)';
+                    fillStreamingBubble(reply);
+                    finishStreamingBubble();
+
+                    // 3) Persist the reply BEFORE dispatching a job — a page
+                    // reload during the job must not lose the confirmation.
+                    const stored = await jsonFetch(storeBase + '/' + dashboardId + '/chat/store-reply', {dashboard_id: dashboardId, content: reply});
+                    const storedJson = await stored.json().catch(() => ({}));
+                    const replyMessageId = storedJson.message_id || null;
+
+                    // 4) Tool decisions start a dashboard job (chat just ends here).
+                    if (['generate_dashboard', 'edit_dashboard', 'clear_dashboard', 'replace_dashboard'].includes(tool)) {
+                        const dispatch = await jsonFetch(storeBase + '/' + dashboardId + '/chat/dispatch', {
+                            dashboard_id: dashboardId, tool: tool, message: draft, message_id: replyMessageId,
+                        });
+                        if (!dispatch.ok) {
+                            const err = await dispatch.json().catch(() => ({}));
+                            throw new Error(err.error || 'dispatch ' + dispatch.status);
+                        }
+                        const job = await dispatch.json();
+                        jobCancelUrl = streamBase + '/api/dashboard-jobs/' + encodeURIComponent(job.job_id) + '/cancel';
+                        if (appState) { appState.chatStreaming = false; }
+                        chatAbort = null;
+                        // Бейдж «писателя» (вариант 14) + live-статус в пузыре.
+                        assistantLabel.textContent = 'AI агент · строит дашборд…';
+                        streamingStatus.classList.remove('hidden');
+                        streamingStatus.classList.add('flex');
+                        startStream(job.stream_url, job.complete_url, function (jobState) {
+                            streamingStatus.textContent = '⚙ ' + (jobState.message || 'Строю дашборд…');
+                            requestAnimationFrame(scrollConversationToBottom);
+                        });
+                        return;
+                    }
+                } catch (error) {
+                    const aborted = error.name === 'AbortError';
+                    finishStreamingBubble();
+                    fillStreamingBubble(aborted ? '⏹ Остановлено пользователем.' : '⚠ ' + (error.message || 'Ошибка запроса к AI.'));
+                    if (!aborted) console.warn('chat streaming failed:', error);
+                } finally {
+                    streamingBubbleText = null;
+                    streamingTextNode = null;
+                    streamingDots = null;
+                    streamingStatus = null;
+                    if (chatAbort === null) {
+                        // job flow already reset the streaming state
+                    } else {
+                        chatAbort = null;
+                    }
+                    if (appState) { appState.chatStreaming = false; appState.chatThinking = false; }
+                }
+            }
+
+            function stopChatStreaming() {
+                if (chatAbort) {
+                    chatAbort.abort();
+                    return;
+                }
+                if (jobCancelUrl) {
+                    fetch(jobCancelUrl, {method: 'POST'}).catch(() => {});
+                }
+            }
+
+            // Expose for Alpine expressions inside the conversation panel.
+            window.submitChatStreaming = submitChatStreaming;
+            window.stopChatStreaming = stopChatStreaming;
+
+            // A first message in a brand-new chat reloads the page once (the
+            // conversation panel does not exist yet). Resume the pending AI
+            // turn here, inside the freshly rendered panel.
+            const pendingTurn = sessionStorage.getItem('analyticsPendingTurn');
+            if (pendingTurn && document.getElementById('analytics-conversation-history')) {
+                sessionStorage.removeItem('analyticsPendingTurn');
+                try {
+                    const turn = JSON.parse(pendingTurn);
+                    runStreamingTurn(turn.prepared, turn.draft, turn);
+                } catch (error) {
+                    console.warn('pending AI turn failed:', error);
+                }
             }
 
             window.addEventListener('message', function (event) {
