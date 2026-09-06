@@ -15,6 +15,7 @@ import logging
 import re
 import time
 from typing import Any
+from urllib.parse import urlparse
 
 import httpx
 
@@ -70,11 +71,15 @@ class DataLensClient:
             )
 
         # Copy all cookies from auth response into the gateway HTTP client.
+        # The domain must match the gateway host (DATALENS_BASE_URL), which is
+        # "localhost" in host mode and "ui" in docker-compose — so it is
+        # derived from the configured base URL instead of being hardcoded.
+        gateway_domain = urlparse(self.settings.datalens_base_url).hostname or "localhost"
         for cookie in response.cookies.jar:
             self._client.cookies.set(
                 cookie.name,
                 cookie.value,
-                domain="localhost",
+                domain=gateway_domain,
                 path="/",
             )
 

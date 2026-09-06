@@ -26,7 +26,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'guard_name' => 'web',
         ]);
 
-        $seedPassword = 'school21';
+        $seedPassword = (string) env('SEED_PASSWORD', 'school21');
 
         $adminUser = User::firstOrNew(['email' => 'admin@gmail.com']);
         $adminUser->forceFill([
@@ -69,17 +69,16 @@ class RolesAndPermissionsSeeder extends Seeder
                 app(GitlabService::class)->ensureUserAccount($user, $seedPassword);
                 $this->command?->info("GitLab account ready: {$user->username} <{$user->email}>");
             } catch (\Throwable $e) {
-                Log::error('Seed GitLab account provisioning failed', [
+                // GitLab is an external dependency: a fresh install without
+                // GITLAB_TOKEN must still be able to seed and log in.
+                Log::warning('Seed GitLab account provisioning skipped', [
                     'user_id' => $user->id,
                     'email' => $user->email,
                     'username' => $user->username,
                     'error' => $e->getMessage(),
                 ]);
 
-                throw new \RuntimeException(
-                    "GitLab account provisioning failed for {$user->email}: " . $e->getMessage(),
-                    previous: $e
-                );
+                $this->command?->warn("GitLab account skipped for {$user->username} <{$user->email}>: {$e->getMessage()}");
             }
         });
 

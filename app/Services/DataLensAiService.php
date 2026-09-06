@@ -53,14 +53,23 @@ class DataLensAiService
     }
 
     /**
+     * @param  array<int, array<string, mixed>>  $knownDashboards
+     * @param  array<int, array{role: string, content: string}>  $history
      * @return array{tool?: string, reply?: string}
      */
-    public function agentRespond(string $message, ?string $dashboardContext = null, bool $hasDashboard = false): array
-    {
+    public function agentRespond(
+        string $message,
+        ?string $dashboardContext = null,
+        bool $hasDashboard = false,
+        array $knownDashboards = [],
+        array $history = [],
+    ): array {
         return $this->request('POST', '/api/agent/respond', [
             'message' => $message,
             'dashboard_context' => $dashboardContext,
             'has_dashboard' => $hasDashboard,
+            'known_dashboards' => $knownDashboards,
+            'history' => $history,
         ]);
     }
 
@@ -137,8 +146,14 @@ class DataLensAiService
         }
 
         if (! $response->successful()) {
-            $detail = $response->json('detail') ?: 'HTTP ' . $response->status();
-            throw new RuntimeException((string) $detail);
+            // FastAPI validation errors (422) return `detail` as an ARRAY of
+            // error objects — string-casting it crashes with "Array to string
+            // conversion" and the chat UI hangs without any error message.
+            $detail = $response->json('detail');
+            $message = is_array($detail)
+                ? collect($detail)->pluck('msg')->implode('; ')
+                : (string) $detail;
+            throw new RuntimeException($message !== '' ? $message : 'HTTP ' . $response->status());
         }
 
         return $response->json() ?? [];

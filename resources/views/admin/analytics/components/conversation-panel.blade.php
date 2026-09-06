@@ -38,16 +38,27 @@
     </div>
 
     <form method="POST" action="{{ $isInitialConversation ? route('admin.analytics.agent') : route('admin.analytics.chat', $selectedDashboard) }}" target="analytics-job-launcher"
-          @submit="chatSubmittedMessage = chatDraft; chatPendingMessage = chatDraft; chatDraft = ''; chatThinking = true" class="shrink-0 border-t border-white/10 p-4">
+          @if (!empty($selectedDashboard)) data-dashboard-id="{{ $selectedDashboard->id }}" @endif
+          data-prepare-url="{{ route('admin.analytics.chat.prepare') }}"
+          data-stream-base="{{ rtrim(config('datalens_ai.public_url'), '/') }}"
+          data-store-base="{{ url('admin/analytics') }}"
+          @submit.prevent="submitChatStreaming($el)"
+          class="shrink-0 border-t border-white/10 p-4">
         @csrf
         <input type="hidden" name="message" :value="chatSubmittedMessage">
         <div class="flex items-center gap-2 rounded-2xl border border-white/15 bg-zinc-950 px-2 py-2 shadow-xl shadow-black/30 focus-within:border-violet-400/50">
             <input type="text" x-model="chatDraft" required maxlength="2000" autocomplete="off"
                    placeholder="Попросите AI изменить dashboard…"
                    class="analytics-prompt-input min-w-0 flex-1 bg-transparent px-2 py-2 text-sm text-white outline-none placeholder:text-zinc-600">
-            <button type="submit" {{ $serviceUnavailable ? 'disabled' : '' }}
+            <button type="submit" x-show="!chatStreaming" {{ $serviceUnavailable ? 'disabled' : '' }}
+            aria-label="Отправить сообщение" title="Отправить сообщение"
             class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-400 text-zinc-950 transition-colors hover:bg-violet-300 disabled:cursor-not-allowed disabled:opacity-40">
                 <i data-lucide="arrow-up" class="h-4 w-4"></i>
+            </button>
+            <button type="button" x-show="chatStreaming" x-cloak @click="stopChatStreaming()"
+            aria-label="Остановить ответ" title="Остановить ответ"
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-zinc-800 text-white transition-colors hover:bg-zinc-700">
+                <span class="h-3 w-3 rounded-[3px] bg-white"></span>
             </button>
         </div>
     </form>

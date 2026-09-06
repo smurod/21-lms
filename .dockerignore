@@ -1,0 +1,47 @@
+# Git
+.git
+.gitignore
+.gitattributes
+.claudeignore
+
+# IDE / tooling
+.idea
+.vscode
+.claude
+
+# Environments and secrets (injected via compose env_file)
+.env
+.env.*
+!.env.example
+
+# Dependencies (installed inside image stages)
+vendor
+node_modules
+analytics/datalens-ai/venv
+
+# Stale host-side caches: the manifest is regenerated inside the image
+# (dev manifests reference --no-dev packages like laravel/pail)
+bootstrap/cache/packages.php
+bootstrap/cache/services.php
+bootstrap/cache/config.php
+
+# Python service is built from its own context (analytics/datalens-ai)
+analytics
+
+# Local artifacts
+docs
+*.log
+*.pid
+jobs.json
+PROJECT_GRAPH.html
+my_hashes.txt
+v.verteov
+storage/logs
+storage/pail
+public/hot
+public/storage
+public/build
+
+# Tests are not needed in the runtime image
+tests
+phpunit.xml

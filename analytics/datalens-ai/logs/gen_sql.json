@@ -1,1 +1,0 @@
-{"sql":"SELECT DATE(created_at) AS date, COUNT(*) AS count\nFROM achievements\nGROUP BY DATE(created_at)\nORDER BY date","chart_type":"line","explanation":"Показать динамику записей по дням"}

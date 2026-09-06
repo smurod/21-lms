@@ -63,6 +63,9 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
             Route::get('/analytics/dashboards', [AnalyticsController::class, 'dashboards'])->name('analytics.dashboards');
             Route::post('/analytics/generate', [AnalyticsController::class, 'generate'])->name('analytics.generate');
             Route::post('/analytics/agent', [AnalyticsController::class, 'agent'])->name('analytics.agent');
+            Route::post('/analytics/chat/prepare', [AnalyticsController::class, 'chatPrepare'])->name('analytics.chat.prepare');
+            Route::post('/analytics/{analyticsDashboard}/chat/store-reply', [AnalyticsController::class, 'chatStoreReply'])->name('analytics.chat.storeReply');
+            Route::post('/analytics/{analyticsDashboard}/chat/dispatch', [AnalyticsController::class, 'chatDispatch'])->name('analytics.chat.dispatch');
             Route::post('/analytics/{analyticsDashboard}/edit', [AnalyticsController::class, 'edit'])->name('analytics.edit');
             Route::post('/analytics/{analyticsDashboard}/chat', [AnalyticsController::class, 'chat'])->name('analytics.chat');
             Route::post('/analytics/live/generate', [AnalyticsController::class, 'startLiveGenerate'])->name('analytics.live.generate');

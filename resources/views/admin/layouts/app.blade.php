@@ -31,6 +31,14 @@
         ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #52525b; }
 
+        /* AI «печатает»: три точки в конце стримингового ответа */
+        .ai-dots { display: inline-flex; gap: 3px; align-items: center; vertical-align: middle; margin-left: 6px; }
+        .ai-dots span { width: 5px; height: 5px; border-radius: 50%; background: #67e8f9; animation: aiDot 1.2s infinite; }
+        .ai-dots span:nth-child(2) { animation-delay: .2s; }
+        .ai-dots span:nth-child(3) { animation-delay: .4s; }
+        @keyframes aiDot { 0%, 60%, 100% { opacity: .25; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-3px); } }
+        @media (prefers-reduced-motion: reduce) { .ai-dots span { animation: none; opacity: .55; } }
+
         /* Входящие анимации */
         @keyframes fmUp { 0% { opacity: 0; transform: translateY(40px); } 100% { opacity: 1; transform: translateY(0); } }
         @keyframes fmUpLg { 0% { opacity: 0; transform: translateY(60px); } 100% { opacity: 1; transform: translateY(0); } }
@@ -52,7 +60,8 @@
         chatThinking: false,
         chatDraft: '',
         chatSubmittedMessage: '',
-        chatPendingMessage: ''
+        chatPendingMessage: '',
+        chatStreaming: false
       }"
       class="bg-[#0a0c14] text-white overflow-hidden antialiased">
 
